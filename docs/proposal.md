@@ -3,13 +3,14 @@
 
 ## Intro
 
-Slackmap v1 was developed by Piotr xx since xx. The Platform is userfed with line-data and has about xx entries so far. Piotr stopped developing the platform in 2018 due to a shift in interests, the platform remains working with some major flaws (deletion of lines is not possible, line management not allowed, access restrictions can not be communicated, etc.)
+Slackmap v1 was developed by Piotr Błaszczak since forever. The Platform is userfed with line-data and has several tousand entries so far. Piotr stopped developing the platform in 2018 due to outdated stack and a shift in interests, the platform remains working with some major flaws that make further usage inconvenience (deletion of lines is not possible, line management not allowed, access restrictions can not be communicated, etc.)
 
 ## Project Scope
 
 In broader concept, Slackmap v2 aims to:
-- Provide global information for travelers
 - Act as a "topo" guide
+- Provide global information for travelers
+- alleviate access issues
 - Form a contact between slackliners in interest and the regional communities & authorities (managers of the spot etc)
 - It does **NOT** provide any `social media` oriented features where people can organize meetings, festivals, inform each other about the currently-active gatherings.
 
@@ -17,8 +18,8 @@ In broader concept, Slackmap v2 aims to:
 
 - Simplicity. It must focus on simplicity both in technical and presentational aspects simply because,
   - It needs to survive potentially decades with volunteered effort which requires long lasting motivation and organization and therefore minimal effort for everybody
-  - It will receive countless requests and changes over time as well as the maintenance which will be an exponential burden as time goes on.
-- Tech Stack must be build on mainstream tools.
+  - It will receive countless requests and changes over time.  The maintenance will be an exponential burden as time goes on.
+- The Tech Stack must be build on mainstream tools.
   - Its easier to on board volunteers when the tech stack follows the mainstream trends. It helps with motivation, learning curve etc...
 
 ## General concepts/entities 
@@ -28,9 +29,12 @@ In broader concept, Slackmap v2 aims to:
   - Name
   - Anchors and access to anchors
   - Gear and line specs
-  - Bolting and first rigger
+  - Bolting and first rigger (opened by)
   - Media files like photos or videos
-- **Spot:** A groupings of several lines having sub-features
+  - Contact information, ex: local club
+  - Access details
+  - Restriction details
+- **Area/Spot:** A groupings of several lines having sub-features
   - Name
   - Contact information, ex: local club
   - Access details
@@ -44,7 +48,7 @@ In broader concept, Slackmap v2 aims to:
 There has to be a user management system (currently facebook etc is used) but other projects like ranking list also requires the same, therefore a single user system for entire ISA products is the most sensible option, where people
 - can use single email-password to login to their profiles
 - can be assigned to multiple associations and clubs.
-- can register on behalf associations nd share their credentials inside their clubs to give permissions to their members to maintain their lines and spots etc. 
+- can register on behalf associations and share their credentials inside their clubs to give permissions to their members to maintain their lines and spots etc. 
 
 **This user system is out of the scope for slackmap. It will be carried out separately.**
 
@@ -61,4 +65,4 @@ There has to be a user management system (currently facebook etc is used) but ot
 - Map offers a good quality satellite images
 - Line/Spot creating and editing happens in separate page instead of a popup to provide a clear space to work on.
 - Line and Spots are marked distinctively in the map.
-- Creating the line supports drawing line on the map interactively
+- Creating the line supports drawing line on the map interactively with automatic distance measurement
