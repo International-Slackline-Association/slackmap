@@ -53,6 +53,7 @@ There has to be a user management system (currently facebook etc is used) but ot
 - **Line:** A single line having sub-features
   - Type, ex: highline, waterline
   - Name
+  - Length, height
   - Anchors and access to anchors
   - Gear and line specs
   - Bolting and first rigger (opened by)
@@ -69,26 +70,31 @@ There has to be a user management system (currently facebook etc is used) but ot
   - name surname
   - country
   - clubs and association list that is member of
+- **Owner**: 
+  - Each spot and line has to have only 1 owner. Initial creator is the owner.
 
-## Initial Functionalities
+### Initial Functionalities
 - Users can only sign-in through ISA. No federated providers (simplicity)
-- Users who initially create the line/spot will be the `owner` of the entity,
-  - Other users can request temporary permissions to edit the line/spot info.
-  - Owners can confirm or reject the permission request. It will be preferable that the local associations are the owner of the line/spots(ex: they will be informed via mail to give permission to user X for editing line X for 7 days)
-  - Owners can transfer the ownership to the other users (in case they are not related to the entity anymore, or wanna transfer to local association)
-- User will directly have edit permissions if the line/spot is owned by the association the are member of, otherwise request permissions from the owner.
-- Users can edit all the information related to a line or spot
-   - This includes all the sub-features listed above, specs, media files etc. There will be editor in UI for all the fields.
+- Users who initially create the line/spot will be the owner of the entity
+  - For the old transferred data, local clubs will be reached and encouraged to sign up and will be assigned as the owner of the line/spot
+  - Owners can transfer the ownership of the line/spot to another user
+- Every user can propose changes to every info about line/spot.
+  - The proposals will notify the owner (email)
+  - There can be only 1 proposal per entity. If there is pending one, further proposals will be disabled
+    - Owners will be notified regularly(emails) to accept/reject the proposal. We need to make sure owners are active and take precautions if they are idle for too long.
+  - Owner should be able to see the suggested changes
+    - Can modify the changes before applying
+    - Can reject writing an reason (the proposing user will be notified via email)
+  - The history/logs will NOT be displayed but kept internally
 - User can query the line/spots based on
   - line/spot name, country, owner-name
 - Map interface with minimal obstruction in the screen where people can navigate on the map to get an overview.
 - Map offers a good quality satellite images
 - Line/Spot creating and editing happens in separate page instead of a popup to provide a clear space to work on.
 - Line and Spots are marked distinctively in the map.
-- Creating the line supports drawing line on the map interactively with automatic distance measurement
+- Creating the line supports drawing line on the map interactively with automatic distance measurement(suggestive only)
 
-
-## Initial Roadmap
+### Initial Roadmap
 
 1) Agree on feature set and product details collectively,
 2) Export the slackmap data and share with developers
