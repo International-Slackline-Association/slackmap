@@ -56,11 +56,12 @@ There has to be a user management system (currently facebook etc is used) but ot
   - Length, height
   - Anchors and access to anchors
   - Gear and line specs
-  - Bolting and first rigger (opened by)
+  - Established by
   - Media files like photos or videos
   - Contact information, ex: local club
   - Access details
   - Restriction details
+  - Restriction severity(open, notify-first, risky, allowed-only...)
 - **Spot:** A groupings of several lines having sub-features
   - Name
   - Contact information, ex: local club
@@ -78,14 +79,16 @@ There has to be a user management system (currently facebook etc is used) but ot
 - Users who initially create the line/spot will be the owner of the entity
   - For the old transferred data, local clubs will be reached and encouraged to sign up and will be assigned as the owner of the line/spot
   - Owners can transfer the ownership of the line/spot to another user
-- Every user can propose changes to every info about line/spot.
-  - The proposals will notify the owner (email)
-  - There can be only 1 proposal per entity. If there is pending one, further proposals will be disabled
-    - Owners will be notified regularly(emails) to accept/reject the proposal. We need to make sure owners are active and take precautions if they are idle for too long.
-  - Owner should be able to see the suggested changes
-    - Can modify the changes before applying
-    - Can reject writing an reason (the proposing user will be notified via email)
-  - The history/logs will NOT be displayed but kept internally
+- Every user can suggest changes to every info about line/spot.
+  - Suggestion should be visible to everyone with a UI indicating whats the difference
+  - It will notify the owner (email) and it would repeat the mails until they are resolved
+  - Suggestions can only be viewed but not act upon.
+      - Owners probably wanna change it then update the line/spot. This can be highly complex(see github PR features), so we shouldn't dive here and let owners just see the differences in nice UI and edit the line themselves without providing customized editing tools.
+  - Owners can reject the suggestion writing a reason (the proposing user will be notified via email)
+- Owner can change the restriction severity for the line/spot
+  - High severity would mark the lines explicitly visible to give the info at first glance
+  - Owners can mark the highest value (whatever) to hide the lines for public viewers.
+    - Viewers have to contact the owner in this case
 - User can query the line/spots based on
   - line/spot name, country, owner-name
 - Map interface with minimal obstruction in the screen where people can navigate on the map to get an overview.
@@ -93,7 +96,7 @@ There has to be a user management system (currently facebook etc is used) but ot
 - Line/Spot creating and editing happens in separate page instead of a popup to provide a clear space to work on.
 - Line and Spots are marked distinctively in the map.
 - Creating the line supports drawing line on the map interactively with automatic distance measurement(suggestive only)
-
+  
 ### Initial Roadmap
 
 1) Agree on feature set and product details collectively,
