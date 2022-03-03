@@ -67,6 +67,7 @@ There has to be a user management system (currently facebook etc is used) but ot
   - Contact information, ex: local club
   - Access details
   - Restriction details
+  - Restriction severity(open, notify-first, risky, allowed-only...)
 - **User:** An individual ISA registered user or a ISA member club(described above) having features
   - name surname
   - country
