@@ -61,41 +61,35 @@ There has to be a user management system (currently facebook etc is used) but ot
   - Contact information, ex: local club
   - Access details
   - Restriction details
-  - Restriction severity(open, notify-first, risky, allowed-only...)
+  - Restriction level(partial, full)
 - **Spot:** A groupings of several lines having sub-features
   - Name
   - Contact information, ex: local club
   - Access details
   - Restriction details
-  - Restriction severity(open, notify-first, risky, allowed-only...)
-- **User:** An individual ISA registered user or a ISA member club(described above) having features
-  - name surname
-  - country
-  - clubs and association list that is member of
+  - Restriction level(partial, full)
+- **Association:** A ISA Member club
+  - Basic info: name, location, logo (from ISA Account)
+- **User:** An individual ISA Account User
 - **Owner**: 
   - Each spot and line has to have only 1 owner. Initial creator is the owner.
 
 ### Initial Functionalities
 - Users can only sign-in through ISA. No federated providers (simplicity)
 - Users who initially create the line/spot will be the owner of the entity
-  - For the old transferred data, local clubs will be reached and encouraged to sign up and will be assigned as the owner of the line/spot
-  - Owners can transfer the ownership of the line/spot to another user
-- Every user can suggest changes to every info about line/spot.
-  - Suggestion should be visible to everyone with a UI indicating whats the difference
-  - It will notify the owner (email) and it would repeat the mails until they are resolved
-  - Suggestions can only be viewed but not act upon.
-      - Owners probably wanna change it then update the line/spot. This can be highly complex(see github PR features), so we shouldn't dive here and let owners just see the differences in nice UI and edit the line themselves without providing customized editing tools.
-  - Owners can reject the suggestion writing a reason (the proposing user will be notified via email)
+  - Owners can transfer the ownership of the line/spot to another user (manually first)
+- The association within the area will have editorship permissions for the lines/spots
+- Every user can comment under the line/spot
 - Owner can change the restriction severity for the line/spot
-  - High severity would mark the lines explicitly visible to give the info at first glance
-  - Owners can mark the highest value (whatever) to hide the lines for public viewers.
-    - Viewers have to contact the owner in this case
+  - Partially-restricted: The popup will display warning info and upon closing that you can see the details
+  - Fully-restricted: The popup will display warning info and no details will be shown
 - User can query the line/spots based on
   - line/spot name, country, owner-name
 - Map interface with minimal obstruction in the screen where people can navigate on the map to get an overview.
 - Map offers a good quality satellite images
 - Line/Spot creating and editing happens in separate page instead of a popup to provide a clear space to work on.
 - Line and Spots are marked distinctively in the map.
+- Associations will be marked on the map with their logos in their coordinates
 - Creating the line supports drawing line on the map interactively with automatic distance measurement(suggestive only)
   
 ### Initial Roadmap
