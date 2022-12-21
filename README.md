@@ -1,0 +1,3 @@
+# SlackMap
+
+World slackline map. Replacing slackmap.com...
