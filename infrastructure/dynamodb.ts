@@ -94,9 +94,6 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
       StreamSpecification: {
         StreamViewType: 'NEW_AND_OLD_IMAGES',
       },
-      PointInTimeRecoverySpecification: {
-        PointInTimeRecoveryEnabled: true,
-      },
       Tags: [
         {
           Key: 'aws_backup',

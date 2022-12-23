@@ -40,6 +40,46 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
+export const getAllSpots = async <T extends keyof DDBSpotDetailItem>(
+  opts: { startKey?: any; limit?: number; fields?: T[] } = {},
+) => {
+  let exclusiveStartKey: any = opts.startKey;
+  const items: DDBSpotDetailItem[] = [];
+  do {
+    const params: DocumentClient.QueryInput = {
+      TableName: TABLE_NAME,
+      IndexName: INDEX_NAMES.GSI,
+      Limit: opts.limit,
+      ExclusiveStartKey: exclusiveStartKey,
+      KeyConditionExpression: '#SK_GSI = :SK_GSI',
+      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+      ExpressionAttributeNames: {
+        '#SK_GSI': keyFields.SK_GSI,
+      },
+      ExpressionAttributeValues: {
+        ':SK_GSI': keyUtils.SK_GSI.compose(),
+      },
+    };
+
+    const queryResult = await ddb
+      .query(params)
+      .promise()
+      .then((data) => {
+        return {
+          lastEvaluatedKey: data.LastEvaluatedKey,
+          items: (data.Items || []).map((i) => attrsToItem(i as DDBSpotDetailAttrs)),
+        };
+      });
+    items.push(...queryResult.items);
+
+    exclusiveStartKey = queryResult.lastEvaluatedKey;
+  } while (exclusiveStartKey && opts.limit && items.length < opts.limit);
+  return {
+    items,
+    lastEvaluatedKey: exclusiveStartKey,
+  };
+};
+
 export const getSpotDetails = async (spotId: string) => {
   return ddb
     .get({ TableName: TABLE_NAME, Key: key({ spotId }) })

@@ -6,6 +6,7 @@ import logger from '@functions/logger';
 import { dynamodbResources } from 'infrastructure/dynamodb';
 import { cloudwatchResources } from 'infrastructure/cloudwatch';
 import { backupResources } from 'infrastructure/backup';
+import { s3Resources } from 'infrastructure/s3';
 
 const serverlessConfiguration: AWS = {
   service: 'slackmap',
@@ -25,6 +26,8 @@ const serverlessConfiguration: AWS = {
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
       SLACKMAP_TABLE_NAME: { Ref: 'SlackmapTable' },
       APPLICATION_LOG_GROUP_NAME: { Ref: 'ApplicationLogsGroup' },
+      SLACKMAP_APPLICATION_DATA_S3_BUCKET: { Ref: 'SlackMapApplicationDataS3Bucket' },
+      SLACKMAP_APPLICATION_DATA_CLOUDFRONT_ID: '${ssm:/slackmap-data-cloudfrontId}',
     },
     iam: {
       role: {
@@ -35,6 +38,15 @@ const serverlessConfiguration: AWS = {
             Resource: [
               {
                 'Fn::Join': ['', [{ 'Fn::GetAtt': ['SlackmapTable', 'Arn'] }, '*']],
+              },
+            ],
+          },
+          {
+            Effect: 'Allow',
+            Action: ['s3:*'],
+            Resource: [
+              {
+                'Fn::Join': ['', [{ 'Fn::GetAtt': ['SlackMapApplicationDataS3Bucket', 'Arn'] }, '*']],
               },
             ],
           },
@@ -55,6 +67,11 @@ const serverlessConfiguration: AWS = {
           {
             Effect: 'Allow',
             Action: ['ses:VerifyEmailIdentity', 'ses:SendCustomVerificationEmail', 'ses:SendEmail'],
+            Resource: '*',
+          },
+          {
+            Effect: 'Allow',
+            Action: ['cloudfront:CreateInvalidation'],
             Resource: '*',
           },
         ],
@@ -92,6 +109,7 @@ const serverlessConfiguration: AWS = {
       ...dynamodbResources,
       ...cloudwatchResources,
       ...backupResources,
+      ...s3Resources,
     },
   },
 };

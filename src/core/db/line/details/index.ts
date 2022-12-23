@@ -29,8 +29,8 @@ const keyUtils = typeSafeCheck({
     compose: () => 'lineDetails',
   },
   GSI_SK: {
-    fields: ['type'],
-    compose: (params) => composeKey('type', params.type),
+    fields: ['lineId'],
+    compose: (params) => composeKey('line', params.lineId),
   },
 });
 
@@ -39,6 +39,46 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   DDBLineDetailAttrs,
   typeof keysUsed
 >(keyUtils);
+
+export const getAllLines = async <T extends keyof DDBLineDetailItem>(
+  opts: { startKey?: any; limit?: number; fields?: T[] } = {},
+) => {
+  let exclusiveStartKey: any = opts.startKey;
+  const items: DDBLineDetailItem[] = [];
+  do {
+    const params: DocumentClient.QueryInput = {
+      TableName: TABLE_NAME,
+      IndexName: INDEX_NAMES.GSI,
+      Limit: opts.limit,
+      ExclusiveStartKey: exclusiveStartKey,
+      KeyConditionExpression: '#SK_GSI = :SK_GSI',
+      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+      ExpressionAttributeNames: {
+        '#SK_GSI': keyFields.SK_GSI,
+      },
+      ExpressionAttributeValues: {
+        ':SK_GSI': keyUtils.SK_GSI.compose(),
+      },
+    };
+
+    const queryResult = await ddb
+      .query(params)
+      .promise()
+      .then((data) => {
+        return {
+          lastEvaluatedKey: data.LastEvaluatedKey,
+          items: (data.Items || []).map((i) => attrsToItem(i as DDBLineDetailAttrs)),
+        };
+      });
+    items.push(...queryResult.items);
+
+    exclusiveStartKey = queryResult.lastEvaluatedKey;
+  } while (exclusiveStartKey && opts.limit && items.length < opts.limit);
+  return {
+    items,
+    lastEvaluatedKey: exclusiveStartKey,
+  };
+};
 
 export const getLineDetails = async (lineId: string) => {
   return ddb

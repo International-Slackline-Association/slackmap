@@ -8,13 +8,15 @@
     "checkTs": "tsc --noEmit",
     "package": "serverless package",
     "deploy": "serverless deploy --verbose",
-    "deploy:api": "serverless deploy function -f api"
+    "deploy:api": "serverless deploy function -f api",
+    "script:parseOldSlackmapData": "ts-node misc/scripts/parseOldSlackmapData.ts"
   },
   "engines": {
     "node": ">=16.13.2",
     "npm": ">=8.1.0"
   },
   "dependencies": {
+    "@turf/turf": "6.5.0",
     "@vendia/serverless-express": "4.10.1",
     "cors": "2.8.5",
     "dateformat": "5.0.3",
@@ -22,7 +24,7 @@
     "jwt-decode": "3.1.2",
     "lodash.assignwith": "4.2.0",
     "lodash.clonedeep": "4.5.0",
-    "nanoid": "4.0.0",
+    "nanoid": "3.3.4",
     "winston": "3.8.2",
     "zod": "3.20.2"
   },
@@ -31,6 +33,7 @@
     "@types/aws-lambda": "8.10.109",
     "@types/dateformat": "5.0.0",
     "@types/express": "4.17.15",
+    "@types/geojson": "7946.0.10",
     "@types/lodash.assignwith": "4.2.7",
     "@types/lodash.clonedeep": "4.5.7",
     "@types/node": "16.0.0",
