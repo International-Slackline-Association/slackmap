@@ -1,11 +1,14 @@
 import { default as express, Express, urlencoded, json } from 'express';
+import cors from 'cors';
 
 import { injectCommonlyUsedHeadersMiddleware, errorMiddleware, notFoundMiddleware } from '@functions/api/middlewares';
+import { lineApi } from './endpoints/line/api';
 
 const app = express();
 
 const setupExpressApp = (app: Express) => {
   app.use(json());
+  app.use(cors());
   app.use(
     urlencoded({
       extended: true,
@@ -14,7 +17,7 @@ const setupExpressApp = (app: Express) => {
 };
 
 const setupRoutes = (app: Express) => {
-  // app.use('/user', userApi);
+  app.use('/line', lineApi);
 };
 
 const registerStartingMiddlewares = (app: Express) => {
