@@ -40,7 +40,7 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
-export const getAllSpots = async <T extends keyof DDBSpotDetailItem>(
+export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
   opts: { startKey?: any; limit?: number; fields?: T[] } = {},
 ) => {
   let exclusiveStartKey: any = opts.startKey;
@@ -80,9 +80,18 @@ export const getAllSpots = async <T extends keyof DDBSpotDetailItem>(
   };
 };
 
-export const getSpotDetails = async (spotId: string) => {
+export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
+  spotId: string,
+  opts: {
+    fields?: T[];
+  } = {},
+) => {
   return ddb
-    .get({ TableName: TABLE_NAME, Key: key({ spotId }) })
+    .get({
+      TableName: TABLE_NAME,
+      Key: key({ spotId }),
+      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+    })
     .promise()
     .then((data) => {
       if (data.Item) {

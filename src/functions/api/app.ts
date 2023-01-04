@@ -3,6 +3,7 @@ import cors from 'cors';
 
 import { injectCommonlyUsedHeadersMiddleware, errorMiddleware, notFoundMiddleware } from '@functions/api/middlewares';
 import { lineApi } from './endpoints/line/api';
+import { spotApi } from './endpoints/spot/api';
 
 const app = express();
 
@@ -18,6 +19,8 @@ const setupExpressApp = (app: Express) => {
 
 const setupRoutes = (app: Express) => {
   app.use('/line', lineApi);
+  app.use('/spot', spotApi);
+
 };
 
 const registerStartingMiddlewares = (app: Express) => {

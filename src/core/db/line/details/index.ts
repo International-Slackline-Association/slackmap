@@ -40,7 +40,7 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
-export const getAllLines = async <T extends keyof DDBLineDetailItem>(
+export const getAllLines = async <T extends keyof DDBLineDetailAttrs>(
   opts: { startKey?: any; limit?: number; fields?: T[] } = {},
 ) => {
   let exclusiveStartKey: any = opts.startKey;
@@ -80,9 +80,18 @@ export const getAllLines = async <T extends keyof DDBLineDetailItem>(
   };
 };
 
-export const getLineDetails = async (lineId: string) => {
+export const getLineDetails = async <T extends keyof DDBLineDetailAttrs>(
+  lineId: string,
+  opts: {
+    fields?: T[];
+  } = {},
+) => {
   return ddb
-    .get({ TableName: TABLE_NAME, Key: key({ lineId }) })
+    .get({
+      TableName: TABLE_NAME,
+      Key: key({ lineId }),
+      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+    })
     .promise()
     .then((data) => {
       if (data.Item) {

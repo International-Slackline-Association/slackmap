@@ -13,6 +13,7 @@ interface NonKeyAttrs {
   accessInfo?: string;
   contactInfo?: string;
   restrictionLevel?: SlacklineRestrictionLevel;
+  restrictionInfo?: string;
   extraInfo?: string;
   coverImageUrl?: string;
   createdDateTime: string;

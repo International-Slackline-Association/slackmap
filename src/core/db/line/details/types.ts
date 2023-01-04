@@ -12,8 +12,10 @@ interface NonKeyAttrs {
   name?: string;
   description?: string;
   city?: string;
+  country?: string;
   length?: number;
   height?: number;
+  isMeasurementAccurate?: boolean;
   accessInfo?: string;
   anchorsInfo?: string;
   gearInfo?: string;

@@ -1,26 +1,18 @@
-import { FeatureCollection } from '@turf/turf';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
+import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 
-export const getLineDetailsResponse = (item: DDBLineDetailItem) => {
+export const getSpotDetailsResponse = (item: DDBSpotDetailItem) => {
   return {
-    id: item.lineId,
+    id: item.spotId,
     name: item.name,
     description: item.description,
     createdDateTime: item.createdDateTime,
     lastModifiedDateTime: item.lastModifiedDateTime,
-    type: item.type,
     creatorUserId: item.creatorUserId,
-    city: item.city,
-    length: item.length,
-    height: item.height,
     accessInfo: item.accessInfo,
-    anchorsInfo: item.anchorsInfo,
-    gearInfo: item.gearInfo,
     contactInfo: item.contactInfo,
     restrictionLevel: item.restrictionLevel,
     extraInfo: item.extraInfo,
     coverImageUrl: item.coverImageUrl,
     restrictionInfo: item.restrictionInfo,
-    isMeasurementAccurate: item.isMeasurementAccurate,
   };
 };
