@@ -119,6 +119,7 @@ const writeToS3 = async (key: string, geoJson: FeatureCollection) => {
       Key: key,
       Body: JSON.stringify(geoJson),
       ContentType: 'application/json; charset=utf-8',
+      CacheControl: 'public, max-age=120',
     })
     .promise();
 };
