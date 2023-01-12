@@ -2,6 +2,7 @@ import type { AWS } from '@serverless/typescript';
 
 import api from '@functions/api/lambda';
 import logger from '@functions/logger';
+import ddbStreams from '@functions/ddb-streams/lambda';
 
 import { dynamodbResources } from 'infrastructure/dynamodb';
 import { cloudwatchResources } from 'infrastructure/cloudwatch';
@@ -28,6 +29,8 @@ const serverlessConfiguration: AWS = {
       APPLICATION_LOG_GROUP_NAME: { Ref: 'ApplicationLogsGroup' },
       SLACKMAP_APPLICATION_DATA_S3_BUCKET: { Ref: 'SlackMapApplicationDataS3Bucket' },
       SLACKMAP_APPLICATION_DATA_CLOUDFRONT_ID: '${ssm:/slackmap-data-cloudfrontId}',
+      OAUTH2_CLIENT_ID_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-id}',
+      OAUTH2_CLIENT_SECRET_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-secret}',
     },
     iam: {
       role: {
@@ -79,7 +82,7 @@ const serverlessConfiguration: AWS = {
     },
   },
   // import the function via paths
-  functions: { api, logger },
+  functions: { api, logger, ddbStreams },
   package: { individually: true },
   custom: {
     esbuild: {

@@ -3,7 +3,7 @@ import 'express';
 declare global {
   namespace Express {
     interface Request {
-      claims: {
+      claims?: {
         sub: string;
       };
       user: {

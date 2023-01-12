@@ -40,6 +40,18 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
+export const lineDetailsDBUtils = {
+  isDDBRecordTypeMatching: (keys: { [key: string]: any }) => {
+    for (const [key, value] of Object.entries(keys)) {
+      if (!isKeyValueMatching(key as any, value)) {
+        return false;
+      }
+    }
+    return true;
+  },
+  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBLineDetailAttrs),
+};
+
 export const getAllLines = async <T extends keyof DDBLineDetailAttrs>(
   opts: { startKey?: any; limit?: number; fields?: T[] } = {},
 ) => {
@@ -103,4 +115,8 @@ export const getLineDetails = async <T extends keyof DDBLineDetailAttrs>(
 
 export const putLine = async (line: DDBLineDetailItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(line) }).promise();
+};
+
+export const deleteLine = async (lineId: string) => {
+  return ddb.delete({ TableName: TABLE_NAME, Key: key({ lineId }) }).promise();
 };

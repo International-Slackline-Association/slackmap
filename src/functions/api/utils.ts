@@ -17,3 +17,13 @@ export const validateApiPayload = <T extends ZodTypeAny>(payload: unknown, schem
     throw error;
   }
 };
+
+export const verifyRequestClaims = (req: Request) => {
+  if (!req.claims) {
+    throw new Error('Unauthorized: Missing claims');
+  }
+  if (!req.claims.sub) {
+    throw new Error('Unauthorized: Missing sub claim');
+  }
+  return req.claims;
+};

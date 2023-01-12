@@ -15,7 +15,7 @@ interface NonKeyAttrs {
   country?: string;
   length?: number;
   height?: number;
-  isMeasurementAccurate?: boolean;
+  isMeasured?: boolean;
   accessInfo?: string;
   anchorsInfo?: string;
   gearInfo?: string;
