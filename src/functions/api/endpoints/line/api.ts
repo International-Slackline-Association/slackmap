@@ -3,13 +3,14 @@ import { catchExpressJsErrorWrapper, validateApiPayload, verifyRequestClaims } f
 import * as db from 'core/db';
 import { getLineDetailsResponse } from './dto';
 import { FeatureCollection, LineString } from '@turf/turf';
-import { CreateLinePostBody, createLineSchema } from './schema';
+import { CreateLinePostBody, createLineSchema, UpdateLinePostBody, updateLineSchema } from './schema';
 import { validateLineGeoJson } from 'core/features/line/validations';
 import { nanoid } from 'nanoid';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 import * as turf from '@turf/turf';
 import { validateLineEditor } from 'core/features/line';
 import { processLineGeoJson } from 'core/features/geojson';
+import { assignFromSourceToTarget } from 'core/utils';
 
 export const getLineDetails = async (req: Request, res: Response) => {
   const line = await db.getLineDetails(req.params.id);
@@ -44,7 +45,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
   const processedGeoJson = processLineGeoJson(geoJson, {
     lineId: lineId,
     type: body.type,
-    length: body.length,
+    length: length,
   });
 
   const isMeasured = body.length ? body.isMeasured : false;
@@ -72,14 +73,42 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
   res.json(getLineDetailsResponse(line));
 };
 
-export const updateLine = async (req: Request, res: Response) => {
-  //
+export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res: Response) => {
+  const requestClaims = verifyRequestClaims(req);
+
+  const lineId = req.params.id;
+  const body = validateApiPayload(req.body, updateLineSchema);
+  const geoJson = body.geoJson as unknown as FeatureCollection;
+
+  const line = await db.getLineDetails(lineId);
+  if (!line) {
+    throw new Error('NotFound: Line not found');
+  }
+
+  if (!validateLineGeoJson(geoJson, body.length)) {
+    throw new Error('Validation: Invalid geoJson');
+  }
+
+  const length = parseFloat((body.length || turf.length(geoJson.features[0], { units: 'meters' })).toFixed(2));
+
+  const processedGeoJson = processLineGeoJson(geoJson, {
+    lineId: lineId,
+    type: body.type,
+    length: length,
+  });
+
+  const payload = { ...req.body, length, geoJson: JSON.stringify(processedGeoJson) };
+  const updatedLine = assignFromSourceToTarget(payload, line);
+  updatedLine.lastModifiedDateTime = new Date().toISOString();
+  await db.putLine(updatedLine);
+  res.json(getLineDetailsResponse(updatedLine));
 };
 
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
   await validateLineEditor(lineId, req.claims?.sub, true);
   await db.deleteLine(lineId);
+  res.json({});
 };
 
 export const lineApi = express.Router();

@@ -1,7 +1,7 @@
 import { lineDetailsDBUtils } from 'core/db/line/details';
 import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { refreshLineGeoJsonFiles } from 'core/features/geojson';
+import { refreshClusterPointsGeoJsonFiles, refreshLineGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
 import { getAuthToken } from 'core/utils/auth';
 import * as accountApi from 'core/externalApi/account-api';
@@ -14,7 +14,12 @@ export const processLineDetailsOperation = async (
 ) => {
   if (eventName === 'INSERT' && newItem) {
     const newLine = lineDetailsDBUtils.attrsToItem(newItem);
-    await refreshLineGeoJsonFiles({ onlyUpdateIds: [newLine.lineId] });
+    await refreshLineGeoJsonFiles({
+      onlyUpdateIds: [newLine.lineId],
+      async onGeoJsonCreated(main, points) {
+        await refreshClusterPointsGeoJsonFiles({ linePoints: points });
+      },
+    });
 
     const isaUser = await accountApi.getBasicUserDetails(newLine.creatorUserId);
     if (isaUser) {
@@ -34,13 +39,23 @@ export const processLineDetailsOperation = async (
     const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
     const updatedLine = lineDetailsDBUtils.attrsToItem(newItem);
     if (!isEqual(oldLine.geoJson, updatedLine.geoJson)) {
-      await refreshLineGeoJsonFiles({ onlyUpdateIds: [updatedLine.lineId] });
+      await refreshLineGeoJsonFiles({
+        onlyUpdateIds: [updatedLine.lineId],
+        async onGeoJsonCreated(main, points) {
+          refreshClusterPointsGeoJsonFiles({ linePoints: points });
+        },
+      });
     }
   }
 
   if (eventName === 'REMOVE' && oldItem) {
     const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
-    await refreshLineGeoJsonFiles({ onlyUpdateIds: [oldLine.lineId] });
+    await refreshLineGeoJsonFiles({
+      onlyUpdateIds: [oldLine.lineId],
+      async onGeoJsonCreated(main, points) {
+        refreshClusterPointsGeoJsonFiles({ linePoints: points });
+      },
+    });
     await deleteAllLineEditors(oldLine.lineId);
   }
 };

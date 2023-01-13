@@ -5,6 +5,17 @@ export const s3Resources: NonNullable<AWS['resources']>['Resources'] = {
     Type: 'AWS::S3::Bucket',
     Properties: {
       BucketName: 'slackmap-application-data-${sls:stage}',
+      CorsConfiguration: {
+        CorsRules: [
+          {
+            AllowedHeaders: ['*'],
+            AllowedMethods: ['GET'],
+            AllowedOrigins: ['*'],
+            ExposedHeaders: [],
+            MaxAge: 3600,
+          },
+        ],
+      },
     },
   },
 };
