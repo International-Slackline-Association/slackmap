@@ -9,7 +9,7 @@ logger.updateMeta({ lambdaName: 'ddbStreams' });
 
 const dynamodbStreamEventHandler: DynamoDBStreamHandler = async (event, context, callback) => {
   const promises = [];
-  if (process.env.DISABLE_STREAMS) {
+  if (process.env.DISABLE_STREAMS === 'true') {
     callback(null);
     return;
   }

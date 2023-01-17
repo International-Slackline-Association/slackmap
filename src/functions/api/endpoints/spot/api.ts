@@ -4,7 +4,7 @@ import * as db from 'core/db';
 import { getSpotDetailsResponse } from './dto';
 import { FeatureCollection } from '@turf/turf';
 import { CreateSpotPostBody, createSpotSchema, UpdateSpotPostBody, updateSpotSchema } from './schema';
-import { processLineGeoJson, processSpotGeoJson } from 'core/features/geojson';
+import { processSpotGeoJson } from 'core/features/geojson';
 import { validateMapFeatureEditor } from 'core/features/mapFeature';
 import { assignFromSourceToTarget } from 'core/utils';
 import { nanoid } from 'nanoid';
