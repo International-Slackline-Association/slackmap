@@ -2,7 +2,7 @@ import { DDBTableKeyAttrs } from 'core/db/types';
 import { UserIdentityType } from 'core/types';
 
 interface ParsedKeyAttrs {
-  spotId: string;
+  featureId: string;
   editorUserId: string;
   userIdentityType: UserIdentityType;
 }
@@ -16,5 +16,5 @@ interface NonKeyAttrs {
   lastModifiedDateTime?: string;
 }
 
-export type DDBSpotEditorItem = ParsedKeyAttrs & NonKeyAttrs;
-export type DDBSpotEditorAttrs = DDBTableKeyAttrs & NonKeyAttrs;
+export type DDBMapFeatureEditorItem = ParsedKeyAttrs & NonKeyAttrs;
+export type DDBMapFeatureEditorAttrs = DDBTableKeyAttrs & NonKeyAttrs;

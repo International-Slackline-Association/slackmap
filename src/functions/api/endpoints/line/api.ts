@@ -8,7 +8,7 @@ import { validateLineGeoJson } from 'core/features/line/validations';
 import { nanoid } from 'nanoid';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 import * as turf from '@turf/turf';
-import { validateLineEditor } from 'core/features/line';
+import { validateMapFeatureEditor } from 'core/features/mapFeature';
 import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 
@@ -17,7 +17,7 @@ export const getLineDetails = async (req: Request, res: Response) => {
   if (!line) {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
-  const isUserEditor = await validateLineEditor(line.lineId, req.claims?.sub);
+  const isUserEditor = await validateMapFeatureEditor(line.lineId, req.claims?.sub);
   res.json(getLineDetailsResponse(line, isUserEditor));
 };
 
@@ -74,10 +74,12 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
 };
 
 export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res: Response) => {
-  const requestClaims = verifyRequestClaims(req);
+  verifyRequestClaims(req);
 
   const lineId = req.params.id;
   const body = validateApiPayload(req.body, updateLineSchema);
+  await validateMapFeatureEditor(lineId, req.claims?.sub, true);
+
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
   const line = await db.getLineDetails(lineId);
@@ -106,7 +108,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
-  await validateLineEditor(lineId, req.claims?.sub, true);
+  await validateMapFeatureEditor(lineId, req.claims?.sub, true);
   await db.deleteLine(lineId);
   res.json({});
 };

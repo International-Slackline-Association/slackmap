@@ -1,6 +1,6 @@
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 
-export const getSpotDetailsResponse = (item: DDBSpotDetailItem) => {
+export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: boolean) => {
   return {
     id: item.spotId,
     name: item.name,
@@ -14,5 +14,6 @@ export const getSpotDetailsResponse = (item: DDBSpotDetailItem) => {
     extraInfo: item.extraInfo,
     coverImageUrl: item.coverImageUrl,
     restrictionInfo: item.restrictionInfo,
+    isUserEditor: isUserEditor,
   };
 };

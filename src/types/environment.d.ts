@@ -5,6 +5,7 @@ declare global {
       SLACKMAP_TABLE_NAME: string;
       SLACKMAP_APPLICATION_DATA_S3_BUCKET: string;
       SLACKMAP_APPLICATION_DATA_CLOUDFRONT_ID: string;
+      DISABLE_STREAMS?: string;
     }
   }
 }

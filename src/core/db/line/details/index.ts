@@ -2,7 +2,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBLineDetailItem, DDBLineDetailAttrs } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
-import { composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
+import { chunkArray, composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
 
@@ -90,6 +90,38 @@ export const getAllLines = async <T extends keyof DDBLineDetailAttrs>(
     items,
     lastEvaluatedKey: exclusiveStartKey,
   };
+};
+
+export const getMultipleLineDetails = async (lineIds: string[]) => {
+  const allKeys = chunkArray(
+    lineIds.map((id) => key({ lineId: id })),
+    100,
+  );
+
+  const items: DDBLineDetailItem[] = [];
+  for (let keysToLoad of allKeys) {
+    while (keysToLoad.length > 0) {
+      const result = await ddb
+        .batchGet({
+          RequestItems: {
+            [TABLE_NAME]: {
+              Keys: keysToLoad,
+            },
+          },
+        })
+        .promise()
+        .then((r) => {
+          const items = r.Responses?.[TABLE_NAME] ?? [];
+          return {
+            items: items.map((i) => attrsToItem(i as DDBLineDetailAttrs)),
+            unprocessedKeys: r.UnprocessedKeys,
+          };
+        });
+      items.push(...result.items);
+      keysToLoad = (result.unprocessedKeys?.[TABLE_NAME]?.Keys as any) ?? [];
+    }
+  }
+  return items;
 };
 
 export const getLineDetails = async <T extends keyof DDBLineDetailAttrs>(

@@ -5,6 +5,8 @@ import { Feature, FeatureCollection, LineString } from '@turf/turf';
 import { invalidateCloudfrontCache } from 'core/aws/cloudfront';
 import { optimizeGeoJsonFeature } from './utils';
 import zlib from 'zlib';
+import { logger } from 'core/utils/logger';
+import cloneDeep from 'lodash.clonedeep';
 
 export const processLineGeoJson = (
   geoJson: FeatureCollection,
@@ -44,45 +46,29 @@ export const processSpotGeoJson = (
     f.properties = f.properties || {};
     f.properties['id'] = meta.spotId;
     f.properties['ft'] = 's';
-
     features.push(f);
   }
-
   return { type: 'FeatureCollection', features };
 };
 
 export const refreshLineGeoJsonFiles = async (
   opts: {
-    onlyUpdateIds?: string[];
-    onGeoJsonCreated?: (main: FeatureCollection, points: FeatureCollection) => void;
+    lineIdToUpdate?: string;
   } = {},
 ) => {
   let mainGeoJSON: FeatureCollection;
 
-  const idsToUpdate = opts.onlyUpdateIds ?? [];
-  if (idsToUpdate.length > 0) {
+  if (opts.lineIdToUpdate) {
+    const line = await db.getLineDetails(opts.lineIdToUpdate);
     mainGeoJSON = await getFromS3('geojson/lines/main.geojson');
-    for (const id of idsToUpdate) {
-      const line = await db.getLineDetails(id);
-      if (line) {
-        const geoJson = processLineGeoJson(JSON.parse(line.geoJson), {
-          lineId: line.lineId,
-          type: line.type,
-          length: line.length,
-        });
-        for (const feature of geoJson.features) {
-          const existingFeatureIndex = mainGeoJSON.features.findIndex(
-            (f) => f.properties?.id === feature.properties?.id,
-          );
-          if (existingFeatureIndex > -1) {
-            mainGeoJSON.features[existingFeatureIndex] = feature;
-          } else {
-            mainGeoJSON.features.push(feature);
-          }
-        }
-      } else {
-        mainGeoJSON.features = mainGeoJSON.features.filter((f) => f.properties?.id !== id);
-      }
+    mainGeoJSON.features = mainGeoJSON.features.filter((f) => f.properties?.id !== opts.lineIdToUpdate);
+    if (line) {
+      const geoJson = processLineGeoJson(JSON.parse(line.geoJson), {
+        lineId: line.lineId,
+        type: line.type,
+        length: line.length,
+      });
+      mainGeoJSON.features.push(...geoJson.features);
     }
   } else {
     mainGeoJSON = {
@@ -104,43 +90,29 @@ export const refreshLineGeoJsonFiles = async (
     }
   }
 
-  const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
-  opts.onGeoJsonCreated?.(mainGeoJSON, pointsGeoJSON);
-
   await writeToS3('geojson/lines/main.geojson', mainGeoJSON);
+  const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
   await writeToS3('geojson/lines/points.geojson', pointsGeoJSON);
+  await refreshClusterPointsGeoJsonFiles({ linePoints: pointsGeoJSON });
+  return { mainGeoJSON, pointsGeoJSON };
 };
 
 export const refreshSpotGeoJsonFiles = async (
   opts: {
-    onlyUpdateIds?: string[];
-    onGeoJsonCreated?: (main: FeatureCollection, points: FeatureCollection) => void;
+    spotIdToUpdate?: string;
   } = {},
 ) => {
   let mainGeoJSON: FeatureCollection;
 
-  const idsToUpdate = opts.onlyUpdateIds ?? [];
-  if (idsToUpdate.length > 0) {
-    mainGeoJSON = await getFromS3('geojson/lines/main.geojson');
-    for (const id of idsToUpdate) {
-      const spot = await db.getSpotDetails(id);
-      if (spot) {
-        const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
-          spotId: spot.spotId,
-        });
-        for (const feature of geoJson.features) {
-          const existingFeatureIndex = mainGeoJSON.features.findIndex(
-            (f) => f.properties?.id === feature.properties?.id,
-          );
-          if (existingFeatureIndex > -1) {
-            mainGeoJSON.features[existingFeatureIndex] = feature;
-          } else {
-            mainGeoJSON.features.push(feature);
-          }
-        }
-      } else {
-        mainGeoJSON.features = mainGeoJSON.features.filter((f) => f.properties?.id !== id);
-      }
+  if (opts.spotIdToUpdate) {
+    const spot = await db.getSpotDetails(opts.spotIdToUpdate);
+    mainGeoJSON = await getFromS3('geojson/spots/main.geojson');
+    mainGeoJSON.features = mainGeoJSON.features.filter((f) => f.properties?.id !== opts.spotIdToUpdate);
+    if (spot) {
+      const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
+        spotId: spot.spotId,
+      });
+      mainGeoJSON.features.push(...geoJson.features);
     }
   } else {
     mainGeoJSON = {
@@ -160,14 +132,14 @@ export const refreshSpotGeoJsonFiles = async (
     }
   }
 
-  const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
-  opts.onGeoJsonCreated?.(mainGeoJSON, pointsGeoJSON);
-
   await writeToS3('geojson/spots/main.geojson', mainGeoJSON);
+  const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
   await writeToS3('geojson/spots/points.geojson', pointsGeoJSON);
+  await refreshClusterPointsGeoJsonFiles({ spotPoints: pointsGeoJSON });
+  return { mainGeoJSON, pointsGeoJSON };
 };
 
-export const refreshClusterPointsGeoJsonFiles = async (
+const refreshClusterPointsGeoJsonFiles = async (
   opts: { linePoints?: FeatureCollection; spotPoints?: FeatureCollection } = {},
 ) => {
   const linesPointGeoJSON = opts.linePoints || (await getFromS3('geojson/lines/points.geojson'));

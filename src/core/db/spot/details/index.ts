@@ -2,7 +2,7 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBSpotDetailAttrs, DDBSpotDetailItem } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
-import { composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
+import { chunkArray, composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
 
@@ -39,6 +39,18 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   DDBSpotDetailAttrs,
   typeof keysUsed
 >(keyUtils);
+
+export const spotDetailsDBUtils = {
+  isDDBRecordTypeMatching: (keys: { [key: string]: any }) => {
+    for (const [key, value] of Object.entries(keys)) {
+      if (!isKeyValueMatching(key as any, value)) {
+        return false;
+      }
+    }
+    return true;
+  },
+  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBSpotDetailAttrs),
+};
 
 export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
   opts: { startKey?: any; limit?: number; fields?: T[] } = {},
@@ -80,6 +92,38 @@ export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
   };
 };
 
+export const getMultipleSpotDetails = async (spotIds: string[]) => {
+  const allKeys = chunkArray(
+    spotIds.map((id) => key({ spotId: id })),
+    100,
+  );
+
+  const items: DDBSpotDetailItem[] = [];
+  for (let keysToLoad of allKeys) {
+    while (keysToLoad.length > 0) {
+      const result = await ddb
+        .batchGet({
+          RequestItems: {
+            [TABLE_NAME]: {
+              Keys: keysToLoad,
+            },
+          },
+        })
+        .promise()
+        .then((r) => {
+          const items = r.Responses?.[TABLE_NAME] ?? [];
+          return {
+            items: items.map((i) => attrsToItem(i as DDBSpotDetailAttrs)),
+            unprocessedKeys: r.UnprocessedKeys,
+          };
+        });
+      items.push(...result.items);
+      keysToLoad = (result.unprocessedKeys?.[TABLE_NAME]?.Keys as any) ?? [];
+    }
+  }
+  return items;
+};
+
 export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
   spotId: string,
   opts: {
@@ -103,4 +147,8 @@ export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
 
 export const putSpot = async (spot: DDBSpotDetailItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(spot) }).promise();
+};
+
+export const deleteSpot = async (spotId: string) => {
+  return ddb.delete({ TableName: TABLE_NAME, Key: key({ spotId }) }).promise();
 };

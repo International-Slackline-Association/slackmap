@@ -1,6 +1,6 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
-import { DDBLineEditorItem, DDBLineEditorAttrs } from './types';
+import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
 import { composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
 
@@ -8,7 +8,7 @@ const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
-    Omit<DDBLineEditorItem, keyof DDBLineEditorAttrs>,
+    Omit<DDBMapFeatureEditorItem, keyof DDBMapFeatureEditorAttrs>,
     ConvertKeysToInterface<typeof keysUsed>
   >,
 >(
@@ -19,15 +19,15 @@ const typeSafeCheck = <
 
 const keyUtils = typeSafeCheck({
   PK: {
-    fields: ['lineId'],
-    compose: (params) => composeKey('line', params.lineId),
+    fields: ['featureId'],
+    compose: (params) => composeKey('feature', params.featureId),
     destruct: (key) => ({
-      lineId: destructKey(key, 1),
+      featureId: destructKey(key, 1),
     }),
   },
   SK_GSI: {
     fields: ['editorUserId'],
-    compose: (params) => composeKey('lineEditor', params.editorUserId),
+    compose: (params) => composeKey('editor', params.editorUserId),
     destruct: (key) => ({
       editorUserId: destructKey(key, 1),
     }),
@@ -39,27 +39,27 @@ const keyUtils = typeSafeCheck({
 });
 
 const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transformUtils<
-  DDBLineEditorItem,
-  DDBLineEditorAttrs,
+  DDBMapFeatureEditorItem,
+  DDBMapFeatureEditorAttrs,
   typeof keysUsed
 >(keyUtils);
 
-export const getLineEditor = async (lineId: string, editorUserId: string) => {
+export const getMapFeatureEditor = async (featureId: string, editorUserId: string) => {
   return ddb
     .get({
       TableName: TABLE_NAME,
-      Key: key({ lineId, editorUserId }),
+      Key: key({ featureId, editorUserId }),
     })
     .promise()
     .then((data) => {
       if (data.Item) {
-        return attrsToItem(data.Item as DDBLineEditorAttrs);
+        return attrsToItem(data.Item as DDBMapFeatureEditorAttrs);
       }
       return null;
     });
 };
 
-export const getLineEditors = async (lineId: string) => {
+export const getMapFeatureEditors = async (featureId: string) => {
   return ddb
     .query({
       TableName: TABLE_NAME,
@@ -69,32 +69,32 @@ export const getLineEditors = async (lineId: string) => {
         '#SK_SGI': keyFields.SK_GSI,
       },
       ExpressionAttributeValues: {
-        ':PK': keyUtils.PK.compose({ lineId }),
+        ':PK': keyUtils.PK.compose({ featureId }),
         ':SK_SGI': keyUtils.SK_GSI?.compose({}),
       },
     })
     .promise()
     .then((data) => {
       const items = data.Items || [];
-      return items.map((i) => attrsToItem(i as DDBLineEditorAttrs));
+      return items.map((i) => attrsToItem(i as DDBMapFeatureEditorAttrs));
     });
 };
 
-export const putLineEditor = async (line: DDBLineEditorItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(line) }).promise();
+export const putMapFeatureEditor = async (editor: DDBMapFeatureEditorItem) => {
+  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(editor) }).promise();
 };
 
-export const deleteLineEditor = async (lineId: string, editorUserId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ lineId, editorUserId }) }).promise();
+export const deleteMapFeatureEditor = async (featureId: string, editorUserId: string) => {
+  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, editorUserId }) }).promise();
 };
 
-export const deleteAllLineEditors = async (lineId: string) => {
-  const members = await getLineEditors(lineId);
+export const deleteAllMapFeatureEditors = async (featureId: string) => {
+  const editors = await getMapFeatureEditors(featureId);
 
   let processingItems: DocumentClient.BatchWriteItemRequestMap = {
-    [TABLE_NAME]: members.map((m) => ({
+    [TABLE_NAME]: editors.map((m) => ({
       DeleteRequest: {
-        Key: key({ lineId, editorUserId: m.editorUserId }),
+        Key: key({ featureId, editorUserId: m.editorUserId }),
       },
     })),
   };

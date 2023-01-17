@@ -117,3 +117,13 @@ export const destructKey = (key: string, index: number) => {
   const token = key.split(delimeter)[index];
   return token;
 };
+
+export const chunkArray = <T>(array: T[], chunkSize: number) => {
+  const temp = [];
+
+  for (let i = 0; i < array.length; i += chunkSize) {
+    temp.push(array.slice(i, i + chunkSize));
+  }
+
+  return temp;
+};

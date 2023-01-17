@@ -1,13 +1,18 @@
 import type { DynamoDBRecord, DynamoDBStreamHandler } from 'aws-lambda';
 import AWS from 'aws-sdk';
-import { lineDetailsDBUtils } from 'core/db';
+import { lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
 import { logger } from 'core/utils/logger';
 import { processLineDetailsOperation } from './lineHandler';
+import { processSpotDetailsOperation } from './spotHandler';
 
 logger.updateMeta({ lambdaName: 'ddbStreams' });
 
 const dynamodbStreamEventHandler: DynamoDBStreamHandler = async (event, context, callback) => {
   const promises = [];
+  if (process.env.DISABLE_STREAMS) {
+    callback(null);
+    return;
+  }
   for (const record of event.Records) {
     promises.push(
       processRecord(record).catch((err) => {
@@ -29,6 +34,10 @@ const processRecord = async (record: DynamoDBRecord) => {
   if (lineDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
     await processLineDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed line details operation:', { newItem, oldItem, eventName });
+  }
+  if (spotDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
+    await processSpotDetailsOperation(newItem, oldItem, eventName);
+    console.log('Processed spot details operation:', { newItem, oldItem, eventName });
   }
 };
 

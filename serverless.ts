@@ -31,6 +31,7 @@ const serverlessConfiguration: AWS = {
       SLACKMAP_APPLICATION_DATA_CLOUDFRONT_ID: '${ssm:/slackmap-data-cloudfrontId}',
       OAUTH2_CLIENT_ID_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-id}',
       OAUTH2_CLIENT_SECRET_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-secret}',
+      DISABLE_STREAMS: 'false',
     },
     iam: {
       role: {
