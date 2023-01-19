@@ -85,7 +85,7 @@ export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
     items.push(...queryResult.items);
 
     exclusiveStartKey = queryResult.lastEvaluatedKey;
-  } while (exclusiveStartKey && opts.limit && items.length < opts.limit);
+  } while (exclusiveStartKey && (opts.limit ? items.length < opts.limit : true));
   return {
     items,
     lastEvaluatedKey: exclusiveStartKey,
