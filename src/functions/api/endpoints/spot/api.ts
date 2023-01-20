@@ -17,7 +17,7 @@ export const getSpotDetails = async (req: Request, res: Response) => {
   if (!spot) {
     throw new Error('NotFound: Spot not found');
   }
-  const isUserEditor = await validateMapFeatureEditor(spot.spotId, req.claims?.sub);
+  const isUserEditor = await validateMapFeatureEditor(spot.spotId, req.user?.isaId);
   res.json(getSpotDetailsResponse(spot, isUserEditor));
 };
 
@@ -55,7 +55,7 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     restrictionLevel: body.restrictionLevel,
     restrictionInfo: body.restrictionInfo,
     extraInfo: body.extraInfo,
-    creatorUserId: requestClaims.sub,
+    creatorUserId: requestClaims.isaId,
     createdDateTime: new Date().toISOString(),
     lastModifiedDateTime: new Date().toISOString(),
   };
@@ -68,7 +68,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
   const spotId = req.params.id;
   const body = validateApiPayload(req.body, updateSpotSchema);
-  await validateMapFeatureEditor(spotId, req.claims?.sub, true);
+  await validateMapFeatureEditor(spotId, req.user?.isaId, true);
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -91,7 +91,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
 export const deleteSpot = async (req: Request, res: Response) => {
   const spotId = req.params.id;
-  await validateMapFeatureEditor(spotId, req.claims?.sub, true);
+  await validateMapFeatureEditor(spotId, req.user?.isaId, true);
   await db.deleteSpot(spotId);
   res.json({});
 };

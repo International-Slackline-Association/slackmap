@@ -97,7 +97,7 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
       Tags: [
         {
           Key: 'aws_backup',
-          Value: 'slackmap_default_backup',
+          Value: 'slackmap_default_backup-${sls:stage}',
         },
       ],
     },

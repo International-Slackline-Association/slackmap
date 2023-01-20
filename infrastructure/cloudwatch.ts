@@ -4,7 +4,7 @@ export const cloudwatchResources: NonNullable<AWS['resources']>['Resources'] = {
   ApplicationLogsGroup: {
     Type: 'AWS::Logs::LogGroup',
     Properties: {
-      LogGroupName: 'slackmap/applicationLogs',
+      LogGroupName: 'slackmap/applicationLogs-${sls:stage}',
       RetentionInDays: 90,
     },
   },

@@ -17,7 +17,7 @@ export const getLineDetails = async (req: Request, res: Response) => {
   if (!line) {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
-  const isUserEditor = await validateMapFeatureEditor(line.lineId, req.claims?.sub);
+  const isUserEditor = await validateMapFeatureEditor(line.lineId, req.user?.isaId);
   res.json(getLineDetailsResponse(line, isUserEditor));
 };
 
@@ -63,7 +63,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     restrictionInfo: body.restrictionInfo,
     extraInfo: body.extraInfo,
     isMeasured: isMeasured,
-    creatorUserId: requestClaims.sub,
+    creatorUserId: requestClaims.isaId,
     createdDateTime: new Date().toISOString(),
     lastModifiedDateTime: new Date().toISOString(),
     length: length,
@@ -78,7 +78,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
   const lineId = req.params.id;
   const body = validateApiPayload(req.body, updateLineSchema);
-  await validateMapFeatureEditor(lineId, req.claims?.sub, true);
+  await validateMapFeatureEditor(lineId, req.user?.isaId, true);
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -108,7 +108,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
-  await validateMapFeatureEditor(lineId, req.claims?.sub, true);
+  await validateMapFeatureEditor(lineId, req.user?.isaId, true);
   await db.deleteLine(lineId);
   res.json({});
 };

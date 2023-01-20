@@ -5,7 +5,7 @@ export const backupResources: NonNullable<AWS['resources']>['Resources'] = {
     Type: 'AWS::Backup::BackupPlan',
     Properties: {
       BackupPlan: {
-        BackupPlanName: 'slackmap_default_backup',
+        BackupPlanName: 'slackmap_default_backup-${sls:stage}',
         BackupPlanRule: [
           {
             RuleName: 'MonthlyBackups',
@@ -33,7 +33,7 @@ export const backupResources: NonNullable<AWS['resources']>['Resources'] = {
           {
             ConditionKey: 'aws_backup',
             ConditionType: 'STRINGEQUALS',
-            ConditionValue: 'slackmap_default_backup',
+            ConditionValue: 'slackmap_default_backup-${sls:stage}',
           },
         ],
       },

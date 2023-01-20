@@ -3,12 +3,19 @@ import { logger } from 'core/utils/logger';
 import jwt_decode from 'jwt-decode';
 import { parseExpectedError } from 'core/utils/error';
 import { getCurrentInvoke } from '@vendia/serverless-express';
+import { generateISAIdFromUsername } from 'core/utils';
 
 export const injectCommonlyUsedHeadersMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = (req.header('Authorization') || req.header('authorization')) as string;
   if (authHeader) {
     const claims: any = jwt_decode(authHeader.split(' ')[1]) as { [key: string]: string };
-    req.claims = claims;
+    if (claims) {
+      req.user = {
+        isaId: claims.sub && generateISAIdFromUsername(claims.sub),
+        email: claims.email,
+        sub: claims.sub,
+      };
+    }
   }
 
   next();

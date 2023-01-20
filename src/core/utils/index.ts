@@ -1,5 +1,6 @@
 import lodashAssignWith from 'lodash.assignwith';
 import cloneDeep from 'lodash.clonedeep';
+import * as crypto from 'crypto';
 
 type NullablePartial<T> = {
   [P in keyof T]?: T[P] | null;
@@ -26,4 +27,9 @@ export const assignFromSourceToTarget = <T>(
     }
   }
   return lodashAssignWith(cloneDeep(target), cloneDeep(source), customizer);
+};
+
+export const generateISAIdFromUsername = (username: string) => {
+  const hash = crypto.createHash('sha256').update(username).digest('hex');
+  return `ISA_${hash.substring(0, 8)}`.toUpperCase();
 };
