@@ -6,7 +6,7 @@ interface ParsedKeyAttrs {
 }
 
 interface NonKeyAttrs {
-  type?: SlacklineType;
+  type: SlacklineType;
   creatorUserId: string;
   geoJson: string; // Always FeatureCollection type
   name?: string;

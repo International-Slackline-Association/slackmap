@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
-export const createSpotSchema = z.object({
+const guideTypeEnum = z.enum(['parkingLot', 'campingSpot', 'accessPath', 'riggingPath', 'other']);
+export const createGuideSchema = z.object({
   geoJson: z.object({
     type: z.literal('FeatureCollection'),
     features: z.array(z.object({}).passthrough()).nonempty(),
   }),
-  name: z.string().max(128).optional(),
+  type: guideTypeEnum,
   description: z.string().max(512).optional(),
-  accessInfo: z.string().max(512).optional(),
-  contactInfo: z.string().max(512).optional(),
-  restrictionLevel: z.enum(['partial', 'full', 'none']).optional(),
-  extraInfo: z.string().max(512).optional(),
-  restrictionInfo: z.string().max(512).optional(),
   images: z
     .object({
       id: z.string().max(256).optional(),
@@ -24,21 +20,16 @@ export const createSpotSchema = z.object({
     .array()
     .optional(),
 });
-export type CreateSpotPostBody = z.infer<typeof createSpotSchema>;
+export type CreateGuidePostBody = z.infer<typeof createGuideSchema>;
 
-export const updateSpotSchema = z
+export const updateGuideSchema = z
   .object({
     geoJson: z.object({
       type: z.literal('FeatureCollection'),
       features: z.array(z.object({}).passthrough()).nonempty(),
     }),
-    name: z.string().max(128).optional(),
+    type: guideTypeEnum,
     description: z.string().max(512).optional(),
-    accessInfo: z.string().max(512).optional(),
-    contactInfo: z.string().max(512).optional(),
-    restrictionLevel: z.enum(['partial', 'full', 'none']).optional(),
-    extraInfo: z.string().max(512).optional(),
-    restrictionInfo: z.string().max(512).optional(),
     images: z
       .object({
         id: z.string().max(256).optional(),
@@ -53,4 +44,4 @@ export const updateSpotSchema = z
   })
   .strict();
 
-export type UpdateSpotPostBody = z.infer<typeof updateSpotSchema>;
+export type UpdateGuidePostBody = z.infer<typeof updateGuideSchema>;

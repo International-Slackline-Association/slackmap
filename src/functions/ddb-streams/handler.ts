@@ -1,7 +1,8 @@
 import type { DynamoDBRecord, DynamoDBStreamHandler } from 'aws-lambda';
 import AWS from 'aws-sdk';
-import { lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
+import { guideDetailsDBUtils, lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
 import { logger } from 'core/utils/logger';
+import { processGuideDetailsOperation } from './guideHandler';
 import { processLineDetailsOperation } from './lineHandler';
 import { processSpotDetailsOperation } from './spotHandler';
 
@@ -38,6 +39,10 @@ const processRecord = async (record: DynamoDBRecord) => {
   if (spotDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
     await processSpotDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed spot details operation:', { newItem, oldItem, eventName });
+  }
+  if (guideDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
+    await processGuideDetailsOperation(newItem, oldItem, eventName);
+    console.log('Processed guide details operation:', { newItem, oldItem, eventName });
   }
 };
 
