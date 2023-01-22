@@ -18,6 +18,7 @@ interface NonKeyAttrs {
   coverImageUrl?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
+  images?: { s3Key: string; id: string; isCover?: boolean }[];
 }
 
 export type DDBSpotDetailItem = ParsedKeyAttrs & NonKeyAttrs;

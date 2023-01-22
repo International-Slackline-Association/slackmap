@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid';
 import { validateSpotGeoJson } from 'core/features/spot/validations';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { logger } from 'core/utils/logger';
+import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 
 export const getSpotDetails = async (req: Request, res: Response) => {
   const spot = await db.getSpotDetails(req.params.id);
@@ -45,6 +46,8 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     spotId: spotId,
   });
 
+  const spotImages = await updateFeatureImagesInS3(spotId, body.images);
+
   const spot: DDBSpotDetailItem = {
     spotId,
     geoJson: JSON.stringify(processedGeoJson),
@@ -58,6 +61,7 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     creatorUserId: requestClaims.isaId,
     createdDateTime: new Date().toISOString(),
     lastModifiedDateTime: new Date().toISOString(),
+    images: spotImages,
   };
   await db.putSpot(spot);
   res.json(getSpotDetailsResponse(spot));
@@ -81,8 +85,10 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
     throw new Error('Validation: Invalid geoJson');
   }
 
+  const spotImages = await updateFeatureImagesInS3(spotId, body.images);
+
   const processedGeoJson = processSpotGeoJson(geoJson, { spotId });
-  const payload = { ...req.body, geoJson: JSON.stringify(processedGeoJson) };
+  const payload = { ...req.body, images: spotImages, geoJson: JSON.stringify(processedGeoJson) };
   const updatedSpot = assignFromSourceToTarget(payload, spot);
   updatedSpot.lastModifiedDateTime = new Date().toISOString();
   await db.putSpot(updatedSpot);

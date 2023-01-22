@@ -11,6 +11,7 @@ import * as turf from '@turf/turf';
 import { validateMapFeatureEditor } from 'core/features/mapFeature';
 import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
+import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 
 export const getLineDetails = async (req: Request, res: Response) => {
   const line = await db.getLineDetails(req.params.id);
@@ -48,6 +49,8 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     length: length,
   });
 
+  const lineImages = await updateFeatureImagesInS3(lineId, body.images);
+
   const isMeasured = body.length ? body.isMeasured : false;
   const line: DDBLineDetailItem = {
     lineId,
@@ -68,6 +71,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     lastModifiedDateTime: new Date().toISOString(),
     length: length,
     height: body.height,
+    images: lineImages,
   };
   await db.putLine(line);
   res.json(getLineDetailsResponse(line));
@@ -99,7 +103,9 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
     length: length,
   });
 
-  const payload = { ...req.body, length, geoJson: JSON.stringify(processedGeoJson) };
+  const lineImages = await updateFeatureImagesInS3(lineId, body.images);
+
+  const payload = { ...req.body, images: lineImages, length, geoJson: JSON.stringify(processedGeoJson) };
   const updatedLine = assignFromSourceToTarget(payload, line);
   updatedLine.lastModifiedDateTime = new Date().toISOString();
   await db.putLine(updatedLine);

@@ -23,9 +23,9 @@ interface NonKeyAttrs {
   restrictionLevel?: SlacklineRestrictionLevel;
   restrictionInfo?: string;
   extraInfo?: string;
-  coverImageUrl?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
+  images?: { s3Key: string; id: string; isCover?: boolean }[];
 }
 
 export type DDBLineDetailItem = ParsedKeyAttrs & NonKeyAttrs;

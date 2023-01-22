@@ -18,6 +18,17 @@ export const createLineSchema = z.object({
   extraInfo: z.string().max(512).optional(),
   restrictionInfo: z.string().max(512).optional(),
   isMeasured: z.boolean().optional(),
+  images: z
+    .object({
+      id: z.string().max(256).optional(),
+      content: z
+        .string()
+        .max(1024 * 1024 * 3)
+        .optional(),
+      isCover: z.boolean().optional(),
+    })
+    .array()
+    .optional(),
 });
 export type CreateLinePostBody = z.infer<typeof createLineSchema>;
 
@@ -40,6 +51,17 @@ export const updateLineSchema = z
     extraInfo: z.string().max(512).optional(),
     restrictionInfo: z.string().max(512).optional(),
     isMeasured: z.boolean().optional(),
+    images: z
+      .object({
+        id: z.string().max(256).optional(),
+        content: z
+          .string()
+          .max(1024 * 1024 * 3)
+          .optional(),
+        isCover: z.boolean().optional(),
+      })
+      .array()
+      .optional(),
   })
   .strict();
 

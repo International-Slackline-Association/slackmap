@@ -19,9 +19,9 @@ export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: b
     contactInfo: item.contactInfo,
     restrictionLevel: item.restrictionLevel,
     extraInfo: item.extraInfo,
-    coverImageUrl: item.coverImageUrl,
     restrictionInfo: item.restrictionInfo,
     isMeasured: item.isMeasured,
     isUserEditor: isUserEditor,
+    images: item.images,
   };
 };

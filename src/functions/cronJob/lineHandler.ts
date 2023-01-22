@@ -6,7 +6,6 @@ import isEqual from 'lodash.isequal';
 import { getAuthToken } from 'core/utils/auth';
 import * as accountApi from 'core/externalApi/account-api';
 import { deleteAllMapFeatureEditors } from 'core/db';
-import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 
 export const processLineDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -43,6 +42,5 @@ export const processLineDetailsOperation = async (
     const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
     await deleteAllMapFeatureEditors(oldLine.lineId);
-    await deleteAllFeatureImages(oldLine.lineId);
   }
 };

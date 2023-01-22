@@ -1,8 +1,9 @@
 import type { AWS } from '@serverless/typescript';
 
 import api from '@functions/api/lambda';
-import logger from '@functions/logger';
+import logger from '@functions/logger/lambda';
 import ddbStreams from '@functions/ddb-streams/lambda';
+import cronJob from '@functions/cronJob/lambda';
 
 import { dynamodbResources } from 'infrastructure/dynamodb';
 import { cloudwatchResources } from 'infrastructure/cloudwatch';
@@ -28,6 +29,7 @@ const serverlessConfiguration: AWS = {
       SLACKMAP_TABLE_NAME: { Ref: 'SlackmapTable' },
       APPLICATION_LOG_GROUP_NAME: { Ref: 'ApplicationLogsGroup' },
       SLACKMAP_APPLICATION_DATA_S3_BUCKET: { Ref: 'SlackMapApplicationDataS3Bucket' },
+      SLACKMAP_IMAGES_S3_BUCKET: { Ref: 'SlackMapImagesS3Bucket' },
       OAUTH2_CLIENT_ID_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-id}',
       OAUTH2_CLIENT_SECRET_ISA_ACCOUNT: '${ssm:/slackmap-isa-account-client-secret}',
       DISABLE_STREAMS: 'false',
@@ -55,6 +57,15 @@ const serverlessConfiguration: AWS = {
           },
           {
             Effect: 'Allow',
+            Action: ['s3:*'],
+            Resource: [
+              {
+                'Fn::Join': ['', [{ 'Fn::GetAtt': ['SlackMapImagesS3Bucket', 'Arn'] }, '*']],
+              },
+            ],
+          },
+          {
+            Effect: 'Allow',
             Action: ['logs:*'],
             Resource: [
               {
@@ -72,17 +83,12 @@ const serverlessConfiguration: AWS = {
             Action: ['ses:VerifyEmailIdentity', 'ses:SendCustomVerificationEmail', 'ses:SendEmail'],
             Resource: '*',
           },
-          {
-            Effect: 'Allow',
-            Action: ['cloudfront:CreateInvalidation'],
-            Resource: '*',
-          },
         ],
       },
     },
   },
   // import the function via paths
-  functions: { api, logger, ddbStreams },
+  functions: { api, logger, ddbStreams, cronJob },
   package: { individually: true },
   custom: {
     esbuild: {

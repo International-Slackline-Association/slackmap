@@ -15,5 +15,6 @@ export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: b
     coverImageUrl: item.coverImageUrl,
     restrictionInfo: item.restrictionInfo,
     isUserEditor: isUserEditor,
+    images: item.images,
   };
 };

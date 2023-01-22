@@ -18,4 +18,21 @@ export const s3Resources: NonNullable<AWS['resources']>['Resources'] = {
       },
     },
   },
+  SlackMapImagesS3Bucket: {
+    Type: 'AWS::S3::Bucket',
+    Properties: {
+      BucketName: 'slackmap-images-${sls:stage}',
+      CorsConfiguration: {
+        CorsRules: [
+          {
+            AllowedHeaders: ['*'],
+            AllowedMethods: ['GET'],
+            AllowedOrigins: ['*'],
+            ExposedHeaders: [],
+            MaxAge: 3600,
+          },
+        ],
+      },
+    },
+  },
 };

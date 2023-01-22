@@ -25,5 +25,5 @@ export const verifyRequestClaims = (req: Request) => {
   if (!req.user.isaId) {
     throw new Error('Unauthorized: Missing sub claim');
   }
-  return req.user as { isaId: string; sub: string; email?: string} ;
+  return req.user as { isaId: string; sub: string; email?: string };
 };
