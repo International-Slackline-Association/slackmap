@@ -7,6 +7,7 @@ import { getAuthToken } from 'core/utils/auth';
 import * as accountApi from 'core/externalApi/account-api';
 import { deleteAllMapFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
+import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
 
 export const processSpotDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -28,6 +29,7 @@ export const processSpotDetailsOperation = async (
         editorSurname: isaUser.surname,
       });
     }
+    await refreshOrganizationMemberEditorsOfFeature(newSpot.spotId, JSON.parse(newSpot.geoJson));
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {

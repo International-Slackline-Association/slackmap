@@ -14,7 +14,7 @@ const lambda: NonNullable<AWS['functions']>[0] = {
       },
     },
   ],
-  timeout: 120,
+  timeout: 180,
   logRetentionInDays: 90,
 };
 

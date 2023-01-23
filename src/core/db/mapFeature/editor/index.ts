@@ -1,6 +1,6 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
-import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs } from './types';
+import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs, EditorGrantType } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
 import { composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
 
@@ -88,8 +88,11 @@ export const deleteMapFeatureEditor = async (featureId: string, editorUserId: st
   return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, editorUserId }) }).promise();
 };
 
-export const deleteAllMapFeatureEditors = async (featureId: string) => {
-  const editors = await getMapFeatureEditors(featureId);
+export const deleteAllMapFeatureEditors = async (featureId: string, opts: { grantType?: EditorGrantType } = {}) => {
+  let editors = await getMapFeatureEditors(featureId);
+  if (opts.grantType) {
+    editors = editors.filter((m) => m.grantedThrough === opts.grantType);
+  }
 
   let processingItems: DocumentClient.BatchWriteItemRequestMap = {
     [TABLE_NAME]: editors.map((m) => ({

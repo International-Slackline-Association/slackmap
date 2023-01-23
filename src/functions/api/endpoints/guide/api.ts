@@ -12,6 +12,7 @@ import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { validateGuideGeoJson } from 'core/features/guide/validations';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { GuideType } from 'core/types';
+import { logger } from 'core/utils/logger';
 
 export const getGuideDetails = async (req: Request, res: Response) => {
   const guide = await db.getGuideDetails(req.params.id);
@@ -92,6 +93,8 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
   const updatedGuide = assignFromSourceToTarget(payload, guide);
   updatedGuide.lastModifiedDateTime = new Date().toISOString();
   await db.putGuide(updatedGuide);
+
+  logger.info('updated guide', { user: req.user, updatedGuide });
   res.json(getGuideDetailsResponse(updatedGuide));
 };
 
@@ -99,6 +102,8 @@ export const deleteGuide = async (req: Request, res: Response) => {
   const guideId = req.params.id;
   await validateMapFeatureEditor(guideId, req.user?.isaId, true);
   await db.deleteGuide(guideId);
+
+  logger.info('deleted guide', { user: req.user, guideId });
   res.json({});
 };
 

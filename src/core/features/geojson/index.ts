@@ -7,6 +7,7 @@ import { optimizeGeoJsonFeature } from './utils';
 import zlib from 'zlib';
 import { guideTypeLabel } from '../guide';
 import { GuideType, SlacklineType } from 'core/types';
+import { AsyncReturnType } from 'type-fest';
 
 export const processLineGeoJson = (
   geoJson: FeatureCollection,
@@ -78,6 +79,7 @@ export const refreshLineGeoJsonFiles = async (
   } = {},
 ) => {
   let mainGeoJSON: FeatureCollection;
+  let allLines: AsyncReturnType<typeof db.getAllLines> | undefined;
 
   if (opts.lineIdToUpdate) {
     const line = await db.getLineDetails(opts.lineIdToUpdate);
@@ -96,7 +98,7 @@ export const refreshLineGeoJsonFiles = async (
       type: 'FeatureCollection',
       features: [],
     };
-    const allLines = await db.getAllLines();
+    allLines = await db.getAllLines();
     for (const line of allLines.items) {
       if (line) {
         const geoJson = processLineGeoJson(JSON.parse(line.geoJson), {
@@ -115,7 +117,7 @@ export const refreshLineGeoJsonFiles = async (
   const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
   await writeToS3('geojson/lines/points.geojson', pointsGeoJSON);
   await refreshClusterPointsGeoJsonFiles({ linePoints: pointsGeoJSON });
-  return { mainGeoJSON, pointsGeoJSON };
+  return { mainGeoJSON, pointsGeoJSON, allLines };
 };
 
 export const refreshSpotGeoJsonFiles = async (
@@ -124,6 +126,7 @@ export const refreshSpotGeoJsonFiles = async (
   } = {},
 ) => {
   let mainGeoJSON: FeatureCollection;
+  let allSpots: AsyncReturnType<typeof db.getAllSpots> | undefined;
 
   if (opts.spotIdToUpdate) {
     const spot = await db.getSpotDetails(opts.spotIdToUpdate);
@@ -157,7 +160,7 @@ export const refreshSpotGeoJsonFiles = async (
   const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
   await writeToS3('geojson/spots/points.geojson', pointsGeoJSON);
   await refreshClusterPointsGeoJsonFiles({ spotPoints: pointsGeoJSON });
-  return { mainGeoJSON, pointsGeoJSON };
+  return { mainGeoJSON, pointsGeoJSON, allSpots };
 };
 
 export const refreshGuideGeoJsonFiles = async (
@@ -166,6 +169,7 @@ export const refreshGuideGeoJsonFiles = async (
   } = {},
 ) => {
   let mainGeoJSON: FeatureCollection;
+  let allGuides: AsyncReturnType<typeof db.getAllGuides> | undefined;
 
   if (opts.guideIdToUpdate) {
     const guide = await db.getGuideDetails(opts.guideIdToUpdate);
@@ -201,7 +205,7 @@ export const refreshGuideGeoJsonFiles = async (
   const pointsGeoJSON = generatePointsGeoJson(mainGeoJSON);
   await writeToS3('geojson/guides/points.geojson', pointsGeoJSON);
   await refreshClusterPointsGeoJsonFiles({ guidePoints: pointsGeoJSON });
-  return { mainGeoJSON, pointsGeoJSON };
+  return { mainGeoJSON, pointsGeoJSON, allGuides };
 };
 
 const refreshClusterPointsGeoJsonFiles = async (

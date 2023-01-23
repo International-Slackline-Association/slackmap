@@ -5,6 +5,7 @@ import * as accountApi from 'core/externalApi/account-api';
 import { deleteAllMapFeatureEditors, guideDetailsDBUtils } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshGuideGeoJsonFiles } from 'core/features/geojson';
+import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
 
 export const processGuideDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -27,6 +28,7 @@ export const processGuideDetailsOperation = async (
         editorSurname: isaUser.surname,
       });
     }
+    await refreshOrganizationMemberEditorsOfFeature(newGuide.guideId, JSON.parse(newGuide.geoJson));
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {

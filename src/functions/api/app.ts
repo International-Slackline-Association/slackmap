@@ -9,11 +9,12 @@ import { guideApi } from './endpoints/guide/api';
 const app = express();
 
 const setupExpressApp = (app: Express) => {
-  app.use(json());
+  app.use(json({ limit: '3mb' }));
   app.use(cors());
   app.use(
     urlencoded({
       extended: true,
+      limit: '3mb',
     }),
   );
 };

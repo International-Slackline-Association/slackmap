@@ -92,6 +92,8 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
   const updatedSpot = assignFromSourceToTarget(payload, spot);
   updatedSpot.lastModifiedDateTime = new Date().toISOString();
   await db.putSpot(updatedSpot);
+
+  logger.info('updated spot', { user: req.user, updatedSpot });
   res.json(getSpotDetailsResponse(updatedSpot));
 };
 
@@ -99,6 +101,8 @@ export const deleteSpot = async (req: Request, res: Response) => {
   const spotId = req.params.id;
   await validateMapFeatureEditor(spotId, req.user?.isaId, true);
   await db.deleteSpot(spotId);
+
+  logger.info('deleted spot', { user: req.user, spotId });
   res.json({});
 };
 

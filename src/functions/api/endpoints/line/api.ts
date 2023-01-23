@@ -12,6 +12,7 @@ import { validateMapFeatureEditor } from 'core/features/mapFeature';
 import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
+import { logger } from 'core/utils/logger';
 
 export const getLineDetails = async (req: Request, res: Response) => {
   const line = await db.getLineDetails(req.params.id);
@@ -109,6 +110,8 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
   const updatedLine = assignFromSourceToTarget(payload, line);
   updatedLine.lastModifiedDateTime = new Date().toISOString();
   await db.putLine(updatedLine);
+
+  logger.info('updated line', { user: req.user, updatedLine });
   res.json(getLineDetailsResponse(updatedLine));
 };
 
@@ -116,6 +119,7 @@ export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
   await validateMapFeatureEditor(lineId, req.user?.isaId, true);
   await db.deleteLine(lineId);
+  logger.info('deleted line', { user: req.user, lineId });
   res.json({});
 };
 
