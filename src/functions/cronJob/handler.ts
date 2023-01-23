@@ -1,4 +1,4 @@
-import type { ScheduledHandler } from 'aws-lambda';
+import type { Handler } from 'aws-lambda';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
@@ -9,9 +9,14 @@ import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeat
 
 logger.updateMeta({ lambdaName: 'cronJob' });
 
-const cronJobHandler: ScheduledHandler = async (event, context, callback) => {
+interface EventPayload {
+  featureId?: string;
+}
+
+const cronJobHandler: Handler<EventPayload> = async (event, context, callback) => {
   try {
-    await runGenericCronJob();
+    const featureId = event?.featureId;
+    await runGenericCronJob(featureId);
   } catch (err) {
     if (err instanceof Error) {
       logger.error('cronJobHandler failed', { message: err.message, stack: err.stack });
@@ -21,7 +26,7 @@ const cronJobHandler: ScheduledHandler = async (event, context, callback) => {
   }
 };
 
-const runGenericCronJob = async () => {
+const runGenericCronJob = async (onlyForFeature?: string) => {
   const { allLines } = await refreshLineGeoJsonFiles();
   const { allSpots } = await refreshSpotGeoJsonFiles();
   const { allGuides } = await refreshGuideGeoJsonFiles();
@@ -31,6 +36,9 @@ const runGenericCronJob = async () => {
   for (const f of allFeatures) {
     const feature = genericFeature(f);
     if (!feature) {
+      continue;
+    }
+    if (onlyForFeature && onlyForFeature !== feature.id) {
       continue;
     }
     await refreshOrganizationMemberEditorsOfFeature(feature.id, feature.geoJson);

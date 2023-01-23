@@ -143,7 +143,7 @@ export const refreshSpotGeoJsonFiles = async (
       type: 'FeatureCollection',
       features: [],
     };
-    const allSpots = await db.getAllSpots();
+    allSpots = await db.getAllSpots();
     for (const spot of allSpots.items) {
       if (spot) {
         const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
@@ -187,7 +187,7 @@ export const refreshGuideGeoJsonFiles = async (
       type: 'FeatureCollection',
       features: [],
     };
-    const allGuides = await db.getAllGuides();
+    allGuides = await db.getAllGuides();
     for (const guide of allGuides.items) {
       if (guide) {
         const geoJson = processGuideGeoJson(JSON.parse(guide.geoJson), {
