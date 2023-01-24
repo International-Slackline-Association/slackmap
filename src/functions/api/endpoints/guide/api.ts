@@ -19,7 +19,7 @@ export const getGuideDetails = async (req: Request, res: Response) => {
   if (!guide) {
     throw new Error(`NotFound: Guide ${req.params.id} not found`);
   }
-  const isUserEditor = await validateMapFeatureEditor(guide.guideId, req.user?.isaId);
+  const isUserEditor = Boolean(await validateMapFeatureEditor(guide.guideId, req.user?.isaId));
   res.json(getGuideDetailsResponse(guide, isUserEditor));
 };
 

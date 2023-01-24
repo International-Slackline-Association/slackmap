@@ -1,7 +1,7 @@
 import { FeatureCollection } from '@turf/turf';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 
-export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: boolean) => {
+export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: boolean, hasNoEditors?: boolean) => {
   return {
     id: item.lineId,
     name: item.name,
@@ -21,7 +21,8 @@ export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: b
     extraInfo: item.extraInfo,
     restrictionInfo: item.restrictionInfo,
     isMeasured: item.isMeasured,
-    isUserEditor: isUserEditor,
     images: item.images,
+    isUserEditor: isUserEditor,
+    hasNoEditors: hasNoEditors,
   };
 };

@@ -1,11 +1,10 @@
 import { FeatureCollection, MultiPolygon, Polygon } from '@turf/turf';
-import axios from 'axios';
 import * as db from 'core/db';
 import * as turf from '@turf/turf';
 import { getOrganizationMembers } from 'core/externalApi/account-api';
 import { calculateCenterOfFeature } from '../geojson/utils';
 import { getAssociationsData } from 'core/externalApi/slackline-data-api';
-
+import * as accountApi from 'core/externalApi/account-api';
 
 export const refreshOrganizationMemberEditorsOfFeature = async (
   featureId: string,
@@ -30,7 +29,7 @@ export const refreshOrganizationMemberEditorsOfFeature = async (
       }
     }
   }
-  await db.deleteAllMapFeatureEditors(featureId, { grantType: 'organizationMembership' });
+  await db.deleteAllMapFeatureEditors(featureId, { exceptGrantType: 'organizationMembership' });
 
   const alreadyAddedMembersForFeature = new Set<string>();
   for (const assocId of associationsContainingFeature) {
@@ -64,16 +63,38 @@ export const refreshOrganizationMemberEditorsOfFeature = async (
   }
 };
 
+export const addTemporaryEditorToMapFeature = async (featureId: string, userId: string) => {
+  const hasNoEditors = await validateMapFeatureHasNoEditors(featureId);
+
+  if (hasNoEditors) {
+    const isaUser = await accountApi.getBasicUserDetails(userId);
+    await db.putMapFeatureEditor({
+      featureId: featureId,
+      editorUserId: userId,
+      createdDateTime: new Date().toISOString(),
+      grantedThrough: 'temporary',
+      userIdentityType: isaUser.identityType,
+      editorName: isaUser.name,
+      editorSurname: isaUser.surname,
+    });
+  }
+};
+
 export const validateMapFeatureEditor = async (featureId: string, userId?: string, shouldThrow?: boolean) => {
   if (!userId) {
     if (shouldThrow) {
       throw new Error('Forbidden: User is not logged in');
     }
-    return false;
+    return null;
   }
   const featureEditor = await db.getMapFeatureEditor(featureId, userId);
   if (!featureEditor && shouldThrow) {
     throw new Error('Forbidden: User is not an editor of this feature');
   }
-  return Boolean(featureEditor);
+  return featureEditor;
+};
+
+export const validateMapFeatureHasNoEditors = async (featureId: string) => {
+  const editors = await db.getMapFeatureEditors(featureId, { limit: 1 });
+  return editors.length === 0;
 };

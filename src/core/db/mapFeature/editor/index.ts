@@ -59,10 +59,11 @@ export const getMapFeatureEditor = async (featureId: string, editorUserId: strin
     });
 };
 
-export const getMapFeatureEditors = async (featureId: string) => {
+export const getMapFeatureEditors = async (featureId: string, opts: { limit?: number } = {}) => {
   return ddb
     .query({
       TableName: TABLE_NAME,
+      Limit: opts.limit,
       KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
       ExpressionAttributeNames: {
         '#PK': keyFields.PK,
@@ -88,10 +89,13 @@ export const deleteMapFeatureEditor = async (featureId: string, editorUserId: st
   return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, editorUserId }) }).promise();
 };
 
-export const deleteAllMapFeatureEditors = async (featureId: string, opts: { grantType?: EditorGrantType } = {}) => {
+export const deleteAllMapFeatureEditors = async (
+  featureId: string,
+  opts: { exceptGrantType?: EditorGrantType } = {},
+) => {
   let editors = await getMapFeatureEditors(featureId);
-  if (opts.grantType) {
-    editors = editors.filter((m) => m.grantedThrough === opts.grantType);
+  if (opts.exceptGrantType) {
+    editors = editors.filter((m) => m.grantedThrough !== opts.exceptGrantType);
   }
 
   let processingItems: DocumentClient.BatchWriteItemRequestMap = {
