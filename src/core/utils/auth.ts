@@ -42,9 +42,5 @@ export const getAuthToken = async (
       };
       authInfoDict['existingToken'] = tokenToSave;
       return tokenToSave;
-    })
-    .catch((e) => {
-      console.log(e);
-      throw e;
     });
 };

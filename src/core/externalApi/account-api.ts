@@ -2,6 +2,10 @@ import axios, { AxiosError, RawAxiosRequestHeaders } from 'axios';
 import { getAuthToken } from 'core/utils/auth';
 import { OrganizationMembersResponse } from './type';
 
+const cache = {
+  organizationMembers: {} as { [key: string]: OrganizationMembersResponse[] },
+};
+
 export const accountApi = axios.create({
   baseURL: `https://qvjz6zmwx1.execute-api.eu-central-1.amazonaws.com/prod/scoped`,
 });
@@ -13,10 +17,6 @@ const generateHeaders = async (isaId: string) => {
   headers['Authorization'] = `${authToken.tokenType} ${authToken.accessToken}`;
   headers['x-isa-id'] = isaId;
   return headers;
-};
-
-const cache = {
-  organizationMembers: {} as { [key: string]: OrganizationMembersResponse[] },
 };
 
 export const getBasicUserDetails = async (isaId: string) => {

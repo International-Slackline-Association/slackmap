@@ -3,53 +3,31 @@ import axios from 'axios';
 import * as db from 'core/db';
 import * as turf from '@turf/turf';
 import { getOrganizationMembers } from 'core/externalApi/account-api';
+import { calculateCenterOfFeature } from '../geojson/utils';
+import { getAssociationsData } from 'core/externalApi/slackline-data-api';
 
-const cache = {
-  associationsGeoJson: undefined as FeatureCollection<Polygon | MultiPolygon> | undefined,
-  associationsInfo: undefined as { [key: string]: { id: string; name: string } } | undefined,
-};
 
-const getAssociationsData = async () => {
-  if (cache.associationsGeoJson && cache.associationsInfo) {
-    return {
-      associationsGeoJson: cache.associationsGeoJson,
-      associationsInfo: cache.associationsInfo,
-    };
-  }
-  const geoJson = await axios
-    .get(
-      'https://raw.githubusercontent.com/International-Slackline-Association/slackline-data/master/communities/associations/associations.geojson',
-    )
-    .then((r) => r.data);
-  const details = await axios
-    .get(
-      'https://raw.githubusercontent.com/International-Slackline-Association/slackline-data/master/communities/associations/associations.json',
-    )
-    .then((r) => r.data);
-
-  const info: { [key: string]: { id: string; name: string } } = {};
-
-  for (const a of details) {
-    info[a.id] = a;
-  }
-
-  cache.associationsGeoJson = geoJson as FeatureCollection<Polygon | MultiPolygon>;
-  cache.associationsInfo = info;
-
-  return {
-    associationsGeoJson: cache.associationsGeoJson,
-    associationsInfo: cache.associationsInfo,
-  };
-};
-
-export const refreshOrganizationMemberEditorsOfFeature = async (featureId: string, geoJson: FeatureCollection) => {
+export const refreshOrganizationMemberEditorsOfFeature = async (
+  featureId: string,
+  opts: { countryCode?: string; geoJson: FeatureCollection },
+) => {
   const { associationsGeoJson, associationsInfo } = await getAssociationsData();
 
   const associationsContainingFeature: string[] = [];
   for (const assoc of associationsGeoJson.features) {
-    const center = turf.centerOfMass(geoJson);
-    if (turf.booleanPointInPolygon(center, assoc)) {
-      associationsContainingFeature.push(...(assoc.properties?.organizationIds ?? []));
+    const organizations = assoc.properties?.organizationIds;
+    if (!organizations) {
+      continue;
+    }
+    if (opts.countryCode) {
+      if (assoc.properties?.id === opts.countryCode) {
+        associationsContainingFeature.push(...organizations);
+      }
+    } else {
+      const center = calculateCenterOfFeature(opts.geoJson);
+      if (turf.booleanPointInPolygon(center, assoc)) {
+        associationsContainingFeature.push(...organizations);
+      }
     }
   }
   await db.deleteAllMapFeatureEditors(featureId, { grantType: 'organizationMembership' });

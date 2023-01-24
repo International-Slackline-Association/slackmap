@@ -3,11 +3,13 @@ import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
-import { getAuthToken } from 'core/utils/auth';
 import * as accountApi from 'core/externalApi/account-api';
 import { deleteAllMapFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import { FeatureCollection } from '@turf/turf';
+import { DDBLineDetailItem } from 'core/db/line/details/types';
 
 export const processLineDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -30,7 +32,7 @@ export const processLineDetailsOperation = async (
         editorSurname: isaUser.surname,
       });
     }
-    await refreshOrganizationMemberEditorsOfFeature(newLine.lineId, JSON.parse(newLine.geoJson));
+    await refreshCountryAndEditors(newLine);
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {
@@ -38,6 +40,7 @@ export const processLineDetailsOperation = async (
     const updatedLine = lineDetailsDBUtils.attrsToItem(newItem);
     if (!isEqual(oldLine.geoJson, updatedLine.geoJson)) {
       await refreshLineGeoJsonFiles({ lineIdToUpdate: updatedLine.lineId });
+      await refreshCountryAndEditors(updatedLine);
     }
   }
 
@@ -47,4 +50,15 @@ export const processLineDetailsOperation = async (
     await deleteAllMapFeatureEditors(oldLine.lineId);
     await deleteAllFeatureImages(oldLine.lineId);
   }
+};
+
+const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(line.geoJson) as FeatureCollection);
+  if (countryCode && countryCode !== line.country) {
+    await db.updateLineField(line.lineId, 'country', countryCode);
+  }
+  await refreshOrganizationMemberEditorsOfFeature(line.lineId, {
+    countryCode,
+    geoJson: JSON.parse(line.geoJson),
+  });
 };

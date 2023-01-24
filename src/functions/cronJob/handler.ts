@@ -4,8 +4,7 @@ import { DDBLineDetailItem } from 'core/db/line/details/types';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { refreshGuideGeoJsonFiles, refreshLineGeoJsonFiles, refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import { logger } from 'core/utils/logger';
-
-import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import { FeatureCollection } from '@turf/turf';
 
 logger.updateMeta({ lambdaName: 'cronJob' });
 
@@ -33,15 +32,19 @@ const runGenericCronJob = async (onlyForFeature?: string) => {
 
   const allFeatures = [...(allLines?.items ?? []), ...(allSpots?.items ?? []), ...(allGuides?.items ?? [])];
 
-  for (const f of allFeatures) {
+  console.log('Lines:', allLines?.items?.length);
+  console.log('Spots:', allSpots?.items?.length);
+  console.log('Guides:', allGuides?.items?.length);
+  for (const f of allFeatures.slice(0, 900)) {
     const feature = genericFeature(f);
+
     if (!feature) {
       continue;
     }
+
     if (onlyForFeature && onlyForFeature !== feature.id) {
       continue;
     }
-    await refreshOrganizationMemberEditorsOfFeature(feature.id, feature.geoJson);
   }
 };
 
@@ -50,21 +53,24 @@ const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuid
     return {
       type: 'line',
       id: feature.lineId,
-      geoJson: JSON.parse(feature.geoJson),
+      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
+      country: feature.country,
     };
   }
   if ('spotId' in feature) {
     return {
       type: 'spot',
       id: feature.spotId,
-      geoJson: JSON.parse(feature.geoJson),
+      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
+      country: feature.country,
     };
   }
   if ('guideId' in feature) {
     return {
       type: 'guide',
       id: feature.guideId,
-      geoJson: JSON.parse(feature.geoJson),
+      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
+      country: feature.country,
     };
   }
 };

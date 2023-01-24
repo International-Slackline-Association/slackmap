@@ -149,6 +149,23 @@ export const putLine = async (line: DDBLineDetailItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(line) }).promise();
 };
 
+export const updateLineField = async <T extends keyof DDBLineDetailAttrs>(
+  lineId: string,
+  field: T,
+  value: DDBLineDetailAttrs[T],
+) => {
+  return ddb
+    .update({
+      TableName: TABLE_NAME,
+      Key: key({ lineId }),
+      UpdateExpression: 'SET #field = :value',
+      ExpressionAttributeNames: { '#field': field },
+      ExpressionAttributeValues: { ':value': value },
+      ConditionExpression: 'attribute_exists(PK)',
+    })
+    .promise();
+};
+
 export const deleteLine = async (lineId: string) => {
   return ddb.delete({ TableName: TABLE_NAME, Key: key({ lineId }) }).promise();
 };

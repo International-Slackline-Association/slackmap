@@ -8,6 +8,9 @@ import * as accountApi from 'core/externalApi/account-api';
 import { deleteAllMapFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import { FeatureCollection } from '@turf/turf';
 
 export const processSpotDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -29,7 +32,7 @@ export const processSpotDetailsOperation = async (
         editorSurname: isaUser.surname,
       });
     }
-    await refreshOrganizationMemberEditorsOfFeature(newSpot.spotId, JSON.parse(newSpot.geoJson));
+    await refreshCountryAndEditors(newSpot);
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {
@@ -37,6 +40,7 @@ export const processSpotDetailsOperation = async (
     const updatedSpot = spotDetailsDBUtils.attrsToItem(newItem);
     if (!isEqual(oldSpot.geoJson, updatedSpot.geoJson)) {
       await refreshSpotGeoJsonFiles({ spotIdToUpdate: updatedSpot.spotId });
+      await refreshCountryAndEditors(updatedSpot);
     }
   }
 
@@ -46,4 +50,15 @@ export const processSpotDetailsOperation = async (
     await deleteAllMapFeatureEditors(oldSpot.spotId);
     await deleteAllFeatureImages(oldSpot.spotId);
   }
+};
+
+const refreshCountryAndEditors = async (spot: DDBSpotDetailItem) => {
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(spot.geoJson) as FeatureCollection);
+  if (countryCode && countryCode !== spot.country) {
+    await db.updateSpotField(spot.spotId, 'country', countryCode);
+  }
+  await refreshOrganizationMemberEditorsOfFeature(spot.spotId, {
+    countryCode,
+    geoJson: JSON.parse(spot.geoJson),
+  });
 };

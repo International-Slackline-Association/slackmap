@@ -149,6 +149,23 @@ export const putSpot = async (spot: DDBSpotDetailItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(spot) }).promise();
 };
 
+export const updateSpotField = async <T extends keyof DDBSpotDetailAttrs>(
+  spotId: string,
+  field: T,
+  value: DDBSpotDetailAttrs[T],
+) => {
+  return ddb
+    .update({
+      TableName: TABLE_NAME,
+      Key: key({ spotId }),
+      UpdateExpression: 'SET #field = :value',
+      ExpressionAttributeNames: { '#field': field },
+      ExpressionAttributeValues: { ':value': value },
+      ConditionExpression: 'attribute_exists(PK)',
+    })
+    .promise();
+};
+
 export const deleteSpot = async (spotId: string) => {
   return ddb.delete({ TableName: TABLE_NAME, Key: key({ spotId }) }).promise();
 };

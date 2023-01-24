@@ -16,6 +16,8 @@ interface NonKeyAttrs {
   restrictionInfo?: string;
   extraInfo?: string;
   coverImageUrl?: string;
+  city?: string;
+  country?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
   images?: { s3Key: string; id: string; isCover?: boolean }[];

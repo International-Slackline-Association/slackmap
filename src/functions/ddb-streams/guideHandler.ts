@@ -6,6 +6,9 @@ import { deleteAllMapFeatureEditors, guideDetailsDBUtils } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshGuideGeoJsonFiles } from 'core/features/geojson';
 import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import { DDBGuideDetailAttrs, DDBGuideDetailItem } from 'core/db/guide/details/types';
+import { FeatureCollection } from '@turf/turf';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 
 export const processGuideDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -28,7 +31,7 @@ export const processGuideDetailsOperation = async (
         editorSurname: isaUser.surname,
       });
     }
-    await refreshOrganizationMemberEditorsOfFeature(newGuide.guideId, JSON.parse(newGuide.geoJson));
+    await refreshCountryAndEditors(newGuide);
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {
@@ -36,6 +39,7 @@ export const processGuideDetailsOperation = async (
     const updatedGuide = guideDetailsDBUtils.attrsToItem(newItem);
     if (!isEqual(oldGuide.geoJson, updatedGuide.geoJson)) {
       await refreshGuideGeoJsonFiles({ guideIdToUpdate: updatedGuide.guideId });
+      await refreshCountryAndEditors(updatedGuide);
     }
   }
 
@@ -45,4 +49,15 @@ export const processGuideDetailsOperation = async (
     await deleteAllMapFeatureEditors(oldGuide.guideId);
     await deleteAllFeatureImages(oldGuide.guideId);
   }
+};
+
+const refreshCountryAndEditors = async (guide: DDBGuideDetailItem) => {
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(guide.geoJson) as FeatureCollection);
+  if (countryCode && countryCode !== guide.country) {
+    await db.updateGuideField(guide.guideId, 'country', countryCode);
+  }
+  await refreshOrganizationMemberEditorsOfFeature(guide.guideId, {
+    countryCode,
+    geoJson: JSON.parse(guide.geoJson),
+  });
 };

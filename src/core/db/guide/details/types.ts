@@ -10,6 +10,8 @@ interface NonKeyAttrs {
   creatorUserId: string;
   geoJson: string; // Always FeatureCollection type
   description?: string;
+  city?: string;
+  country?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
   images?: { s3Key: string; id: string; isCover?: boolean }[];

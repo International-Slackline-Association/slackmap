@@ -116,6 +116,23 @@ export const putGuide = async (line: DDBGuideDetailItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(line) }).promise();
 };
 
+export const updateGuideField = async <T extends keyof DDBGuideDetailAttrs>(
+  guideId: string,
+  field: T,
+  value: DDBGuideDetailAttrs[T],
+) => {
+  return ddb
+    .update({
+      TableName: TABLE_NAME,
+      Key: key({ guideId }),
+      UpdateExpression: 'SET #field = :value',
+      ExpressionAttributeNames: { '#field': field },
+      ExpressionAttributeValues: { ':value': value },
+      ConditionExpression: 'attribute_exists(PK)',
+    })
+    .promise();
+};
+
 export const deleteGuide = async (guideId: string) => {
   return ddb.delete({ TableName: TABLE_NAME, Key: key({ guideId }) }).promise();
 };

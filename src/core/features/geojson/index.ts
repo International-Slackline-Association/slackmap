@@ -3,7 +3,7 @@ import { s3 } from 'core/aws/clients';
 import * as db from 'core/db';
 import { Feature, featureCollection, FeatureCollection, LineString } from '@turf/turf';
 import { invalidateCloudfrontCache } from 'core/aws/cloudfront';
-import { optimizeGeoJsonFeature } from './utils';
+import { calculateCenterOfFeature, optimizeGeoJsonFeature } from './utils';
 import zlib from 'zlib';
 import { guideTypeLabel } from '../guide';
 import { GuideType, SlacklineType } from 'core/types';
@@ -285,7 +285,7 @@ const generatePointsGeoJson = (geoJson: FeatureCollection) => {
 };
 
 const generatePointFeature = (feature: Feature) => {
-  const coordinates = calculatePoint(feature);
+  const coordinates = calculateCenterOfFeature(feature);
   const newFeature: Feature = {
     type: 'Feature',
     geometry: {
@@ -295,10 +295,6 @@ const generatePointFeature = (feature: Feature) => {
     properties: feature.properties,
   };
   return newFeature;
-};
-
-const calculatePoint = (geoJson: Feature) => {
-  return turf.centerOfMass(geoJson).geometry.coordinates;
 };
 
 const writeToS3 = async (key: string, geoJson: FeatureCollection) => {
