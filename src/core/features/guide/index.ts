@@ -10,6 +10,8 @@ export const guideTypeLabel = (type: GuideType) => {
       return 'Access Path';
     case 'riggingPath':
       return 'Rigging Path';
+    case 'information':
+      return 'Information';
     case 'other':
       return 'Other';
     default:

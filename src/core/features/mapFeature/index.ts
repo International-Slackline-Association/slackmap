@@ -29,7 +29,17 @@ export const refreshOrganizationMemberEditorsOfFeature = async (
       }
     }
   }
-  await db.deleteAllMapFeatureEditors(featureId, { exceptGrantType: 'organizationMembership' });
+  await db.deleteAllMapFeatureEditors(featureId, { grantTypes: ['organizationMembership', 'temporary'] });
+
+  await db.putMapFeatureEditor({
+    featureId: featureId,
+    editorUserId: 'ISA_C87BE5F6', // SlackMap Admin Account
+    createdDateTime: new Date().toISOString(),
+    grantedThrough: 'admin',
+    userIdentityType: 'individual',
+    editorName: 'SlackMap Admin',
+    editorSurname: '',
+  });
 
   const alreadyAddedMembersForFeature = new Set<string>();
   for (const assocId of associationsContainingFeature) {
@@ -96,5 +106,5 @@ export const validateMapFeatureEditor = async (featureId: string, userId?: strin
 
 export const validateMapFeatureHasNoEditors = async (featureId: string) => {
   const editors = await db.getMapFeatureEditors(featureId, { limit: 1 });
-  return editors.length === 0;
+  return editors.length === 0 || editors[0].grantedThrough === 'admin';
 };

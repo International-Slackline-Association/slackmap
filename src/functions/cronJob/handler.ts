@@ -5,6 +5,7 @@ import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { refreshGuideGeoJsonFiles, refreshLineGeoJsonFiles, refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import { logger } from 'core/utils/logger';
 import { FeatureCollection } from '@turf/turf';
+import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
 
 logger.updateMeta({ lambdaName: 'cronJob' });
 
@@ -35,17 +36,33 @@ const runGenericCronJob = async (onlyForFeature?: string) => {
   console.log('Lines:', allLines?.items?.length);
   console.log('Spots:', allSpots?.items?.length);
   console.log('Guides:', allGuides?.items?.length);
-  for (const f of allFeatures.slice(0, 900)) {
-    const feature = genericFeature(f);
+  let position = 0;
+  const batchSize = 100;
+  while (position < allFeatures.length) {
+    const itemsForBatch = allFeatures.slice(position, position + batchSize);
+    if (itemsForBatch.length === 0) {
+      break;
+    }
+    await batchProcessFeatures(itemsForBatch);
+    position += batchSize;
+  }
+};
 
+const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem)[]) => {
+  const promises = [];
+  for (const f of features) {
+    const feature = genericFeature(f);
     if (!feature) {
       continue;
     }
-
-    if (onlyForFeature && onlyForFeature !== feature.id) {
-      continue;
-    }
+    promises.push(
+      refreshOrganizationMemberEditorsOfFeature(feature.id, {
+        countryCode: feature.country,
+        geoJson: feature.geoJson,
+      }),
+    );
   }
+  return Promise.all(promises);
 };
 
 const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem) => {

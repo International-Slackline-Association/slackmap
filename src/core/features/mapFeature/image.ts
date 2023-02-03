@@ -77,7 +77,7 @@ const putFeatureImage = async (featureId: string, imageId: string, body: Buffer,
       Key: getS3KeyForFeatureImage(featureId, imageId, type),
       Body: body,
       ContentType: 'image/' + type,
-      CacheControl: 'public, max-age=31536000',
+      CacheControl: 'public, max-age=864000',
     })
     .promise();
 };

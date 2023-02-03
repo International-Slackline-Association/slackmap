@@ -17,6 +17,6 @@ interface NonKeyAttrs {
   lastModifiedDateTime?: string;
 }
 
-export type EditorGrantType = 'explicit' | 'organizationMembership' | 'temporary';
+export type EditorGrantType = 'explicit' | 'organizationMembership' | 'temporary' | 'admin';
 export type DDBMapFeatureEditorItem = ParsedKeyAttrs & NonKeyAttrs;
 export type DDBMapFeatureEditorAttrs = DDBTableKeyAttrs & NonKeyAttrs;

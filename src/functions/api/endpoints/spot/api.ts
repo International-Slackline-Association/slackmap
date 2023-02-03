@@ -5,7 +5,11 @@ import { getSpotDetailsResponse } from './dto';
 import { FeatureCollection } from '@turf/turf';
 import { CreateSpotPostBody, createSpotSchema, UpdateSpotPostBody, updateSpotSchema } from './schema';
 import { processSpotGeoJson } from 'core/features/geojson';
-import { addTemporaryEditorToMapFeature, validateMapFeatureEditor } from 'core/features/mapFeature';
+import {
+  addTemporaryEditorToMapFeature,
+  validateMapFeatureEditor,
+  validateMapFeatureHasNoEditors,
+} from 'core/features/mapFeature';
 import { assignFromSourceToTarget } from 'core/utils';
 import { nanoid } from 'nanoid';
 import { validateSpotGeoJson } from 'core/features/spot/validations';
@@ -19,7 +23,7 @@ export const getSpotDetails = async (req: Request, res: Response) => {
     throw new Error('NotFound: Spot not found');
   }
   const isUserEditor = Boolean(await validateMapFeatureEditor(spot.spotId, req.user?.isaId));
-  const hasNoEditors = (await db.getMapFeatureEditors(spot.spotId, { limit: 1 })).length === 0;
+  const hasNoEditors = await validateMapFeatureHasNoEditors(spot.spotId);
 
   res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
 };
@@ -102,9 +106,9 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 export const deleteSpot = async (req: Request, res: Response) => {
   const spotId = req.params.id;
   const editor = await validateMapFeatureEditor(spotId, req.user?.isaId, true);
-  if (editor?.grantedThrough === 'temporary') {
-    throw new Error('Forbidden: Cannot delete line with temporary editorship');
-  }
+  // if (editor?.grantedThrough === 'temporary') {
+  //   throw new Error('Forbidden: Cannot delete line with temporary editorship');
+  // }
   await db.deleteSpot(spotId);
 
   logger.info('deleted spot', { user: req.user, spotId });

@@ -125,9 +125,9 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
   const editor = await validateMapFeatureEditor(lineId, req.user?.isaId, true);
-  if (editor?.grantedThrough === 'temporary') {
-    throw new Error('Forbidden: Cannot delete line with temporary editorship');
-  }
+  // if (editor?.grantedThrough === 'temporary') {
+  //   throw new Error('Forbidden: Cannot delete line with temporary editorship');
+  // }
   await db.deleteLine(lineId);
   logger.info('deleted line', { user: req.user, lineId });
   res.json({});

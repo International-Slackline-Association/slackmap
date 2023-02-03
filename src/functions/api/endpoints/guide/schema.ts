@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const guideTypeEnum = z.enum(['parkingLot', 'campingSpot', 'accessPath', 'riggingPath', 'other']);
+const guideTypeEnum = z.enum(['parkingLot', 'campingSpot', 'accessPath', 'riggingPath', 'information', 'other']);
 export const createGuideSchema = z.object({
   geoJson: z.object({
     type: z.literal('FeatureCollection'),
