@@ -16,7 +16,7 @@ export const getAssociationsData = async () => {
       associationsInfo: cache.associationsInfo,
     };
   }
-  const geoJson = await slacklineDataApi.get('/communities/organizations/organizations.geojson').then((r) => r.data);
+  const geoJson = await slacklineDataApi.get('/communities/organizations/managedAreas.geojson').then((r) => r.data);
   const details = await slacklineDataApi.get('/communities/organizations/organizations.json').then((r) => r.data);
 
   const info: { [key: string]: { id: string; name: string } } = {};
