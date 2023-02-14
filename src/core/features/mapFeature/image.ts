@@ -21,8 +21,18 @@ export const updateFeatureImagesInS3 = async (
       throw new Error('Validation: Maximum 3 images are allowed per line');
     }
     if (addedImage.content) {
-      const base64Data = Buffer.from(addedImage.content.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-      const type = addedImage.content.split(';')[0].split('/')[1];
+      const base64Data = Buffer.from(addedImage.content.replace(/^.+?(;base64),/, ''), 'base64');
+      let type = 'unknown';
+      switch (addedImage.content.charAt(0)) {
+        case '/':
+          type = 'jpg';
+          break;
+        case 'i':
+          type = 'png';
+          break;
+        default:
+          break;
+      }
       await putFeatureImage(featureId, nextImageId.toString(), base64Data, type);
     }
     nextImageId++;

@@ -1,11 +1,21 @@
 import { z } from 'zod';
 
+const lineTypeSchema = z.enum([
+  'waterline',
+  'highline',
+  'midline',
+  'longline',
+  'trickline',
+  'rodeoline',
+  'parkline',
+  'other',
+]);
 export const createLineSchema = z.object({
   geoJson: z.object({
     type: z.literal('FeatureCollection'),
     features: z.array(z.object({}).passthrough()).nonempty(),
   }),
-  type: z.enum(['waterline', 'highline', 'other']),
+  type: lineTypeSchema,
   name: z.string().max(128).optional(),
   description: z.string().max(512).optional(),
   length: z.number().positive().optional(),
@@ -38,7 +48,7 @@ export const updateLineSchema = z
       type: z.literal('FeatureCollection'),
       features: z.array(z.object({}).passthrough()).nonempty(),
     }),
-    type: z.enum(['waterline', 'highline', 'other']),
+    type: lineTypeSchema,
     name: z.string().max(128).optional(),
     description: z.string().max(512).optional(),
     length: z.number().positive().optional(),
