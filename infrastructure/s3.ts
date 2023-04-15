@@ -35,4 +35,11 @@ export const s3Resources: NonNullable<AWS['resources']>['Resources'] = {
       },
     },
   },
+
+  SlackMapDataBackupBucket: {
+    Type: 'AWS::S3::Bucket',
+    Properties: {
+      BucketName: 'slackmap-backup-data-${sls:stage}',
+    },
+  },
 };

@@ -105,6 +105,12 @@ export const validateMapFeatureEditor = async (featureId: string, userId?: strin
 };
 
 export const validateMapFeatureHasNoEditors = async (featureId: string) => {
-  const editors = await db.getMapFeatureEditors(featureId, { limit: 1 });
-  return editors.length === 0 || editors[0].grantedThrough === 'admin';
+  const editors = await db.getMapFeatureEditors(featureId, { limit: 2 });
+  if (editors.length === 0) {
+    return true;
+  }
+  if (editors.length === 1 && editors[0].grantedThrough === 'admin') {
+    return true;
+  }
+  return false;
 };

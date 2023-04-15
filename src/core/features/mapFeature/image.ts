@@ -30,7 +30,8 @@ export const updateFeatureImagesInS3 = async (
         case 'i':
           type = 'png';
           break;
-        default:
+        default: // I think trying jpg is the best option here
+          type = 'jpg';
           break;
       }
       await putFeatureImage(featureId, nextImageId.toString(), base64Data, type);
