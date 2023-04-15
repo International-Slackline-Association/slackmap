@@ -33,6 +33,19 @@ export const s3Resources: NonNullable<AWS['resources']>['Resources'] = {
           },
         ],
       },
+      VersioningConfiguration: {
+        Status: 'Enabled',
+      },
+      LifecycleConfiguration: {
+        Rules: [
+          {
+            Status: 'Enabled',
+            NoncurrentVersionExpiration: {
+              NoncurrentDays: 365,
+            },
+          },
+        ],
+      },
     },
   },
 
