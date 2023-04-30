@@ -3,6 +3,7 @@ import { SlacklineRestrictionLevel, SlacklineType } from 'core/types';
 
 interface ParsedKeyAttrs {
   spotId: string;
+  country?: string;
 }
 
 interface NonKeyAttrs {
@@ -17,7 +18,6 @@ interface NonKeyAttrs {
   extraInfo?: string;
   coverImageUrl?: string;
   city?: string;
-  country?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
   images?: { s3Key: string; id: string; isCover?: boolean }[];

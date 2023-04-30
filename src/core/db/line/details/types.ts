@@ -3,16 +3,16 @@ import { SlacklineRestrictionLevel, SlacklineType } from 'core/types';
 
 interface ParsedKeyAttrs {
   lineId: string;
+  type: SlacklineType;
+  country?: string;
 }
 
 interface NonKeyAttrs {
-  type: SlacklineType;
   creatorUserId: string;
   geoJson: string; // Always FeatureCollection type
   name?: string;
   description?: string;
   city?: string;
-  country?: string;
   length?: number;
   height?: number;
   isMeasured?: boolean;

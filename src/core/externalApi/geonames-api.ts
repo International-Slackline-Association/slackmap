@@ -17,7 +17,11 @@ export const getCountryCode = async (lat: number, lng: number) => {
       },
     })
     .then((r) => {
-      return r.data.geonames?.[0]?.countryCode as string;
+      const code = r.data.geonames?.[0]?.countryCode as string;
+      if (!code) {
+        throw new Error(r.data.status?.message);
+      }
+      return code;
     })
     .catch((err) => {
       logger.error('Error getting country code', { message: err.message });

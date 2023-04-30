@@ -55,7 +55,7 @@ export const processLineDetailsOperation = async (
 const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
   const countryCode = await getCountryCodeOfGeoJson(JSON.parse(line.geoJson) as FeatureCollection);
   if (countryCode && countryCode !== line.country) {
-    await db.updateLineField(line.lineId, 'country', countryCode);
+    await db.updateLineCountry(line.lineId, countryCode);
   }
   await refreshOrganizationMemberEditorsOfFeature(line.lineId, {
     countryCode,

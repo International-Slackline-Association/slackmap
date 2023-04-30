@@ -2,9 +2,17 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBGuideDetailAttrs, DDBGuideDetailItem } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
-import { chunkArray, composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
+import {
+  chunkArray,
+  composeKey,
+  composeKeyStrictly,
+  destructKey,
+  INDEX_NAMES,
+  TABLE_NAME,
+  transformUtils,
+} from 'core/db/utils';
 
-const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
+const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', "GSI2_SK"] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
@@ -31,6 +39,16 @@ const keyUtils = typeSafeCheck({
   GSI_SK: {
     fields: ['guideId'],
     compose: (params) => composeKey('guide', params.guideId),
+  },
+  GSI2: {
+    fields: ['country'],
+    compose: (params) => composeKeyStrictly('country', params.country) ?? '',
+    destruct: (key) => ({
+      country: destructKey(key, 1),
+    }),
+  },
+  GSI2_SK: {
+    compose: () => 'featureType:guide',
   },
 });
 
@@ -128,6 +146,22 @@ export const updateGuideField = async <T extends keyof DDBGuideDetailAttrs>(
       UpdateExpression: 'SET #field = :value',
       ExpressionAttributeNames: { '#field': field },
       ExpressionAttributeValues: { ':value': value },
+      ConditionExpression: 'attribute_exists(PK)',
+    })
+    .promise();
+};
+
+export const updateGuideCountry = async (guideId: string, country: string) => {
+  return ddb
+    .update({
+      TableName: TABLE_NAME,
+      Key: key({ guideId }),
+      UpdateExpression: 'SET #GSI2 = :GSI2, #GSI2_SK = :GSI2_SK',
+      ExpressionAttributeNames: { '#GSI2': keyFields.GSI2, '#GSI2_SK': keyFields.GSI2_SK },
+      ExpressionAttributeValues: {
+        ':GSI2': keyUtils.GSI2.compose({ country }),
+        ':GSI2_SK': keyUtils.GSI2_SK.compose(),
+      },
       ConditionExpression: 'attribute_exists(PK)',
     })
     .promise();

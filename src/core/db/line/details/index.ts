@@ -2,9 +2,18 @@ import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBLineDetailItem, DDBLineDetailAttrs } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
-import { chunkArray, composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
+import {
+  chunkArray,
+  composeKey,
+  composeKeyStrictly,
+  destructKey,
+  INDEX_NAMES,
+  TABLE_NAME,
+  transformUtils,
+} from 'core/db/utils';
+import { SlacklineType } from 'core/types';
 
-const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
+const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', 'GSI2_SK'] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
@@ -29,8 +38,21 @@ const keyUtils = typeSafeCheck({
     compose: () => 'lineDetails',
   },
   GSI_SK: {
-    fields: ['lineId'],
-    compose: (params) => composeKey('line', params.lineId),
+    fields: ['type'],
+    compose: (params) => composeKeyStrictly('type', params.type),
+    destruct: (key) => ({
+      type: destructKey(key, 1) as SlacklineType,
+    }),
+  },
+  GSI2: {
+    fields: ['country'],
+    compose: (params) => composeKeyStrictly('country', params.country) ?? '',
+    destruct: (key) => ({
+      country: destructKey(key, 1),
+    }),
+  },
+  GSI2_SK: {
+    compose: () => 'featureType:line',
   },
 });
 
@@ -161,6 +183,22 @@ export const updateLineField = async <T extends keyof DDBLineDetailAttrs>(
       UpdateExpression: 'SET #field = :value',
       ExpressionAttributeNames: { '#field': field },
       ExpressionAttributeValues: { ':value': value },
+      ConditionExpression: 'attribute_exists(PK)',
+    })
+    .promise();
+};
+
+export const updateLineCountry = async (lineId: string, country: string) => {
+  return ddb
+    .update({
+      TableName: TABLE_NAME,
+      Key: key({ lineId }),
+      UpdateExpression: 'SET #GSI2 = :GSI2, #GSI2_SK = :GSI2_SK',
+      ExpressionAttributeNames: { '#GSI2': keyFields.GSI2, '#GSI2_SK': keyFields.GSI2_SK },
+      ExpressionAttributeValues: {
+        ':GSI2': keyUtils.GSI2.compose({ country }),
+        ':GSI2_SK': keyUtils.GSI2_SK.compose(),
+      },
       ConditionExpression: 'attribute_exists(PK)',
     })
     .promise();

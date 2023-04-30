@@ -54,7 +54,7 @@ export const processGuideDetailsOperation = async (
 const refreshCountryAndEditors = async (guide: DDBGuideDetailItem) => {
   const countryCode = await getCountryCodeOfGeoJson(JSON.parse(guide.geoJson) as FeatureCollection);
   if (countryCode && countryCode !== guide.country) {
-    await db.updateGuideField(guide.guideId, 'country', countryCode);
+    await db.updateGuideCountry(guide.guideId, countryCode);
   }
   await refreshOrganizationMemberEditorsOfFeature(guide.guideId, {
     countryCode,

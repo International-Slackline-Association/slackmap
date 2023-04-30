@@ -97,6 +97,7 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
       PointInTimeRecoverySpecification: {
         PointInTimeRecoveryEnabled: true,
       },
+      DeletionProtectionEnabled: true,
       Tags: [
         {
           Key: 'aws_backup',

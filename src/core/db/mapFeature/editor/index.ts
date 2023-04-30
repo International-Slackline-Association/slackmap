@@ -90,26 +90,36 @@ export const deleteMapFeatureEditor = async (featureId: string, editorUserId: st
 };
 
 export const deleteAllMapFeatureEditors = async (featureId: string, opts: { grantTypes?: EditorGrantType[] } = {}) => {
-  let editors = await getMapFeatureEditors(featureId);
+  let allEditors = await getMapFeatureEditors(featureId);
   if (opts.grantTypes) {
-    editors = editors.filter((m) => opts.grantTypes?.includes(m.grantedThrough));
+    allEditors = allEditors.filter((m) => opts.grantTypes?.includes(m.grantedThrough));
   }
 
-  let processingItems: DocumentClient.BatchWriteItemRequestMap = {
-    [TABLE_NAME]: editors.map((m) => ({
-      DeleteRequest: {
-        Key: key({ featureId, editorUserId: m.editorUserId }),
-      },
-    })),
-  };
-  while (processingItems[TABLE_NAME]?.length > 0) {
-    const unprocessedItems = await ddb
-      .batchWrite({
-        RequestItems: processingItems,
-      })
-      .promise()
-      .then((r) => r.UnprocessedItems);
+  // chunk array in 25 items
+  const editorsBatch = allEditors.reduce((acc, cur, i) => {
+    const group = Math.floor(i / 25);
+    acc[group] = acc[group] || [];
+    acc[group].push(cur);
+    return acc;
+  }, [] as DDBMapFeatureEditorItem[][]);
 
-    processingItems = unprocessedItems as any;
+  for (const editors of editorsBatch) {
+    let processingItems: DocumentClient.BatchWriteItemRequestMap = {
+      [TABLE_NAME]: editors.map((m) => ({
+        DeleteRequest: {
+          Key: key({ featureId, editorUserId: m.editorUserId }),
+        },
+      })),
+    };
+    while (processingItems[TABLE_NAME]?.length > 0) {
+      const unprocessedItems = await ddb
+        .batchWrite({
+          RequestItems: processingItems,
+        })
+        .promise()
+        .then((r) => r.UnprocessedItems);
+
+      processingItems = unprocessedItems as any;
+    }
   }
 };

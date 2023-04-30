@@ -3,6 +3,7 @@ import { GuideType, SlacklineType } from 'core/types';
 
 interface ParsedKeyAttrs {
   guideId: string;
+  country?: string;
 }
 
 interface NonKeyAttrs {
@@ -11,7 +12,6 @@ interface NonKeyAttrs {
   geoJson: string; // Always FeatureCollection type
   description?: string;
   city?: string;
-  country?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
   images?: { s3Key: string; id: string; isCover?: boolean }[];

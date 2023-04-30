@@ -55,7 +55,7 @@ export const processSpotDetailsOperation = async (
 const refreshCountryAndEditors = async (spot: DDBSpotDetailItem) => {
   const countryCode = await getCountryCodeOfGeoJson(JSON.parse(spot.geoJson) as FeatureCollection);
   if (countryCode && countryCode !== spot.country) {
-    await db.updateSpotField(spot.spotId, 'country', countryCode);
+    await db.updateSpotCountry(spot.spotId, countryCode);
   }
   await refreshOrganizationMemberEditorsOfFeature(spot.spotId, {
     countryCode,
