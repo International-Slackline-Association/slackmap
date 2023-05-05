@@ -3,13 +3,16 @@ import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
-import * as accountApi from 'core/externalApi/account-api';
-import { deleteAllMapFeatureEditors } from 'core/db';
+import { deleteAllFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
-import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import {
+  addAdminAsEditorToMapFeature,
+  refreshRepresentativeEditorsOfMapFeature,
+} from 'core/features/mapFeature/editors';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { FeatureCollection } from '@turf/turf';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
+import { getUserDetails } from 'core/features/isaUser';
 
 export const processLineDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -20,18 +23,19 @@ export const processLineDetailsOperation = async (
     const newLine = lineDetailsDBUtils.attrsToItem(newItem);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: newLine.lineId });
 
-    const isaUser = await accountApi.getBasicUserDetails(newLine.creatorUserId);
+    const isaUser = await getUserDetails(newLine.creatorUserId);
     if (isaUser) {
-      await db.putMapFeatureEditor({
+      await db.putFeatureEditor({
         featureId: newLine.lineId,
-        editorUserId: newLine.creatorUserId,
+        featureType: 'line',
+        userId: newLine.creatorUserId,
         createdDateTime: new Date().toISOString(),
-        grantedThrough: 'explicit',
+        reason: 'explicit',
         userIdentityType: isaUser.identityType,
-        editorName: isaUser.name,
-        editorSurname: isaUser.surname,
+        type: 'owner',
       });
     }
+    await addAdminAsEditorToMapFeature(newLine.lineId, 'line');
     await refreshCountryAndEditors(newLine);
   }
 
@@ -46,9 +50,9 @@ export const processLineDetailsOperation = async (
 
   if (eventName === 'REMOVE' && oldItem) {
     const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
-    await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
-    await deleteAllMapFeatureEditors(oldLine.lineId);
+    await deleteAllFeatureEditors(oldLine.lineId, 'line');
     await deleteAllFeatureImages(oldLine.lineId);
+    await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
   }
 };
 
@@ -57,7 +61,7 @@ const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
   if (countryCode && countryCode !== line.country) {
     await db.updateLineCountry(line.lineId, countryCode);
   }
-  await refreshOrganizationMemberEditorsOfFeature(line.lineId, {
+  await refreshRepresentativeEditorsOfMapFeature(line.lineId, 'line', {
     countryCode,
     geoJson: JSON.parse(line.geoJson),
   });

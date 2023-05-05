@@ -9,7 +9,7 @@ import {
   addTemporaryEditorToMapFeature,
   validateMapFeatureEditor,
   validateMapFeatureHasNoEditors,
-} from 'core/features/mapFeature';
+} from 'core/features/mapFeature/editors';
 import { assignFromSourceToTarget } from 'core/utils';
 import { nanoid } from 'nanoid';
 import { validateSpotGeoJson } from 'core/features/spot/validations';
@@ -22,8 +22,8 @@ export const getSpotDetails = async (req: Request, res: Response) => {
   if (!spot) {
     throw new Error('NotFound: Spot not found');
   }
-  const isUserEditor = Boolean(await validateMapFeatureEditor(spot.spotId, req.user?.isaId));
-  const hasNoEditors = await validateMapFeatureHasNoEditors(spot.spotId);
+  const isUserEditor = Boolean(await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId));
+  const hasNoEditors = await validateMapFeatureHasNoEditors(spot.spotId, 'spot');
 
   res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
 };
@@ -78,7 +78,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
   const spotId = req.params.id;
   const body = validateApiPayload(req.body, updateSpotSchema);
-  await validateMapFeatureEditor(spotId, req.user?.isaId, true);
+  await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, true);
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -105,12 +105,8 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
 export const deleteSpot = async (req: Request, res: Response) => {
   const spotId = req.params.id;
-  const editor = await validateMapFeatureEditor(spotId, req.user?.isaId, true);
-  // if (editor?.grantedThrough === 'temporary') {
-  //   throw new Error('Forbidden: Cannot delete line with temporary editorship');
-  // }
+  await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, true);
   await db.deleteSpot(spotId);
-
   logger.info('deleted spot', { user: req.user, spotId });
   res.json({});
 };
@@ -118,8 +114,7 @@ export const deleteSpot = async (req: Request, res: Response) => {
 export const requestTemporaryEditorship = async (req: Request, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const spotId = req.params.id;
-  await addTemporaryEditorToMapFeature(spotId, requestClaims.isaId);
-
+  await addTemporaryEditorToMapFeature(spotId, 'spot', requestClaims.isaId);
   logger.info('added temporary editor for spot', { user: req.user, spotId });
   res.json({});
 };

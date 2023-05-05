@@ -5,18 +5,19 @@ import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { refreshGuideGeoJsonFiles, refreshLineGeoJsonFiles, refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import { logger } from 'core/utils/logger';
 import { FeatureCollection } from '@turf/turf';
-import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import { refreshRepresentativeEditorsOfMapFeature } from 'core/features/mapFeature/editors';
+import { MapFeatureType } from 'core/types';
 
 logger.updateMeta({ lambdaName: 'cronJob' });
 
 interface EventPayload {
-  featureId?: string;
+  // featureId?: string;
 }
 
 const cronJobHandler: Handler<EventPayload> = async (event, context, callback) => {
   try {
-    const featureId = event?.featureId;
-    await runGenericCronJob(featureId);
+    // const featureId = event?.featureId;
+    await runGenericCronJob();
   } catch (err) {
     if (err instanceof Error) {
       logger.error('cronJobHandler failed', { message: err.message, stack: err.stack });
@@ -26,16 +27,16 @@ const cronJobHandler: Handler<EventPayload> = async (event, context, callback) =
   }
 };
 
-const runGenericCronJob = async (onlyForFeature?: string) => {
-  const { allLines } = await refreshLineGeoJsonFiles();
-  const { allSpots } = await refreshSpotGeoJsonFiles();
-  const { allGuides } = await refreshGuideGeoJsonFiles();
+const runGenericCronJob = async () => {
+  const { updatedLines } = await refreshLineGeoJsonFiles();
+  const { updatedSpots } = await refreshSpotGeoJsonFiles();
+  const { updatedGuides } = await refreshGuideGeoJsonFiles();
 
-  const allFeatures = [...(allLines?.items ?? []), ...(allSpots?.items ?? []), ...(allGuides?.items ?? [])];
+  const allFeatures = [...(updatedLines?.items ?? []), ...(updatedSpots?.items ?? []), ...(updatedGuides?.items ?? [])];
 
-  console.log('Lines:', allLines?.items?.length);
-  console.log('Spots:', allSpots?.items?.length);
-  console.log('Guides:', allGuides?.items?.length);
+  console.log('Lines:', updatedLines?.items?.length);
+  console.log('Spots:', updatedSpots?.items?.length);
+  console.log('Guides:', updatedGuides?.items?.length);
   let position = 0;
   const batchSize = 100;
   while (position < allFeatures.length) {
@@ -56,7 +57,7 @@ const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetail
       continue;
     }
     promises.push(
-      refreshOrganizationMemberEditorsOfFeature(feature.id, {
+      refreshRepresentativeEditorsOfMapFeature(feature.id, feature.type, {
         countryCode: feature.country,
         geoJson: feature.geoJson,
       }),
@@ -68,7 +69,7 @@ const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetail
 const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem) => {
   if ('lineId' in feature) {
     return {
-      type: 'line',
+      type: 'line' as MapFeatureType,
       id: feature.lineId,
       geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
       country: feature.country,
@@ -76,7 +77,7 @@ const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuid
   }
   if ('spotId' in feature) {
     return {
-      type: 'spot',
+      type: 'spot' as MapFeatureType,
       id: feature.spotId,
       geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
       country: feature.country,
@@ -84,7 +85,7 @@ const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuid
   }
   if ('guideId' in feature) {
     return {
-      type: 'guide',
+      type: 'guide' as MapFeatureType,
       id: feature.guideId,
       geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
       country: feature.country,

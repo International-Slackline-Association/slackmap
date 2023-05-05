@@ -12,20 +12,19 @@ import {
   addTemporaryEditorToMapFeature,
   validateMapFeatureEditor,
   validateMapFeatureHasNoEditors,
-} from 'core/features/mapFeature';
+} from 'core/features/mapFeature/editors';
 import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { logger } from 'core/utils/logger';
-import { accountApi } from 'core/externalApi/account-api';
 
 export const getLineDetails = async (req: Request, res: Response) => {
   const line = await db.getLineDetails(req.params.id);
   if (!line) {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
-  const isUserEditor = Boolean(await validateMapFeatureEditor(line.lineId, req.user?.isaId));
-  const hasNoEditors = await validateMapFeatureHasNoEditors(line.lineId);
+  const isUserEditor = Boolean(await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId));
+  const hasNoEditors = await validateMapFeatureHasNoEditors(line.lineId, 'line');
 
   res.json(getLineDetailsResponse(line, isUserEditor, hasNoEditors));
 };
@@ -90,7 +89,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
   const lineId = req.params.id;
   const body = validateApiPayload(req.body, updateLineSchema);
-  await validateMapFeatureEditor(lineId, req.user?.isaId, true);
+  await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, true);
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -124,10 +123,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
-  const editor = await validateMapFeatureEditor(lineId, req.user?.isaId, true);
-  // if (editor?.grantedThrough === 'temporary') {
-  //   throw new Error('Forbidden: Cannot delete line with temporary editorship');
-  // }
+  await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, true);
   await db.deleteLine(lineId);
   logger.info('deleted line', { user: req.user, lineId });
   res.json({});
@@ -136,7 +132,7 @@ export const deleteLine = async (req: Request, res: Response) => {
 export const requestTemporaryEditorship = async (req: Request, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const lineId = req.params.id;
-  await addTemporaryEditorToMapFeature(lineId, requestClaims.isaId);
+  await addTemporaryEditorToMapFeature(lineId, 'line', requestClaims.isaId);
 
   logger.info('added temporary editor for line', { user: req.user, lineId });
   res.json({});

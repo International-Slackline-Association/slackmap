@@ -1,10 +1,19 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
-import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs, EditorGrantType } from './types';
+import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs, EditorshipReason, EditorType } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
-import { composeKey, destructKey, INDEX_NAMES, TABLE_NAME, transformUtils } from 'core/db/utils';
+import {
+  chunkArray,
+  composeKey,
+  composeKeyStrictly,
+  destructKey,
+  INDEX_NAMES,
+  TABLE_NAME,
+  transformUtils,
+} from 'core/db/utils';
+import { MapFeatureType } from 'core/types';
 
-const keysUsed = ['PK', 'SK_GSI', 'GSI_SK'] as const;
+const keysUsed = ['PK', 'SK_GSI', 'LSI', 'GSI_SK'] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
@@ -19,22 +28,33 @@ const typeSafeCheck = <
 
 const keyUtils = typeSafeCheck({
   PK: {
-    fields: ['featureId'],
-    compose: (params) => composeKey('feature', params.featureId),
+    fields: ['featureId', 'featureType'],
+    compose: (params) => composeKey('feature', params.featureId, params.featureType),
     destruct: (key) => ({
       featureId: destructKey(key, 1),
+      featureType: destructKey(key, 2) as MapFeatureType,
     }),
   },
   SK_GSI: {
-    fields: ['editorUserId'],
-    compose: (params) => composeKey('editor', params.editorUserId),
+    fields: ['userId'],
+    compose: (params) => composeKey('featureEditor', params.userId),
     destruct: (key) => ({
-      editorUserId: destructKey(key, 1),
+      userId: destructKey(key, 1),
+    }),
+  },
+  LSI: {
+    fields: ['reason'],
+    compose: (params) => composeKey('editorReason', params.reason),
+    destruct: (key) => ({
+      reason: destructKey(key, 1) as EditorshipReason,
     }),
   },
   GSI_SK: {
-    fields: ['userIdentityType'],
-    compose: (params) => composeKey('identityType', params.userIdentityType),
+    fields: ['type'],
+    compose: (params) => composeKeyStrictly('type', params.type),
+    destruct: (key) => ({
+      type: destructKey(key, 1) as EditorType,
+    }),
   },
 });
 
@@ -44,11 +64,11 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
-export const getMapFeatureEditor = async (featureId: string, editorUserId: string) => {
+export const getFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
   return ddb
     .get({
       TableName: TABLE_NAME,
-      Key: key({ featureId, editorUserId }),
+      Key: key({ featureId, featureType, userId }),
     })
     .promise()
     .then((data) => {
@@ -59,7 +79,11 @@ export const getMapFeatureEditor = async (featureId: string, editorUserId: strin
     });
 };
 
-export const getMapFeatureEditors = async (featureId: string, opts: { limit?: number } = {}) => {
+export const getFeatureEditors = async (
+  featureId: string,
+  featureType: MapFeatureType,
+  opts: { limit?: number } = {},
+) => {
   return ddb
     .query({
       TableName: TABLE_NAME,
@@ -70,7 +94,7 @@ export const getMapFeatureEditors = async (featureId: string, opts: { limit?: nu
         '#SK_SGI': keyFields.SK_GSI,
       },
       ExpressionAttributeValues: {
-        ':PK': keyUtils.PK.compose({ featureId }),
+        ':PK': keyUtils.PK.compose({ featureId, featureType }),
         ':SK_SGI': keyUtils.SK_GSI?.compose({}),
       },
     })
@@ -81,33 +105,32 @@ export const getMapFeatureEditors = async (featureId: string, opts: { limit?: nu
     });
 };
 
-export const putMapFeatureEditor = async (editor: DDBMapFeatureEditorItem) => {
+export const putFeatureEditor = async (editor: DDBMapFeatureEditorItem) => {
   return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(editor) }).promise();
 };
 
-export const deleteMapFeatureEditor = async (featureId: string, editorUserId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, editorUserId }) }).promise();
+export const deleteFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
+  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, featureType, userId }) }).promise();
 };
 
-export const deleteAllMapFeatureEditors = async (featureId: string, opts: { grantTypes?: EditorGrantType[] } = {}) => {
-  let allEditors = await getMapFeatureEditors(featureId);
-  if (opts.grantTypes) {
-    allEditors = allEditors.filter((m) => opts.grantTypes?.includes(m.grantedThrough));
-  }
+export const deleteAllFeatureEditors = async (
+  featureId: string,
+  featureType: MapFeatureType,
+  opts: { reason?: EditorshipReason[] } = {},
+) => {
+  let allEditors = await getFeatureEditors(featureId, featureType);
 
+  if (opts.reason) {
+    allEditors = allEditors.filter((m) => opts.reason?.includes(m.reason));
+  }
   // chunk array in 25 items
-  const editorsBatch = allEditors.reduce((acc, cur, i) => {
-    const group = Math.floor(i / 25);
-    acc[group] = acc[group] || [];
-    acc[group].push(cur);
-    return acc;
-  }, [] as DDBMapFeatureEditorItem[][]);
+  const editorsBatch = chunkArray(allEditors, 25);
 
   for (const editors of editorsBatch) {
     let processingItems: DocumentClient.BatchWriteItemRequestMap = {
       [TABLE_NAME]: editors.map((m) => ({
         DeleteRequest: {
-          Key: key({ featureId, editorUserId: m.editorUserId }),
+          Key: key({ featureId, featureType, userId: m.userId }),
         },
       })),
     };
@@ -123,3 +146,34 @@ export const deleteAllMapFeatureEditors = async (featureId: string, opts: { gran
     }
   }
 };
+
+// export const migrateFeature = (feature: DDBMapFeatureEditorItem, type: MapFeatureType) => {
+//   const reason = feature.grantedThrough === 'organizationMembership' ? 'areaRepresentative' : feature.grantedThrough;
+
+//   return ddb
+//     .put({
+//       TableName: TABLE_NAME,
+//       Item: {
+//         PK: `feature:${feature.featureId}:${type}`,
+//         SK_GSI: `featureEditor:${feature.editorUserId}`,
+//         LSI: `editorReason:${reason}`,
+//         userIdentityType: feature.userIdentityType,
+//         grantedByUserId: feature.grantedByUserId,
+//         createdDateTime: feature.createdDateTime,
+//         lastModifiedDateTime: feature.lastModifiedDateTime,
+//       },
+//     })
+//     .promise();
+// };
+
+// export const deleteFeature = (id: string, user: string, type: MapFeatureType) => {
+//   return ddb
+//     .delete({
+//       TableName: TABLE_NAME,
+//       Key: {
+//         PK: `feature:${id}:${type}`,
+//         SK_GSI: `featureEditor:${user}`,
+//       },
+//     })
+//     .promise();
+// };

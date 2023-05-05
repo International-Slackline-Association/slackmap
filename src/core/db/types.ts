@@ -32,7 +32,7 @@ export interface LSILastEvaluatedKey {
 export interface LSI2LastEvaluatedKey {
   readonly PK: string;
   readonly SK_GSI: string;
-  readonly LS2: string;
+  readonly LSI2: string;
 }
 
 export interface GSILastEvaluatedKey {

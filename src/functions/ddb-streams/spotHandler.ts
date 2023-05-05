@@ -1,16 +1,18 @@
 import { spotDetailsDBUtils } from 'core/db/spot/details';
 import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
-import { refreshLineGeoJsonFiles, refreshSpotGeoJsonFiles } from 'core/features/geojson';
+import { refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
-import { getAuthToken } from 'core/utils/auth';
-import * as accountApi from 'core/externalApi/account-api';
-import { deleteAllMapFeatureEditors } from 'core/db';
+import { deleteAllFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
-import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
+import {
+  addAdminAsEditorToMapFeature,
+  refreshRepresentativeEditorsOfMapFeature,
+} from 'core/features/mapFeature/editors';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { FeatureCollection } from '@turf/turf';
+import { getUserDetails } from 'core/features/isaUser';
 
 export const processSpotDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -20,18 +22,19 @@ export const processSpotDetailsOperation = async (
   if (eventName === 'INSERT' && newItem) {
     const newSpot = spotDetailsDBUtils.attrsToItem(newItem);
     await refreshSpotGeoJsonFiles({ spotIdToUpdate: newSpot.spotId });
-    const isaUser = await accountApi.getBasicUserDetails(newSpot.creatorUserId);
+    const isaUser = await getUserDetails(newSpot.creatorUserId);
     if (isaUser) {
-      await db.putMapFeatureEditor({
+      await db.putFeatureEditor({
         featureId: newSpot.spotId,
-        editorUserId: newSpot.creatorUserId,
+        featureType: 'spot',
+        userId: newSpot.creatorUserId,
         createdDateTime: new Date().toISOString(),
-        grantedThrough: 'explicit',
+        reason: 'explicit',
         userIdentityType: isaUser.identityType,
-        editorName: isaUser.name,
-        editorSurname: isaUser.surname,
+        type: 'owner',
       });
     }
+    await addAdminAsEditorToMapFeature(newSpot.spotId, 'spot');
     await refreshCountryAndEditors(newSpot);
   }
 
@@ -46,9 +49,9 @@ export const processSpotDetailsOperation = async (
 
   if (eventName === 'REMOVE' && oldItem) {
     const oldSpot = spotDetailsDBUtils.attrsToItem(oldItem);
-    await refreshSpotGeoJsonFiles({ spotIdToUpdate: oldSpot.spotId });
-    await deleteAllMapFeatureEditors(oldSpot.spotId);
+    await deleteAllFeatureEditors(oldSpot.spotId, 'spot');
     await deleteAllFeatureImages(oldSpot.spotId);
+    await refreshSpotGeoJsonFiles({ spotIdToUpdate: oldSpot.spotId });
   }
 };
 
@@ -57,7 +60,7 @@ const refreshCountryAndEditors = async (spot: DDBSpotDetailItem) => {
   if (countryCode && countryCode !== spot.country) {
     await db.updateSpotCountry(spot.spotId, countryCode);
   }
-  await refreshOrganizationMemberEditorsOfFeature(spot.spotId, {
+  await refreshRepresentativeEditorsOfMapFeature(spot.spotId, 'spot', {
     countryCode,
     geoJson: JSON.parse(spot.geoJson),
   });

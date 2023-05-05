@@ -1,14 +1,17 @@
 import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import isEqual from 'lodash.isequal';
-import * as accountApi from 'core/externalApi/account-api';
-import { deleteAllMapFeatureEditors, guideDetailsDBUtils } from 'core/db';
+import { deleteAllFeatureEditors, guideDetailsDBUtils } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshGuideGeoJsonFiles } from 'core/features/geojson';
-import { refreshOrganizationMemberEditorsOfFeature } from 'core/features/mapFeature';
-import { DDBGuideDetailAttrs, DDBGuideDetailItem } from 'core/db/guide/details/types';
+import {
+  addAdminAsEditorToMapFeature,
+  refreshRepresentativeEditorsOfMapFeature,
+} from 'core/features/mapFeature/editors';
+import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { FeatureCollection } from '@turf/turf';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import { getUserDetails } from 'core/features/isaUser';
 
 export const processGuideDetailsOperation = async (
   newItem: DocumentClient.AttributeMap | undefined,
@@ -19,18 +22,19 @@ export const processGuideDetailsOperation = async (
     const newGuide = guideDetailsDBUtils.attrsToItem(newItem);
     await refreshGuideGeoJsonFiles({ guideIdToUpdate: newGuide.guideId });
 
-    const isaUser = await accountApi.getBasicUserDetails(newGuide.creatorUserId);
+    const isaUser = await getUserDetails(newGuide.creatorUserId);
     if (isaUser) {
-      await db.putMapFeatureEditor({
+      await db.putFeatureEditor({
         featureId: newGuide.guideId,
-        editorUserId: newGuide.creatorUserId,
+        featureType: 'guide',
+        userId: newGuide.creatorUserId,
         createdDateTime: new Date().toISOString(),
-        grantedThrough: 'explicit',
+        reason: 'explicit',
         userIdentityType: isaUser.identityType,
-        editorName: isaUser.name,
-        editorSurname: isaUser.surname,
+        type: 'owner',
       });
     }
+    await addAdminAsEditorToMapFeature(newGuide.guideId, 'guide');
     await refreshCountryAndEditors(newGuide);
   }
 
@@ -45,9 +49,9 @@ export const processGuideDetailsOperation = async (
 
   if (eventName === 'REMOVE' && oldItem) {
     const oldGuide = guideDetailsDBUtils.attrsToItem(oldItem);
-    await refreshGuideGeoJsonFiles({ guideIdToUpdate: oldGuide.guideId });
-    await deleteAllMapFeatureEditors(oldGuide.guideId);
+    await deleteAllFeatureEditors(oldGuide.guideId, 'guide');
     await deleteAllFeatureImages(oldGuide.guideId);
+    await refreshGuideGeoJsonFiles({ guideIdToUpdate: oldGuide.guideId });
   }
 };
 
@@ -56,7 +60,7 @@ const refreshCountryAndEditors = async (guide: DDBGuideDetailItem) => {
   if (countryCode && countryCode !== guide.country) {
     await db.updateGuideCountry(guide.guideId, countryCode);
   }
-  await refreshOrganizationMemberEditorsOfFeature(guide.guideId, {
+  await refreshRepresentativeEditorsOfMapFeature(guide.guideId, 'guide', {
     countryCode,
     geoJson: JSON.parse(guide.geoJson),
   });

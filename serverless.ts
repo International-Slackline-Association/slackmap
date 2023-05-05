@@ -27,6 +27,7 @@ const serverlessConfiguration: AWS = {
       AWS_NODEJS_CONNECTION_REUSE_ENABLED: '1',
       NODE_OPTIONS: '--enable-source-maps --stack-trace-limit=1000',
       SLACKMAP_TABLE_NAME: { Ref: 'SlackmapTable' },
+      USERS_TABLE_NAME: { 'Fn::ImportValue': 'UsersTable-Name' },
       APPLICATION_LOG_GROUP_NAME: { Ref: 'ApplicationLogsGroup' },
       SLACKMAP_APPLICATION_DATA_S3_BUCKET: { Ref: 'SlackMapApplicationDataS3Bucket' },
       SLACKMAP_IMAGES_S3_BUCKET: { Ref: 'SlackMapImagesS3Bucket' },
@@ -44,6 +45,15 @@ const serverlessConfiguration: AWS = {
             Resource: [
               {
                 'Fn::Join': ['', [{ 'Fn::GetAtt': ['SlackmapTable', 'Arn'] }, '*']],
+              },
+            ],
+          },
+          {
+            Effect: 'Allow',
+            Action: ['dynamodb:Query', 'dynamodb:GetItem', 'dynamodb:BatchGetItem'],
+            Resource: [
+              {
+                'Fn::Join': ['', [{ 'Fn::ImportValue': 'UsersTable-Arn' }, '*']],
               },
             ],
           },

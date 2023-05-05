@@ -12,7 +12,7 @@ import {
   transformUtils,
 } from 'core/db/utils';
 
-const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', "GSI2_SK"] as const;
+const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', 'GSI2_SK'] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
@@ -42,12 +42,13 @@ const keyUtils = typeSafeCheck({
   },
   GSI2: {
     fields: ['country'],
-    compose: (params) => composeKeyStrictly('country', params.country) ?? '',
+    compose: (params) => composeKeyStrictly('country', params.country),
     destruct: (key) => ({
       country: destructKey(key, 1),
     }),
   },
   GSI2_SK: {
+    fields: ['country'],
     compose: () => 'featureType:guide',
   },
 });
@@ -74,6 +75,7 @@ export const getAllGuides = async <T extends keyof DDBGuideDetailAttrs>(
   opts: { startKey?: any; limit?: number; fields?: T[] } = {},
 ) => {
   let exclusiveStartKey: any = opts.startKey;
+  const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   const items: DDBGuideDetailItem[] = [];
   do {
     const params: DocumentClient.QueryInput = {
@@ -82,7 +84,7 @@ export const getAllGuides = async <T extends keyof DDBGuideDetailAttrs>(
       Limit: opts.limit,
       ExclusiveStartKey: exclusiveStartKey,
       KeyConditionExpression: '#SK_GSI = :SK_GSI',
-      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+      ProjectionExpression: fields ? fields.join(', ') : undefined,
       ExpressionAttributeNames: {
         '#SK_GSI': keyFields.SK_GSI,
       },
@@ -160,7 +162,7 @@ export const updateGuideCountry = async (guideId: string, country: string) => {
       ExpressionAttributeNames: { '#GSI2': keyFields.GSI2, '#GSI2_SK': keyFields.GSI2_SK },
       ExpressionAttributeValues: {
         ':GSI2': keyUtils.GSI2.compose({ country }),
-        ':GSI2_SK': keyUtils.GSI2_SK.compose(),
+        ':GSI2_SK': country ? keyUtils.GSI2_SK.compose() : undefined,
       },
       ConditionExpression: 'attribute_exists(PK)',
     })

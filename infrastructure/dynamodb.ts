@@ -97,6 +97,10 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
       PointInTimeRecoverySpecification: {
         PointInTimeRecoveryEnabled: true,
       },
+      TimeToLiveSpecification: {
+        AttributeName: 'ddb_ttl',
+        Enabled: 'TRUE',
+      },
       DeletionProtectionEnabled: true,
       Tags: [
         {

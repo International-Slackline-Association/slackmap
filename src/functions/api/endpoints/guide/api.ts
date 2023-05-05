@@ -5,7 +5,7 @@ import { getGuideDetailsResponse } from './dto';
 import { FeatureCollection, Geometry } from '@turf/turf';
 import { CreateGuidePostBody, createGuideSchema, UpdateGuidePostBody, updateGuideSchema } from './schema';
 import { nanoid } from 'nanoid';
-import { validateMapFeatureEditor } from 'core/features/mapFeature';
+import { validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { processGuideGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
@@ -19,7 +19,7 @@ export const getGuideDetails = async (req: Request, res: Response) => {
   if (!guide) {
     throw new Error(`NotFound: Guide ${req.params.id} not found`);
   }
-  const isUserEditor = Boolean(await validateMapFeatureEditor(guide.guideId, req.user?.isaId));
+  const isUserEditor = Boolean(await validateMapFeatureEditor(guide.guideId, 'guide', req.user?.isaId));
   res.json(getGuideDetailsResponse(guide, isUserEditor));
 };
 
@@ -69,7 +69,7 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
 
   const guideId = req.params.id;
   const body = validateApiPayload(req.body, updateGuideSchema);
-  await validateMapFeatureEditor(guideId, req.user?.isaId, true);
+  await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, true);
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -93,16 +93,14 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
   const updatedGuide = assignFromSourceToTarget(payload, guide);
   updatedGuide.lastModifiedDateTime = new Date().toISOString();
   await db.putGuide(updatedGuide);
-
   logger.info('updated guide', { user: req.user, updatedGuide });
   res.json(getGuideDetailsResponse(updatedGuide));
 };
 
 export const deleteGuide = async (req: Request, res: Response) => {
   const guideId = req.params.id;
-  await validateMapFeatureEditor(guideId, req.user?.isaId, true);
+  await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, true);
   await db.deleteGuide(guideId);
-
   logger.info('deleted guide', { user: req.user, guideId });
   res.json({});
 };
