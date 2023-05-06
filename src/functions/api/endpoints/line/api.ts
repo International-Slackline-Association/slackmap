@@ -18,7 +18,6 @@ import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { logger } from 'core/utils/logger';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
-import { log } from 'console';
 import {
   addCreatedChangelogToFeature,
   addTemporaryEditorChangelogToFeature,
@@ -31,7 +30,7 @@ export const getLineDetails = async (req: Request, res: Response) => {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
   const isUserEditor = Boolean(await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId));
-  const hasNoEditors = await validateMapFeatureHasNoEditors(line.lineId, 'line');
+  const hasNoEditors = !isUserEditor && (await validateMapFeatureHasNoEditors(line.lineId, 'line'));
 
   res.json(getLineDetailsResponse(line, isUserEditor, hasNoEditors));
 };

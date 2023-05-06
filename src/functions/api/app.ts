@@ -5,6 +5,7 @@ import { injectCommonlyUsedHeadersMiddleware, errorMiddleware, notFoundMiddlewar
 import { lineApi } from './endpoints/line/api';
 import { spotApi } from './endpoints/spot/api';
 import { guideApi } from './endpoints/guide/api';
+import { featureApi } from './endpoints/feature/api';
 
 const app = express();
 
@@ -23,6 +24,8 @@ const setupRoutes = (app: Express) => {
   app.use('/line', lineApi);
   app.use('/spot', spotApi);
   app.use('/guide', guideApi);
+  app.use('/feature', featureApi);
+
 };
 
 const registerStartingMiddlewares = (app: Express) => {

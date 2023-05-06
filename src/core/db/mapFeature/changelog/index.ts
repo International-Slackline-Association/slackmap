@@ -89,7 +89,10 @@ export const getFeatureChangelogs = async (
     .promise()
     .then((data) => {
       const items = data.Items || [];
-      return items.map((i) => attrsToItem(i as DDBMapFeatureChangelogAttrs));
+      return {
+        items: items.map((i) => attrsToItem(i as DDBMapFeatureChangelogAttrs)),
+        lastEvaluatedKey: data.LastEvaluatedKey,
+      };
     });
 };
 
@@ -102,12 +105,10 @@ export const deleteFeatureChangelog = async (featureId: string, featureType: Map
 };
 
 export const deleteAllFeatureChangelogs = async (featureId: string, featureType: MapFeatureType) => {
-  const allChangelogs = await getFeatureChangelogs(featureId, featureType);
+  const { items } = await getFeatureChangelogs(featureId, featureType);
 
   // chunk array in 25 items
-  const editorsBatch = chunkArray(allChangelogs, 25);
-
-  logger.debug('deleting all feature changelogs', { allChangelogs });
+  const editorsBatch = chunkArray(items, 25);
 
   for (const editors of editorsBatch) {
     let processingItems: DocumentClient.BatchWriteItemRequestMap = {

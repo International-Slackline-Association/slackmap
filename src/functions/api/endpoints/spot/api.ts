@@ -17,6 +17,11 @@ import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { logger } from 'core/utils/logger';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import {
+  addCreatedChangelogToFeature,
+  addTemporaryEditorChangelogToFeature,
+  addUpdatedDetailsChangelog,
+} from 'core/features/mapFeature/changelog';
 
 export const getSpotDetails = async (req: Request, res: Response) => {
   const spot = await db.getSpotDetails(req.params.id);
@@ -24,7 +29,7 @@ export const getSpotDetails = async (req: Request, res: Response) => {
     throw new Error('NotFound: Spot not found');
   }
   const isUserEditor = Boolean(await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId));
-  const hasNoEditors = await validateMapFeatureHasNoEditors(spot.spotId, 'spot');
+  const hasNoEditors = !isUserEditor && (await validateMapFeatureHasNoEditors(spot.spotId, 'spot'));
 
   res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
 };
@@ -73,13 +78,14 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     country: countryCode,
   };
   await db.putSpot(spot);
+  await addCreatedChangelogToFeature(spot, requestClaims.isaId, new Date());
 
   logger.info('created spot', { user: req.user, spot });
   res.json(getSpotDetailsResponse(spot));
 };
 
 export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res: Response) => {
-  verifyRequestClaims(req);
+  const requestClaims = verifyRequestClaims(req);
 
   const spotId = req.params.id;
   const body = validateApiPayload(req.body, updateSpotSchema);
@@ -103,6 +109,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
   const updatedSpot = assignFromSourceToTarget(payload, spot);
   updatedSpot.lastModifiedDateTime = new Date().toISOString();
   await db.putSpot(updatedSpot);
+  await addUpdatedDetailsChangelog(updatedSpot, spot, requestClaims.isaId, new Date());
 
   logger.info('updated spot', { user: req.user, updatedSpot });
   res.json(getSpotDetailsResponse(updatedSpot));
@@ -119,7 +126,13 @@ export const deleteSpot = async (req: Request, res: Response) => {
 export const requestTemporaryEditorship = async (req: Request, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const spotId = req.params.id;
+  const spot = await db.getSpotDetails(spotId, { fields: [] });
+  if (!spot) {
+    throw new Error('NotFound: Spot not found');
+  }
   await addTemporaryEditorToMapFeature(spotId, 'spot', requestClaims.isaId);
+  await addTemporaryEditorChangelogToFeature(spotId, 'spot', requestClaims.isaId, new Date(), spot.country);
+
   logger.info('added temporary editor for spot', { user: req.user, spotId });
   res.json({});
 };

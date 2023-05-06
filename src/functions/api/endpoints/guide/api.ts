@@ -14,6 +14,7 @@ import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { GuideType } from 'core/types';
 import { logger } from 'core/utils/logger';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import { addCreatedChangelogToFeature } from 'core/features/mapFeature/changelog';
 
 export const getGuideDetails = async (req: Request, res: Response) => {
   const guide = await db.getGuideDetails(req.params.id);
@@ -64,6 +65,7 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
     country: countryCode,
   };
   await db.putGuide(guide);
+  await addCreatedChangelogToFeature(guide, requestClaims.isaId, new Date());
 
   logger.info('created guide', { user: req.user, guide });
   res.json(getGuideDetailsResponse(guide));

@@ -31,7 +31,7 @@ export const errorMiddleware: ErrorRequestHandler = async (error, req, res, next
   const stack = error.stack;
 
   const loggerData = {
-    httpRequest: { path: req.path, body: req.body, method: req.method },
+    httpRequest: { path: req.path, body: req.body, method: req.method, query: req.query, user: req.user },
     status,
     stack,
   };
