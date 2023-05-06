@@ -3,7 +3,7 @@ import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
-import { deleteAllFeatureEditors } from 'core/db';
+import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import {
   addAdminAsEditorToMapFeature,
@@ -51,13 +51,16 @@ export const processLineDetailsOperation = async (
   if (eventName === 'REMOVE' && oldItem) {
     const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
     await deleteAllFeatureEditors(oldLine.lineId, 'line');
+    await deleteAllFeatureChangelogs(oldLine.lineId, 'line');
     await deleteAllFeatureImages(oldLine.lineId);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
   }
 };
 
 const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
-  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(line.geoJson) as FeatureCollection);
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(line.geoJson) as FeatureCollection, {
+    dontThrowError: true,
+  });
   if (countryCode && countryCode !== line.country) {
     await db.updateLineCountry(line.lineId, countryCode);
   }

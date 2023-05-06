@@ -1,6 +1,6 @@
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
-import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs, EditorshipReason, EditorType } from './types';
+import { DDBMapFeatureChangelogItem, DDBMapFeatureChangelogAttrs } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
 import {
   chunkArray,
@@ -12,12 +12,13 @@ import {
   transformUtils,
 } from 'core/db/utils';
 import { MapFeatureType } from 'core/types';
+import { logger } from 'core/utils/logger';
 
-const keysUsed = ['PK', 'SK_GSI', 'LSI', 'GSI_SK'] as const;
+const keysUsed = ['PK', 'SK_GSI', 'GSI2', 'GSI2_SK'] as const;
 
 const typeSafeCheck = <
   T extends TransformerParams<
-    Omit<DDBMapFeatureEditorItem, keyof DDBMapFeatureEditorAttrs>,
+    Omit<DDBMapFeatureChangelogItem, keyof DDBMapFeatureChangelogAttrs>,
     ConvertKeysToInterface<typeof keysUsed>
   >,
 >(
@@ -36,58 +37,45 @@ const keyUtils = typeSafeCheck({
     }),
   },
   SK_GSI: {
-    fields: ['userId'],
-    compose: (params) => composeKey('featureEditor', params.userId),
+    fields: ['date'],
+    compose: (params) => composeKey('changelog', params.date),
     destruct: (key) => ({
-      userId: destructKey(key, 1),
+      date: destructKey(key, 1),
     }),
   },
-  LSI: {
-    fields: ['reason'],
-    compose: (params) => composeKey('editorReason', params.reason),
+  GSI2: {
+    fields: ['country'],
+    compose: (params) => composeKeyStrictly('country', params.country),
     destruct: (key) => ({
-      reason: destructKey(key, 1) as EditorshipReason,
+      country: destructKey(key, 1),
     }),
   },
-  GSI_SK: {
-    fields: ['type'],
-    compose: (params) => composeKeyStrictly('type', params.type),
+  GSI2_SK: {
+    fields: ['date'],
+    compose: (params) => composeKey('featureChangelog', params.date),
     destruct: (key) => ({
-      type: destructKey(key, 1) as EditorType,
+      date: destructKey(key, 1),
     }),
   },
 });
 
 const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transformUtils<
-  DDBMapFeatureEditorItem,
-  DDBMapFeatureEditorAttrs,
+  DDBMapFeatureChangelogItem,
+  DDBMapFeatureChangelogAttrs,
   typeof keysUsed
 >(keyUtils);
 
-export const getFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
-  return ddb
-    .get({
-      TableName: TABLE_NAME,
-      Key: key({ featureId, featureType, userId }),
-    })
-    .promise()
-    .then((data) => {
-      if (data.Item) {
-        return attrsToItem(data.Item as DDBMapFeatureEditorAttrs);
-      }
-      return null;
-    });
-};
-
-export const getFeatureEditors = async (
+export const getFeatureChangelogs = async (
   featureId: string,
   featureType: MapFeatureType,
-  opts: { limit?: number } = {},
+  opts: { startKey?: any; limit?: number } = {},
 ) => {
   return ddb
     .query({
       TableName: TABLE_NAME,
       Limit: opts.limit,
+      ExclusiveStartKey: opts.startKey,
+      ScanIndexForward: false,
       KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
       ExpressionAttributeNames: {
         '#PK': keyFields.PK,
@@ -95,42 +83,37 @@ export const getFeatureEditors = async (
       },
       ExpressionAttributeValues: {
         ':PK': keyUtils.PK.compose({ featureId, featureType }),
-        ':SK_SGI': keyUtils.SK_GSI?.compose({}),
+        ':SK_SGI': keyUtils.SK_GSI.compose({}),
       },
     })
     .promise()
     .then((data) => {
       const items = data.Items || [];
-      return items.map((i) => attrsToItem(i as DDBMapFeatureEditorAttrs));
+      return items.map((i) => attrsToItem(i as DDBMapFeatureChangelogAttrs));
     });
 };
 
-export const putFeatureEditor = async (editor: DDBMapFeatureEditorItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(editor) }).promise();
+export const putFeatureChangelog = async (changelog: DDBMapFeatureChangelogItem) => {
+  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(changelog) }).promise();
 };
 
-export const deleteFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, featureType, userId }) }).promise();
+export const deleteFeatureChangelog = async (featureId: string, featureType: MapFeatureType, date: string) => {
+  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, featureType, date }) }).promise();
 };
 
-export const deleteAllFeatureEditors = async (
-  featureId: string,
-  featureType: MapFeatureType,
-  opts: { reason?: EditorshipReason[] } = {},
-) => {
-  let allEditors = await getFeatureEditors(featureId, featureType);
+export const deleteAllFeatureChangelogs = async (featureId: string, featureType: MapFeatureType) => {
+  const allChangelogs = await getFeatureChangelogs(featureId, featureType);
 
-  if (opts.reason) {
-    allEditors = allEditors.filter((m) => opts.reason?.includes(m.reason));
-  }
   // chunk array in 25 items
-  const editorsBatch = chunkArray(allEditors, 25);
+  const editorsBatch = chunkArray(allChangelogs, 25);
+
+  logger.debug('deleting all feature changelogs', { allChangelogs });
 
   for (const editors of editorsBatch) {
     let processingItems: DocumentClient.BatchWriteItemRequestMap = {
       [TABLE_NAME]: editors.map((m) => ({
         DeleteRequest: {
-          Key: key({ featureId, featureType, userId: m.userId }),
+          Key: key({ featureId, featureType, date: m.date }),
         },
       })),
     };

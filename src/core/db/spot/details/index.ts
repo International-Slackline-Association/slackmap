@@ -151,11 +151,12 @@ export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
     fields?: T[];
   } = {},
 ) => {
+  const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   return ddb
     .get({
       TableName: TABLE_NAME,
       Key: key({ spotId }),
-      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+      ProjectionExpression: fields ? fields.join(', ') : undefined,
     })
     .promise()
     .then((data) => {

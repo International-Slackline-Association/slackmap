@@ -17,6 +17,13 @@ import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { logger } from 'core/utils/logger';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
+import { log } from 'console';
+import {
+  addCreatedChangelogToFeature,
+  addTemporaryEditorChangelogToFeature,
+  addUpdatedDetailsChangelog,
+} from 'core/features/mapFeature/changelog';
 
 export const getLineDetails = async (req: Request, res: Response) => {
   const line = await db.getLineDetails(req.params.id);
@@ -57,6 +64,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
   });
 
   const lineImages = await updateFeatureImagesInS3(lineId, body.images);
+  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const isMeasured = body.length ? body.isMeasured : false;
   const line: DDBLineDetailItem = {
@@ -65,6 +73,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     name: body.name,
     description: body.description,
     type: body.type,
+    country: countryCode,
     accessInfo: body.accessInfo,
     anchorsInfo: body.anchorsInfo,
     gearInfo: body.gearInfo,
@@ -81,11 +90,14 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     images: lineImages,
   };
   await db.putLine(line);
+  await addCreatedChangelogToFeature(line, requestClaims.isaId, new Date());
+
+  logger.info('created line', { user: req.user, line });
   res.json(getLineDetailsResponse(line));
 };
 
 export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res: Response) => {
-  verifyRequestClaims(req);
+  const requestClaims = verifyRequestClaims(req);
 
   const lineId = req.params.id;
   const body = validateApiPayload(req.body, updateLineSchema);
@@ -116,6 +128,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
   const updatedLine = assignFromSourceToTarget(payload, line);
   updatedLine.lastModifiedDateTime = new Date().toISOString();
   await db.putLine(updatedLine);
+  await addUpdatedDetailsChangelog(updatedLine, line, requestClaims.isaId, new Date());
 
   logger.info('updated line', { user: req.user, updatedLine });
   res.json(getLineDetailsResponse(updatedLine));
@@ -125,6 +138,7 @@ export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
   await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, true);
   await db.deleteLine(lineId);
+
   logger.info('deleted line', { user: req.user, lineId });
   res.json({});
 };
@@ -132,7 +146,14 @@ export const deleteLine = async (req: Request, res: Response) => {
 export const requestTemporaryEditorship = async (req: Request, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const lineId = req.params.id;
+
+  const line = await db.getLineDetails(lineId, { fields: [] });
+  if (!line) {
+    throw new Error('NotFound: Line not found');
+  }
+
   await addTemporaryEditorToMapFeature(lineId, 'line', requestClaims.isaId);
+  await addTemporaryEditorChangelogToFeature(lineId, 'line', requestClaims.isaId, new Date(), line.country);
 
   logger.info('added temporary editor for line', { user: req.user, lineId });
   res.json({});

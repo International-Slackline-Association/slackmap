@@ -1,7 +1,7 @@
 import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import isEqual from 'lodash.isequal';
-import { deleteAllFeatureEditors, guideDetailsDBUtils } from 'core/db';
+import { deleteAllFeatureChangelogs, deleteAllFeatureEditors, guideDetailsDBUtils } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import { refreshGuideGeoJsonFiles } from 'core/features/geojson';
 import {
@@ -50,13 +50,16 @@ export const processGuideDetailsOperation = async (
   if (eventName === 'REMOVE' && oldItem) {
     const oldGuide = guideDetailsDBUtils.attrsToItem(oldItem);
     await deleteAllFeatureEditors(oldGuide.guideId, 'guide');
+    await deleteAllFeatureChangelogs(oldGuide.guideId, 'guide');
     await deleteAllFeatureImages(oldGuide.guideId);
     await refreshGuideGeoJsonFiles({ guideIdToUpdate: oldGuide.guideId });
   }
 };
 
 const refreshCountryAndEditors = async (guide: DDBGuideDetailItem) => {
-  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(guide.geoJson) as FeatureCollection);
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(guide.geoJson) as FeatureCollection, {
+    dontThrowError: true,
+  });
   if (countryCode && countryCode !== guide.country) {
     await db.updateGuideCountry(guide.guideId, countryCode);
   }

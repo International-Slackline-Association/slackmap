@@ -16,6 +16,7 @@ import { validateSpotGeoJson } from 'core/features/spot/validations';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { logger } from 'core/utils/logger';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 
 export const getSpotDetails = async (req: Request, res: Response) => {
   const spot = await db.getSpotDetails(req.params.id);
@@ -53,6 +54,7 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
   });
 
   const spotImages = await updateFeatureImagesInS3(spotId, body.images);
+  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const spot: DDBSpotDetailItem = {
     spotId,
@@ -68,8 +70,11 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     createdDateTime: new Date().toISOString(),
     lastModifiedDateTime: new Date().toISOString(),
     images: spotImages,
+    country: countryCode,
   };
   await db.putSpot(spot);
+
+  logger.info('created spot', { user: req.user, spot });
   res.json(getSpotDetailsResponse(spot));
 };
 

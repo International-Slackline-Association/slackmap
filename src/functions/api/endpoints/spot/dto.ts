@@ -12,7 +12,6 @@ export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: b
     contactInfo: item.contactInfo,
     restrictionLevel: item.restrictionLevel,
     extraInfo: item.extraInfo,
-    coverImageUrl: item.coverImageUrl,
     restrictionInfo: item.restrictionInfo,
     images: item.images,
     isUserEditor: isUserEditor,

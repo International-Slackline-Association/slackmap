@@ -13,8 +13,16 @@ export const calculateCenterOfFeature = (geoJson: Feature | FeatureCollection) =
   return turf.centerOfMass(geoJson).geometry.coordinates;
 };
 
-export const getCountryCodeOfGeoJson = async (geoJson: Feature | FeatureCollection) => {
+export const getCountryCodeOfGeoJson = async <Throw = false>(
+  geoJson: Feature | FeatureCollection,
+  opts: {
+    dontThrowError?: Throw;
+  } = {},
+): Promise<Throw extends true ? string | undefined : string> => {
   const lineCenter = calculateCenterOfFeature(geoJson);
   const countryCode = await getCountryCode(lineCenter[1], lineCenter[0]);
-  return countryCode;
+  if (!countryCode && !opts.dontThrowError) {
+    throw new Error('Country code cannot be determined from the coordinates');
+  }
+  return countryCode as string;
 };

@@ -10,7 +10,6 @@ export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: b
     lastModifiedDateTime: item.lastModifiedDateTime,
     type: item.type,
     creatorUserId: item.creatorUserId,
-    city: item.city,
     length: item.length,
     height: item.height,
     accessInfo: item.accessInfo,

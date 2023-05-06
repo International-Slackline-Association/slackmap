@@ -3,7 +3,7 @@ import * as db from 'core/db';
 import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
-import { deleteAllFeatureEditors } from 'core/db';
+import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import {
   addAdminAsEditorToMapFeature,
@@ -50,13 +50,16 @@ export const processSpotDetailsOperation = async (
   if (eventName === 'REMOVE' && oldItem) {
     const oldSpot = spotDetailsDBUtils.attrsToItem(oldItem);
     await deleteAllFeatureEditors(oldSpot.spotId, 'spot');
+    await deleteAllFeatureChangelogs(oldSpot.spotId, 'spot');
     await deleteAllFeatureImages(oldSpot.spotId);
     await refreshSpotGeoJsonFiles({ spotIdToUpdate: oldSpot.spotId });
   }
 };
 
 const refreshCountryAndEditors = async (spot: DDBSpotDetailItem) => {
-  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(spot.geoJson) as FeatureCollection);
+  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(spot.geoJson) as FeatureCollection, {
+    dontThrowError: true,
+  });
   if (countryCode && countryCode !== spot.country) {
     await db.updateSpotCountry(spot.spotId, countryCode);
   }

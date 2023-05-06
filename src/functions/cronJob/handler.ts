@@ -7,6 +7,7 @@ import { logger } from 'core/utils/logger';
 import { FeatureCollection } from '@turf/turf';
 import { refreshRepresentativeEditorsOfMapFeature } from 'core/features/mapFeature/editors';
 import { MapFeatureType } from 'core/types';
+import { genericFeatureFromItem } from 'core/features/mapFeature';
 
 logger.updateMeta({ lambdaName: 'cronJob' });
 
@@ -52,10 +53,7 @@ const runGenericCronJob = async () => {
 const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem)[]) => {
   const promises = [];
   for (const f of features) {
-    const feature = genericFeature(f);
-    if (!feature) {
-      continue;
-    }
+    const feature = genericFeatureFromItem(f);
     promises.push(
       refreshRepresentativeEditorsOfMapFeature(feature.id, feature.type, {
         countryCode: feature.country,
@@ -64,33 +62,6 @@ const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetail
     );
   }
   return Promise.all(promises);
-};
-
-const genericFeature = (feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem) => {
-  if ('lineId' in feature) {
-    return {
-      type: 'line' as MapFeatureType,
-      id: feature.lineId,
-      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
-      country: feature.country,
-    };
-  }
-  if ('spotId' in feature) {
-    return {
-      type: 'spot' as MapFeatureType,
-      id: feature.spotId,
-      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
-      country: feature.country,
-    };
-  }
-  if ('guideId' in feature) {
-    return {
-      type: 'guide' as MapFeatureType,
-      id: feature.guideId,
-      geoJson: JSON.parse(feature.geoJson) as FeatureCollection,
-      country: feature.country,
-    };
-  }
 };
 
 export const main = cronJobHandler;

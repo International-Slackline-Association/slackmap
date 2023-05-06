@@ -114,7 +114,13 @@ export const destructKey = (key: string, index: number) => {
   if (!key) {
     return undefined;
   }
-  const token = key.split(delimeter)[index];
+  const regex = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/g;
+  // replace with placeholder to avoid splitting on date and them re-adding it
+  const keyWithoutDate = key.replace(regex, 'DATE_PLACEHOLDER');
+  const token = keyWithoutDate.split(delimeter)[index];
+  if (token === 'DATE_PLACEHOLDER') {
+    return key.match(regex)?.[0];
+  }
   return token;
 };
 

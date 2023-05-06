@@ -13,6 +13,7 @@ import { validateGuideGeoJson } from 'core/features/guide/validations';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { GuideType } from 'core/types';
 import { logger } from 'core/utils/logger';
+import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 
 export const getGuideDetails = async (req: Request, res: Response) => {
   const guide = await db.getGuideDetails(req.params.id);
@@ -49,6 +50,7 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
   });
 
   const guideImages = await updateFeatureImagesInS3(guideId, body.images);
+  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const guide: DDBGuideDetailItem = {
     guideId,
@@ -59,8 +61,11 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
     createdDateTime: new Date().toISOString(),
     lastModifiedDateTime: new Date().toISOString(),
     images: guideImages,
+    country: countryCode,
   };
   await db.putGuide(guide);
+
+  logger.info('created guide', { user: req.user, guide });
   res.json(getGuideDetailsResponse(guide));
 };
 
@@ -93,6 +98,7 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
   const updatedGuide = assignFromSourceToTarget(payload, guide);
   updatedGuide.lastModifiedDateTime = new Date().toISOString();
   await db.putGuide(updatedGuide);
+
   logger.info('updated guide', { user: req.user, updatedGuide });
   res.json(getGuideDetailsResponse(updatedGuide));
 };
@@ -101,6 +107,7 @@ export const deleteGuide = async (req: Request, res: Response) => {
   const guideId = req.params.id;
   await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, true);
   await db.deleteGuide(guideId);
+
   logger.info('deleted guide', { user: req.user, guideId });
   res.json({});
 };

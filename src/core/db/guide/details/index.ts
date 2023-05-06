@@ -118,11 +118,12 @@ export const getGuideDetails = async <T extends keyof DDBGuideDetailAttrs>(
     fields?: T[];
   } = {},
 ) => {
+  const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   return ddb
     .get({
       TableName: TABLE_NAME,
       Key: key({ guideId }),
-      ProjectionExpression: opts.fields ? opts.fields.join(', ') : undefined,
+      ProjectionExpression: fields ? fields.join(', ') : undefined,
     })
     .promise()
     .then((data) => {
