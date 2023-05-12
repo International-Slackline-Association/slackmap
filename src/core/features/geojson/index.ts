@@ -220,48 +220,6 @@ const refreshClusterPointsGeoJsonFiles = async (
 
   const promises: Promise<void>[] = [];
 
-  if (opts.linePoints) {
-    promises.push(
-      writeToS3(
-        'geojson/clusters/lines-spots.geojson',
-        featureCollection(linesPointGeoJSON.features.concat(spotsPointGeoJSON.features)),
-      ),
-    );
-    promises.push(
-      writeToS3(
-        'geojson/clusters/lines-guides.geojson',
-        featureCollection(linesPointGeoJSON.features.concat(guidesPointGeoJSON.features)),
-      ),
-    );
-  }
-  if (opts.spotPoints) {
-    promises.push(
-      writeToS3(
-        'geojson/clusters/lines-spots.geojson',
-        featureCollection(linesPointGeoJSON.features.concat(spotsPointGeoJSON.features)),
-      ),
-    );
-    promises.push(
-      writeToS3(
-        'geojson/clusters/spots-guides.geojson',
-        featureCollection(spotsPointGeoJSON.features.concat(guidesPointGeoJSON.features)),
-      ),
-    );
-  }
-  if (opts.guidePoints) {
-    promises.push(
-      writeToS3(
-        'geojson/clusters/lines-guides.geojson',
-        featureCollection(linesPointGeoJSON.features.concat(guidesPointGeoJSON.features)),
-      ),
-    );
-    promises.push(
-      writeToS3(
-        'geojson/clusters/spots-guides.geojson',
-        featureCollection(spotsPointGeoJSON.features.concat(guidesPointGeoJSON.features)),
-      ),
-    );
-  }
   writeToS3(
     'geojson/clusters/all.geojson',
     featureCollection([...linesPointGeoJSON.features, ...spotsPointGeoJSON.features, ...guidesPointGeoJSON.features]),
