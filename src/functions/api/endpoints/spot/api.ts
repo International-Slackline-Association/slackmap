@@ -34,14 +34,6 @@ export const getSpotDetails = async (req: Request, res: Response) => {
   res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
 };
 
-export const getSpotGeoJson = async (req: Request, res: Response) => {
-  const spot = await db.getSpotDetails(req.params.id, { fields: ['geoJson'] });
-  if (!spot || !spot.geoJson) {
-    throw new Error('NotFound: Spot not found');
-  }
-  const geoJson = JSON.parse(spot.geoJson) as FeatureCollection;
-  res.json(geoJson);
-};
 
 export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
@@ -140,7 +132,6 @@ export const requestTemporaryEditorship = async (req: Request, res: Response) =>
 export const spotApi = express.Router();
 spotApi.post('/', catchExpressJsErrorWrapper(createSpot));
 spotApi.get('/:id/details', catchExpressJsErrorWrapper(getSpotDetails));
-spotApi.get('/:id/geojson', catchExpressJsErrorWrapper(getSpotGeoJson));
 spotApi.put('/:id', catchExpressJsErrorWrapper(updateSpot));
 spotApi.delete('/:id', catchExpressJsErrorWrapper(deleteSpot));
 spotApi.put('/:id/requestTemporaryEditorship', catchExpressJsErrorWrapper(requestTemporaryEditorship));

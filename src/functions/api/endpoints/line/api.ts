@@ -35,15 +35,6 @@ export const getLineDetails = async (req: Request, res: Response) => {
   res.json(getLineDetailsResponse(line, isUserEditor, hasNoEditors));
 };
 
-export const getLineGeoJson = async (req: Request, res: Response) => {
-  const line = await db.getLineDetails(req.params.id, { fields: ['geoJson'] });
-  if (!line || !line.geoJson) {
-    throw new Error(`NotFound: Line ${req.params.id} not found`);
-  }
-  const lineGeoJson = JSON.parse(line.geoJson) as FeatureCollection;
-  res.json(lineGeoJson);
-};
-
 export const createLine = async (req: Request<any, any, CreateLinePostBody>, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createLineSchema);
@@ -161,7 +152,6 @@ export const requestTemporaryEditorship = async (req: Request, res: Response) =>
 export const lineApi = express.Router();
 lineApi.post('/', catchExpressJsErrorWrapper(createLine));
 lineApi.get('/:id/details', catchExpressJsErrorWrapper(getLineDetails));
-lineApi.get('/:id/geojson', catchExpressJsErrorWrapper(getLineGeoJson));
 lineApi.put('/:id', catchExpressJsErrorWrapper(updateLine));
 lineApi.delete('/:id', catchExpressJsErrorWrapper(deleteLine));
 lineApi.put('/:id/requestTemporaryEditorship', catchExpressJsErrorWrapper(requestTemporaryEditorship));

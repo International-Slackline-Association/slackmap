@@ -22,7 +22,7 @@ const pathNamesMapping: { [p in AllFieldNames]: string | null } = {
   accessInfo: 'access',
   contactInfo: 'contact',
   restrictionLevel: 'restriction level',
-  restrictionInfo: 'restriction',
+  restrictionInfo: 'restriction info',
   extraInfo: 'additional details',
   images: 'images',
   country: 'country',
@@ -121,8 +121,10 @@ export const getChangelogsOfFeature = async (
       const item: MapFeatureChangelog = {
         featureId: c.featureId,
         featureType: c.featureType,
-        changelogText: '',
+        userName: userNames[index] || 'Unknown user',
         date: c.date,
+        htmlText: '',
+        actionType: c.action,
       };
       const userName = userNames[index] || 'Unknown user';
       const paths = c.updatedPaths?.map((p) => pathNamesMapping[p as AllFieldNames]).filter((p) => p);
@@ -130,27 +132,23 @@ export const getChangelogsOfFeature = async (
 
       switch (c.action) {
         case 'created':
-          item.changelogText = `${userName} has created the ${c.featureType}`;
+          item.htmlText = `<b>${userName}</b> has created the ${c.featureType}.`;
           break;
         case 'updatedDetails':
-          item.changelogText = `${userName} updated the ${pathsString || 'details'} of the ${c.featureType}`;
+          item.htmlText = `<b>${userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${c.featureType}.`;
           break;
         case 'grantedTemporaryEditor':
-          item.changelogText = `${userName} has been granted temporary editor rights for the ${c.featureType}`;
+          item.htmlText = `<b>${userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
           break;
         case 'updatedOwners':
-          item.changelogText = `${userName} changed the owner of the ${c.featureType}`;
+          item.htmlText = `<b>${userName}</b> changed the owner of the ${c.featureType}.`;
           break;
         default:
           break;
       }
       return item;
     })
-    .filter((c) => c.changelogText !== '');
+    .filter((c) => c.htmlText !== '');
 
   return { changelogs: changelogs, lastEvaluatedKey };
-};
-
-const getKeysInOriginalOrder = <T extends object>(obj: T): (keyof T)[] => {
-  return Object.getOwnPropertyNames(obj) as (keyof T)[];
 };

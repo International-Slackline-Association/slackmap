@@ -4,6 +4,7 @@ import { DDBLineDetailItem } from 'core/db/line/details/types';
 export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: boolean, hasNoEditors?: boolean) => {
   return {
     id: item.lineId,
+    geoJson: JSON.parse(item.geoJson) as FeatureCollection,
     name: item.name,
     description: item.description,
     createdDateTime: item.createdDateTime,

@@ -1,19 +1,11 @@
-import { FeatureCollection } from '@turf/turf';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
-import { MapFeatureType } from 'core/types';
+import { GenericFeature } from './types';
 
 export const genericFeatureFromItem = (
   feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem,
-): {
-  type: MapFeatureType;
-  id: string;
-  geoJson: FeatureCollection;
-  country: string;
-  createdDateTime: string;
-  creatorUserId: string;
-} => {
+): GenericFeature => {
   if ('lineId' in feature) {
     return {
       type: 'line',

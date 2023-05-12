@@ -24,16 +24,6 @@ export const getGuideDetails = async (req: Request, res: Response) => {
   const isUserEditor = Boolean(await validateMapFeatureEditor(guide.guideId, 'guide', req.user?.isaId));
   res.json(getGuideDetailsResponse(guide, isUserEditor));
 };
-
-export const getGuideGeoJson = async (req: Request, res: Response) => {
-  const guide = await db.getGuideDetails(req.params.id, { fields: ['geoJson'] });
-  if (!guide || !guide.geoJson) {
-    throw new Error(`NotFound: Guide ${req.params.id} not found`);
-  }
-  const guideGeoJson = JSON.parse(guide.geoJson) as FeatureCollection;
-  res.json(guideGeoJson);
-};
-
 export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createGuideSchema);
@@ -117,6 +107,5 @@ export const deleteGuide = async (req: Request, res: Response) => {
 export const guideApi = express.Router();
 guideApi.post('/', catchExpressJsErrorWrapper(createGuide));
 guideApi.get('/:id/details', catchExpressJsErrorWrapper(getGuideDetails));
-guideApi.get('/:id/geojson', catchExpressJsErrorWrapper(getGuideGeoJson));
 guideApi.put('/:id', catchExpressJsErrorWrapper(updateGuide));
 guideApi.delete('/:id', catchExpressJsErrorWrapper(deleteGuide));
