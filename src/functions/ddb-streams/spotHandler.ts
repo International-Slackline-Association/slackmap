@@ -64,7 +64,6 @@ const refreshCountryAndEditors = async (spot: DDBSpotDetailItem) => {
     await db.updateSpotCountry(spot.spotId, countryCode);
   }
   await refreshRepresentativeEditorsOfMapFeature(spot.spotId, 'spot', {
-    countryCode,
-    geoJson: JSON.parse(spot.geoJson),
+    countryCode: countryCode || spot.country,
   });
 };

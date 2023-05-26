@@ -34,14 +34,15 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
   }
 
   const guideId = nanoid(7);
+  const countryCode = await getCountryCodeOfGeoJson(geoJson);
 
   const processedGeoJson = processGuideGeoJson(geoJson, {
     guideId,
     type: body.type as GuideType,
+    country: countryCode,
   });
 
   const guideImages = await updateFeatureImagesInS3(guideId, body.images);
-  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const guide: DDBGuideDetailItem = {
     guideId,
@@ -82,6 +83,7 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
   const processedGeoJson = processGuideGeoJson(geoJson, {
     guideId,
     type: body.type as GuideType,
+    country: guide.country,
   });
 
   const guideImages = await updateFeatureImagesInS3(guideId, body.images);

@@ -39,14 +39,20 @@ export const transformUtils = <
   };
 
   const attrsToItem = (attrs: DDBAttrs): DDBItem => {
+    type DDBItemWithoutKeys = Omit<DDBItem, keyof DDBAttrs>;
     const { PK, SK_GSI, LSI, GSI_SK, GSI2, GSI2_SK, LSI2, ...rest } = attrs;
-    let item = { ...rest };
+    const item = { ...rest } as DDBItem;
     for (const [key, value] of Object.entries(keyUtils)) {
       if (value.destruct) {
-        item = { ...item, ...value.destruct((attrs[key as keyof DDBAttrs] as string) || '') };
+        const destructed = value.destruct((attrs[key as keyof DDBAttrs] as string) || '');
+        for (const [k, v] of Object.entries<any>(destructed)) {
+          if (v !== undefined) {
+            item[k as keyof DDBItem] = v;
+          }
+        }
       }
     }
-    return item as unknown as DDBItem;
+    return item;
   };
 
   const itemToAttrs = (item: DDBItem): DDBAttrs => {

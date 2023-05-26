@@ -65,7 +65,6 @@ const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
     await db.updateLineCountry(line.lineId, countryCode);
   }
   await refreshRepresentativeEditorsOfMapFeature(line.lineId, 'line', {
-    countryCode,
-    geoJson: JSON.parse(line.geoJson),
+    countryCode: countryCode || line.country,
   });
 };

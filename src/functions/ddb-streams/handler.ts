@@ -1,7 +1,8 @@
 import type { DynamoDBRecord, DynamoDBStreamHandler } from 'aws-lambda';
 import AWS from 'aws-sdk';
-import { guideDetailsDBUtils, lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
+import { featureChangelogDBUtils, guideDetailsDBUtils, lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
 import { logger } from 'core/utils/logger';
+import { processFeatureChangelogOperation } from './changelogHandler';
 import { processGuideDetailsOperation } from './guideHandler';
 import { processLineDetailsOperation } from './lineHandler';
 import { processSpotDetailsOperation } from './spotHandler';
@@ -43,6 +44,10 @@ const processRecord = async (record: DynamoDBRecord) => {
   if (guideDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
     await processGuideDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed guide details operation:', { newItem, oldItem, eventName });
+  }
+  if (featureChangelogDBUtils.isDDBRecordTypeMatching(keys)) {
+    await processFeatureChangelogOperation(newItem, oldItem, eventName);
+    console.log('Processed feature changelog operation:', { newItem, oldItem, eventName });
   }
 };
 

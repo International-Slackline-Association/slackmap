@@ -1,0 +1,15 @@
+[
+  { "id": "ISA_D1FD2193", "name": "Swiss Slackline", "countries": ["CH"] },
+  { "id": "ISA_6E2BF48B", "name": "vierwaldslackers.ch", "countries": ["CH"] },
+  { "id": "ISA_EA450947", "name": "Grischa Slack", "countries": ["CH"] },
+  { "id": "ISA_61F952E0", "name": "Slacklattack - Slackline Crew Bern&Thun", "countries": ["CH"] },
+  { "id": "ISA_78576E0A", "name": "MOVE Switzerland / Bern MOVES", "countries": ["CH"] },
+  { "id": "ISA_CEDAB493", "name": "Slacklions - Slackline Zürich", "countries": ["CH"] },
+  { "id": "ISA_AE44FDC6", "name": "Swiss Highline", "countries": ["CH"] },
+  { "id": "ISA_8B74A33C", "name": "Slackline Dernegi", "countries": ["TR"] },
+  { "id": "ISA_035D3052", "name": "SlackNED", "countries": ["NL"] },
+  { "id": "ISA_C5227462", "name": "Slackline Lietuva", "countries": ["LT"] },
+  { "id": "ISA_134605C0", "name": "Slackline Roma A.S.D", "countries": ["IT"] },
+  { "id": "ISA_D029BE95", "name": "Slackline Slovakia", "countries": ["SK"] },
+  { "id": "ISA_7CEFC612", "name": "Highlife Peru Slackline Association", "countries": ["PE"] }
+]

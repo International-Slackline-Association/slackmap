@@ -57,7 +57,6 @@ const batchProcessFeatures = async (features: (DDBLineDetailItem | DDBSpotDetail
     promises.push(
       refreshRepresentativeEditorsOfMapFeature(feature.id, feature.type, {
         countryCode: feature.country,
-        geoJson: feature.geoJson,
       }),
     );
   }

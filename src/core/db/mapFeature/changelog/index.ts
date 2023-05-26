@@ -12,7 +12,6 @@ import {
   transformUtils,
 } from 'core/db/utils';
 import { MapFeatureType } from 'core/types';
-import { logger } from 'core/utils/logger';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI2', 'GSI2_SK'] as const;
 
@@ -65,6 +64,18 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
   typeof keysUsed
 >(keyUtils);
 
+export const featureChangelogDBUtils = {
+  isDDBRecordTypeMatching: (keys: { [key: string]: any }) => {
+    for (const [key, value] of Object.entries(keys)) {
+      if (!isKeyValueMatching(key as any, value)) {
+        return false;
+      }
+    }
+    return true;
+  },
+  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBMapFeatureChangelogAttrs),
+};
+
 export const getFeatureChangelogs = async (
   featureId: string,
   featureType: MapFeatureType,
@@ -94,6 +105,40 @@ export const getFeatureChangelogs = async (
         lastEvaluatedKey: data.LastEvaluatedKey,
       };
     });
+};
+
+export const getMultipleFeatureChangelog = async (
+  changelogs: { featureId: string; featureType: MapFeatureType; date: string }[],
+) => {
+  const allKeys = chunkArray(
+    changelogs.map((c) => key({ featureId: c.featureId, featureType: c.featureType, date: c.date })),
+    100,
+  );
+
+  const items: DDBMapFeatureChangelogItem[] = [];
+  for (let keysToLoad of allKeys) {
+    while (keysToLoad.length > 0) {
+      const result = await ddb
+        .batchGet({
+          RequestItems: {
+            [TABLE_NAME]: {
+              Keys: keysToLoad,
+            },
+          },
+        })
+        .promise()
+        .then((r) => {
+          const items = r.Responses?.[TABLE_NAME] ?? [];
+          return {
+            items: items.map((i) => attrsToItem(i as DDBMapFeatureChangelogAttrs)),
+            unprocessedKeys: r.UnprocessedKeys,
+          };
+        });
+      items.push(...result.items);
+      keysToLoad = (result.unprocessedKeys?.[TABLE_NAME]?.Keys as any) ?? [];
+    }
+  }
+  return items;
 };
 
 export const putFeatureChangelog = async (changelog: DDBMapFeatureChangelogItem) => {

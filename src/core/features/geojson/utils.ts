@@ -24,5 +24,5 @@ export const getCountryCodeOfGeoJson = async <Throw = false>(
   if (!countryCode && !opts.dontThrowError) {
     throw new Error('Country code cannot be determined from the coordinates');
   }
-  return countryCode as string;
+  return countryCode?.toUpperCase() as string;
 };

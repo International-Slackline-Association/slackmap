@@ -7,6 +7,7 @@ import { genericFeatureFromItem } from '.';
 import { diff } from 'deep-diff';
 import { MapFeatureType } from 'core/types';
 import { MapFeatureChangelog } from './types';
+import { DDBCountryItem } from 'core/db/country/types';
 
 type AllFieldNames = keyof (DDBLineDetailItem & DDBSpotDetailItem & DDBGuideDetailItem);
 
@@ -117,6 +118,69 @@ export const getChangelogsOfFeature = async (
   );
 
   const changelogs = items
+    .map((c, index) => {
+      const item: MapFeatureChangelog = {
+        featureId: c.featureId,
+        featureType: c.featureType,
+        userName: userNames[index] || 'Unknown user',
+        date: c.date,
+        htmlText: '',
+        actionType: c.action,
+      };
+      const userName = userNames[index] || 'Unknown user';
+      const paths = c.updatedPaths?.map((p) => pathNamesMapping[p as AllFieldNames]).filter((p) => p);
+      const pathsString = paths && paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
+
+      switch (c.action) {
+        case 'created':
+          item.htmlText = `<b>${userName}</b> has created the ${c.featureType}.`;
+          break;
+        case 'updatedDetails':
+          item.htmlText = `<b>${userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${c.featureType}.`;
+          break;
+        case 'grantedTemporaryEditor':
+          item.htmlText = `<b>${userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
+          break;
+        case 'updatedOwners':
+          item.htmlText = `<b>${userName}</b> changed the owner of the ${c.featureType}.`;
+          break;
+        default:
+          break;
+      }
+      return item;
+    })
+    .filter((c) => c.htmlText !== '');
+
+  return { changelogs: changelogs, lastEvaluatedKey };
+};
+
+export const getChangelogsOfCountry = async (
+  code: string,
+  opts: {
+    startKey?: any;
+    limit?: number;
+  } = {},
+) => {
+  const { items, lastEvaluatedKey } = await db.getCountryChangelogs(code, opts);
+
+  const isChangelog = (c: any): c is Required<DDBCountryItem> => {
+    return c.changelogDate && c.featureType;
+  };
+
+  const countryChangelogs = items.filter(isChangelog).map((c) => ({
+    featureId: c.featureId,
+    featureType: c.featureType,
+    date: c.changelogDate,
+  }));
+
+  const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);
+
+  const userNames = (await Promise.all(featureChangelogs.map((c) => db.isaUsersDb.getBasicUserDetails(c.userId)))).map(
+    (f) => f?.fullname,
+  );
+
+  const changelogs = featureChangelogs
+    .sort((a, b) => (a.date > b.date ? -1 : 1))
     .map((c, index) => {
       const item: MapFeatureChangelog = {
         featureId: c.featureId,

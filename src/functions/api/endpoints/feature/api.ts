@@ -27,6 +27,7 @@ export const getFeatureChangelogs = async (
     limit: 20,
     startKey: cursor,
   });
+
   res.json(getFeatureChangelogsResponse(changelogs, constructPaginationResponse(lastEvaluatedKey)));
 };
 

@@ -6,6 +6,7 @@ import { lineApi } from './endpoints/line/api';
 import { spotApi } from './endpoints/spot/api';
 import { guideApi } from './endpoints/guide/api';
 import { featureApi } from './endpoints/feature/api';
+import { countryApi } from './endpoints/country/api';
 
 const app = express();
 
@@ -25,7 +26,7 @@ const setupRoutes = (app: Express) => {
   app.use('/spot', spotApi);
   app.use('/guide', guideApi);
   app.use('/feature', featureApi);
-
+  app.use('/country', countryApi);
 };
 
 const registerStartingMiddlewares = (app: Express) => {

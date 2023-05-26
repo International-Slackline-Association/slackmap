@@ -9,12 +9,15 @@ import { guideTypeLabel } from '../guide';
 import { GuideType, SlacklineType } from 'core/types';
 import { AsyncReturnType } from 'type-fest';
 
+import countriesJson from 'data/countryInfoDict.json';
+
 export const processLineGeoJson = (
   geoJson: FeatureCollection,
   meta: {
     lineId: string;
     type?: SlacklineType;
     length?: number;
+    country: string;
   },
 ): FeatureCollection => {
   const features: Feature[] = [];
@@ -28,6 +31,9 @@ export const processLineGeoJson = (
     if (meta.type && meta.type !== 'other') {
       f.properties['lt'] = meta.type?.substring(0, 1);
     }
+    if (meta.country) {
+      f.properties['c'] = meta.country;
+    }
     features.push(f);
   }
 
@@ -38,6 +44,7 @@ export const processSpotGeoJson = (
   geoJson: FeatureCollection,
   meta: {
     spotId: string;
+    country: string;
   },
 ): FeatureCollection => {
   const features: Feature[] = [];
@@ -47,6 +54,9 @@ export const processSpotGeoJson = (
     f.properties = f.properties || {};
     f.properties['id'] = meta.spotId;
     f.properties['ft'] = 's';
+    if (meta.country) {
+      f.properties['c'] = meta.country;
+    }
     features.push(f);
   }
   return { type: 'FeatureCollection', features };
@@ -57,6 +67,7 @@ export const processGuideGeoJson = (
   meta: {
     guideId: string;
     type?: GuideType;
+    country: string;
   },
 ): FeatureCollection => {
   const features: Feature[] = [];
@@ -67,6 +78,9 @@ export const processGuideGeoJson = (
     f.properties['id'] = meta.guideId;
     f.properties['ft'] = 'g';
     f.properties['l'] = meta.type && guideTypeLabel(meta.type);
+    if (meta.country) {
+      f.properties['c'] = meta.country;
+    }
     features.push(f);
   }
 
@@ -90,6 +104,7 @@ export const refreshLineGeoJsonFiles = async (
         lineId: line.lineId,
         type: line.type,
         length: line.length,
+        country: line.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
       updatedLines = { items: [line], lastEvaluatedKey: undefined };
@@ -106,6 +121,7 @@ export const refreshLineGeoJsonFiles = async (
           lineId: line.lineId,
           type: line.type,
           length: line.length,
+          country: line.country,
         });
         for (const feature of geoJson.features) {
           mainGeoJSON.features.push(feature);
@@ -136,6 +152,7 @@ export const refreshSpotGeoJsonFiles = async (
     if (spot) {
       const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
         spotId: spot.spotId,
+        country: spot.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
       updatedSpots = { items: [spot], lastEvaluatedKey: undefined };
@@ -150,6 +167,7 @@ export const refreshSpotGeoJsonFiles = async (
       if (spot) {
         const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
           spotId: spot.spotId,
+          country: spot.country,
         });
         for (const feature of geoJson.features) {
           mainGeoJSON.features.push(feature);
@@ -181,6 +199,7 @@ export const refreshGuideGeoJsonFiles = async (
       const geoJson = processGuideGeoJson(JSON.parse(guide.geoJson), {
         guideId: guide.guideId,
         type: guide.type,
+        country: guide.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
       updatedGuides = { items: [guide], lastEvaluatedKey: undefined };
@@ -196,6 +215,7 @@ export const refreshGuideGeoJsonFiles = async (
         const geoJson = processGuideGeoJson(JSON.parse(guide.geoJson), {
           guideId: guide.guideId,
           type: guide.type,
+          country: guide.country,
         });
         for (const feature of geoJson.features) {
           mainGeoJSON.features.push(feature);
@@ -218,13 +238,49 @@ const refreshClusterPointsGeoJsonFiles = async (
   const spotsPointGeoJSON = opts.spotPoints || (await getFromS3('geojson/spots/points.geojson'));
   const guidesPointGeoJSON = opts.guidePoints || (await getFromS3('geojson/guides/points.geojson'));
 
-  const promises: Promise<void>[] = [];
+  const allPoints = featureCollection([
+    ...linesPointGeoJSON.features,
+    ...spotsPointGeoJSON.features,
+    ...guidesPointGeoJSON.features,
+  ]);
 
-  writeToS3(
-    'geojson/clusters/all.geojson',
-    featureCollection([...linesPointGeoJSON.features, ...spotsPointGeoJSON.features, ...guidesPointGeoJSON.features]),
-  );
-  await Promise.all(promises);
+  await writeToS3('geojson/clusters/all.geojson', allPoints);
+  await refreshCountryPointsGeoJson({ allPoints });
+  return { allPoints };
+};
+
+const refreshCountryPointsGeoJson = async (opts: { allPoints?: FeatureCollection }) => {
+  const allPointsGeoJson = opts.allPoints || (await getFromS3('geojson/clusters/all.geojson'));
+
+  const countriesHavingFeatures = new Set<string>();
+  turf.propEach(allPointsGeoJson, (currentProp) => {
+    const countryId = currentProp?.['c'];
+    if (countryId) {
+      countriesHavingFeatures.add(countryId);
+    }
+  });
+
+  const geojson: FeatureCollection = {
+    type: 'FeatureCollection',
+    features: [],
+  };
+  for (const code of countriesHavingFeatures) {
+    const countryInfo = countriesJson[code as keyof typeof countriesJson];
+    if (!countryInfo) {
+      throw new Error(`Country ${code} not found in countries.json`);
+    }
+    geojson.features.push({
+      type: 'Feature',
+      properties: {
+        name: countryInfo.name,
+        id: code,
+        ft: 'ct',
+      },
+      geometry: countryInfo.geometry,
+    });
+  }
+
+  await writeToS3('geojson/countries/points.geojson', geojson);
 };
 
 const generatePointsGeoJson = (geoJson: FeatureCollection) => {

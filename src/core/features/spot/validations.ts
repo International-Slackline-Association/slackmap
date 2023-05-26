@@ -14,8 +14,8 @@ export const validateSpotGeoJson = (geoJson: FeatureCollection): geoJson is Feat
       throw new Error(`Validation: Spots can NOT have more than 50 edges`);
     }
     const area = turf.area(feature);
-    if (area < 100 || area > 100000) {
-      throw new Error(`Validation: Spot drawn should be between 100 and 100000 square meters`);
+    if (area < 100 || area > 500000) {
+      throw new Error(`Validation: Spot drawn should be between 100 and 500000(0.5 square kilometer) square meters`);
     }
   }
   return true;

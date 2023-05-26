@@ -1,33 +1,17 @@
-import { FeatureCollection } from '@turf/turf';
 import * as db from 'core/db';
-import * as turf from '@turf/turf';
-import { calculateCenterOfFeature } from '../geojson/utils';
-import { getAssociationsData } from 'core/externalApi/slackline-data-api';
 import { MapFeatureType } from 'core/types';
 import { getUserDetails, getUsersOfOrganization } from '../isaUser';
+import organizationsJson from 'data/organizations.json';
 
 export const refreshRepresentativeEditorsOfMapFeature = async (
   featureId: string,
   featureType: MapFeatureType,
-  opts: { countryCode?: string; geoJson: FeatureCollection },
+  opts: { countryCode: string },
 ) => {
-  const { associationsGeoJson } = await getAssociationsData();
-
   const representativeOrganizations: string[] = [];
-  for (const assoc of associationsGeoJson.features) {
-    const organizations = assoc.properties?.organizationIds;
-    if (!organizations) {
-      continue;
-    }
-    if (opts.countryCode) {
-      if (assoc.properties?.id === opts.countryCode) {
-        representativeOrganizations.push(...organizations);
-      }
-    } else {
-      const center = calculateCenterOfFeature(opts.geoJson);
-      if (turf.booleanPointInPolygon(center, assoc)) {
-        representativeOrganizations.push(...organizations);
-      }
+  for (const organization of organizationsJson) {
+    if (organization.countries.includes(opts.countryCode)) {
+      representativeOrganizations.push(...organization.id);
     }
   }
   if (representativeOrganizations.length === 0) {

@@ -34,7 +34,6 @@ export const getSpotDetails = async (req: Request, res: Response) => {
   res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
 };
 
-
 export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res: Response) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createSpotSchema);
@@ -45,13 +44,14 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
   }
 
   const spotId = nanoid(7);
+  const countryCode = await getCountryCodeOfGeoJson(geoJson);
 
   const processedGeoJson = processSpotGeoJson(geoJson, {
     spotId: spotId,
+    country: countryCode,
   });
 
   const spotImages = await updateFeatureImagesInS3(spotId, body.images);
-  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const spot: DDBSpotDetailItem = {
     spotId,
@@ -96,7 +96,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
   const spotImages = await updateFeatureImagesInS3(spotId, body.images);
 
-  const processedGeoJson = processSpotGeoJson(geoJson, { spotId });
+  const processedGeoJson = processSpotGeoJson(geoJson, { spotId, country: spot.country });
   const payload = { ...req.body, images: spotImages, geoJson: JSON.stringify(processedGeoJson) };
   const updatedSpot = assignFromSourceToTarget(payload, spot);
   updatedSpot.lastModifiedDateTime = new Date().toISOString();

@@ -64,7 +64,6 @@ const refreshCountryAndEditors = async (guide: DDBGuideDetailItem) => {
     await db.updateGuideCountry(guide.guideId, countryCode);
   }
   await refreshRepresentativeEditorsOfMapFeature(guide.guideId, 'guide', {
-    countryCode,
-    geoJson: JSON.parse(guide.geoJson),
+    countryCode: countryCode || guide.country,
   });
 };

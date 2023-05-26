@@ -1,5 +1,6 @@
 import { ddb } from 'core/aws/clients';
 import { UserIdentityType } from 'core/types';
+import { chunkArray } from '../utils';
 
 const TABLE_NAME = process.env.USERS_TABLE_NAME;
 
@@ -59,6 +60,50 @@ export const getBasicUserDetails = async (userId: string) => {
     return { ...details, identityType };
   }
   return null;
+};
+
+export const getMultipleOrganizationDetails = async (orgIds: string[]) => {
+  const allKeys = chunkArray(
+    orgIds.map((id) => ({ PK: `org:${id}`, SK_GSI: `orgDetails` })),
+    100,
+  );
+
+  const items: {
+    fullname: string;
+    profilePictureUrl?: string;
+    country?: string;
+    email?: string;
+  }[] = [];
+  for (let keysToLoad of allKeys) {
+    while (keysToLoad.length > 0) {
+      const result = await ddb
+        .batchGet({
+          RequestItems: {
+            [TABLE_NAME]: {
+              Keys: keysToLoad,
+            },
+          },
+        })
+        .promise()
+        .then((r) => {
+          const items = r.Responses?.[TABLE_NAME] ?? [];
+          return {
+            items: items.map((i) => {
+              return {
+                fullname: i.name,
+                profilePictureUrl: i.profilePictureUrl,
+                country: i.country,
+                email: i.GSI_SK?.split(':')[1],
+              };
+            }),
+            unprocessedKeys: r.UnprocessedKeys,
+          };
+        });
+      items.push(...result.items);
+      keysToLoad = (result.unprocessedKeys?.[TABLE_NAME]?.Keys as any) ?? [];
+    }
+  }
+  return items;
 };
 
 export const getUsersOfOrganization = async (organizationId: string) => {

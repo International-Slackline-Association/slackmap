@@ -46,15 +46,16 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
 
   const lineId = nanoid(7);
   const length = parseFloat((body.length || turf.length(geoJson.features[0], { units: 'meters' })).toFixed(2));
+  const countryCode = await getCountryCodeOfGeoJson(geoJson);
 
   const processedGeoJson = processLineGeoJson(geoJson, {
     lineId: lineId,
     type: body.type,
     length: length,
+    country: countryCode,
   });
 
   const lineImages = await updateFeatureImagesInS3(lineId, body.images);
-  const countryCode = await getCountryCodeOfGeoJson(processedGeoJson);
 
   const isMeasured = body.length ? body.isMeasured : false;
   const line: DDBLineDetailItem = {
@@ -110,6 +111,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
     lineId: lineId,
     type: body.type,
     length: length,
+    country: line.country,
   });
 
   const lineImages = await updateFeatureImagesInS3(lineId, body.images);
