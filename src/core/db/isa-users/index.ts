@@ -62,48 +62,39 @@ export const getBasicUserDetails = async (userId: string) => {
   return null;
 };
 
-export const getMultipleOrganizationDetails = async (orgIds: string[]) => {
-  const allKeys = chunkArray(
-    orgIds.map((id) => ({ PK: `org:${id}`, SK_GSI: `orgDetails` })),
-    100,
-  );
-
-  const items: {
-    fullname: string;
-    profilePictureUrl?: string;
-    country?: string;
-    email?: string;
-  }[] = [];
-  for (let keysToLoad of allKeys) {
-    while (keysToLoad.length > 0) {
-      const result = await ddb
-        .batchGet({
-          RequestItems: {
-            [TABLE_NAME]: {
-              Keys: keysToLoad,
-            },
-          },
-        })
-        .promise()
-        .then((r) => {
-          const items = r.Responses?.[TABLE_NAME] ?? [];
+export const getAllOrganizations = async (filter: { country?: string } = {}) => {
+  return ddb
+    .query({
+      TableName: TABLE_NAME,
+      IndexName: 'GSI',
+      KeyConditionExpression: '#SK_GSI = :SK_GSI',
+      ExpressionAttributeNames: {
+        '#SK_GSI': 'SK_GSI',
+      },
+      ExpressionAttributeValues: {
+        ':SK_GSI': `orgDetails`,
+      },
+    })
+    .promise()
+    .then((data) => {
+      const items = data.Items || [];
+      return items
+        .map((i) => {
           return {
-            items: items.map((i) => {
-              return {
-                fullname: i.name,
-                profilePictureUrl: i.profilePictureUrl,
-                country: i.country,
-                email: i.GSI_SK?.split(':')[1],
-              };
-            }),
-            unprocessedKeys: r.UnprocessedKeys,
+            id: i.PK.split(':')[1],
+            fullname: i.name,
+            profilePictureUrl: i.profilePictureUrl,
+            country: i.country,
+            email: i.GSI_SK?.split(':')[1],
           };
+        })
+        .filter((i) => {
+          if (filter.country) {
+            return i.country?.toUpperCase() === filter.country.toUpperCase();
+          }
+          return true;
         });
-      items.push(...result.items);
-      keysToLoad = (result.unprocessedKeys?.[TABLE_NAME]?.Keys as any) ?? [];
-    }
-  }
-  return items;
+    });
 };
 
 export const getUsersOfOrganization = async (organizationId: string) => {

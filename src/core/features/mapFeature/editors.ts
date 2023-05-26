@@ -9,6 +9,8 @@ export const refreshRepresentativeEditorsOfMapFeature = async (
   opts: { countryCode: string },
 ) => {
   const representativeOrganizations: string[] = [];
+
+  // TODO: Switch to loading organizations from DB
   for (const organization of organizationsJson) {
     if (organization.countries.includes(opts.countryCode)) {
       representativeOrganizations.push(...organization.id);
