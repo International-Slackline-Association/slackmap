@@ -175,37 +175,41 @@ export const getChangelogsOfCountry = async (
 
   const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);
 
-  const userNames = (await Promise.all(featureChangelogs.map((c) => db.isaUsersDb.getBasicUserDetails(c.userId)))).map(
-    (f) => f?.fullname,
-  );
+  const userNames = (
+    await Promise.all(featureChangelogs.map((c) => db.isaUsersDb.getBasicUserDetails(c.userId)))
+  ).reduce((acc, f) => {
+    if (f) {
+      acc[f.id] = f?.fullname;
+    }
+    return acc;
+  }, {} as { [userId: string]: string });
 
   const changelogs = featureChangelogs
     .sort((a, b) => (a.date > b.date ? -1 : 1))
-    .map((c, index) => {
+    .map((c) => {
       const item: MapFeatureChangelog = {
         featureId: c.featureId,
         featureType: c.featureType,
-        userName: userNames[index] || 'Unknown user',
+        userName: userNames[c.userId] || 'Unknown user',
         date: c.date,
         htmlText: '',
         actionType: c.action,
       };
-      const userName = userNames[index] || 'Unknown user';
       const paths = c.updatedPaths?.map((p) => pathNamesMapping[p as AllFieldNames]).filter((p) => p);
       const pathsString = paths && paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
 
       switch (c.action) {
         case 'created':
-          item.htmlText = `<b>${userName}</b> has created the ${c.featureType}.`;
+          item.htmlText = `<b>${item.userName}</b> has created the ${c.featureType}.`;
           break;
         case 'updatedDetails':
-          item.htmlText = `<b>${userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${c.featureType}.`;
+          item.htmlText = `<b>${item.userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${c.featureType}.`;
           break;
         case 'grantedTemporaryEditor':
-          item.htmlText = `<b>${userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
+          item.htmlText = `<b>${item.userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
           break;
         case 'updatedOwners':
-          item.htmlText = `<b>${userName}</b> changed the owner of the ${c.featureType}.`;
+          item.htmlText = `<b>${item.userName}</b> changed the owner of the ${c.featureType}.`;
           break;
         default:
           break;

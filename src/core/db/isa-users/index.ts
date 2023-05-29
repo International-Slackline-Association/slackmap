@@ -7,6 +7,7 @@ const TABLE_NAME = process.env.USERS_TABLE_NAME;
 const getUserDetails = async (
   userId: string,
 ): Promise<{
+  id: string;
   fullname: string;
   profilePictureUrl?: string;
   country?: string;
@@ -17,6 +18,7 @@ const getUserDetails = async (
     .then((data) => {
       if (data.Item) {
         const user = {
+          id: userId,
           fullname: `${data.Item.name} ${data.Item.surname}`,
           profilePictureUrl: data.Item.profilePictureUrl,
           country: data.Item.country,
@@ -29,6 +31,7 @@ const getUserDetails = async (
 const getOrganizationDetails = async (
   orgId: string,
 ): Promise<{
+  id: string;
   fullname: string;
   profilePictureUrl?: string;
   country?: string;
@@ -39,6 +42,7 @@ const getOrganizationDetails = async (
     .then((data) => {
       if (data.Item) {
         const user = {
+          id: orgId,
           fullname: data.Item.name,
           profilePictureUrl: data.Item.profilePictureUrl,
           country: data.Item.country,
