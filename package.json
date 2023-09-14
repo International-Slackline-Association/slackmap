@@ -12,9 +12,7 @@
     "deploy:api": "serverless deploy function -f api",
     "deploy:ddbStreams": "serverless deploy function -f ddbStreams",
     "deploy:cronJob": "serverless deploy function -f cronJob",
-    "script:parseOldSlackmapData": "ts-node misc/scripts/parseOldSlackmapData.ts",
-    "script:parseOldCommunitiesData": "ts-node misc/scripts/parseOldCommunitiesData.ts",
-    "script:parseAssociationsData": "ts-node misc/scripts/parseAssociationsData.ts"
+    "script:cwLogs": "ts-node misc/scripts/queryCwLogs.ts"
   },
   "engines": {
     "node": ">=16.13.2",

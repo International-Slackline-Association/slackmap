@@ -7,15 +7,15 @@ export class SimpleCache<T> {
     this.cache = {};
   }
 
-  get(key: string) {
-    const record = this.cache[key];
+  get(key?: string) {
+    const record = this.cache[key || 'default'];
     if (record && record.timestamp + this.timeout > Date.now()) {
       return record.value;
     }
     return null;
   }
-  set(key: string, value: T) {
-    this.cache[key] = {
+  set(key: string | undefined, value: T) {
+    this.cache[key || 'default'] = {
       timestamp: Date.now(),
       value,
     };
