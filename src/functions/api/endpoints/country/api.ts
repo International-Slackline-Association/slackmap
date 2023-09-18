@@ -8,9 +8,7 @@ export const getCountryDetails = async (req: Request, res: Response) => {
   const countryCode = req.params.code;
   const countryInfo = countriesJson[countryCode.toUpperCase() as keyof typeof countriesJson];
 
-  const organizations = await isaUsersDb.getAllOrganizations({ country: countryCode.toUpperCase() });
-
-  res.json({ name: countryInfo.name, organizations });
+  res.json({ name: countryInfo.name });
 };
 
 export const getCountryChangelogs = async (req: Request, res: Response) => {

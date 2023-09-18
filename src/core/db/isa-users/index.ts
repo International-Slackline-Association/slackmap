@@ -53,6 +53,26 @@ const getOrganizationDetails = async (
     });
 };
 
+const findOrganizationsFromEmail = async (email: string) => {
+  return ddb
+    .query({
+      TableName: TABLE_NAME,
+      IndexName: 'GSI',
+      KeyConditionExpression: 'SK_GSI = :SK_GSI and GSI_SK = :GSI_SK',
+      ExpressionAttributeValues: {
+        ':SK_GSI': `orgDetails`,
+        ':GSI_SK': `email:${email}`,
+      },
+    })
+    .promise()
+    .then((data) => {
+      const items = data.Items || [];
+      return items.map((i) => ({
+        id: i.PK.split(':')[1] as string,
+      }));
+    });
+};
+
 export const getBasicUserDetails = async (userId: string) => {
   let identityType: UserIdentityType = 'individual';
   let details = await getUserDetails(userId);
@@ -66,39 +86,13 @@ export const getBasicUserDetails = async (userId: string) => {
   return null;
 };
 
-export const getAllOrganizations = async (filter: { country?: string } = {}) => {
-  return ddb
-    .query({
-      TableName: TABLE_NAME,
-      IndexName: 'GSI',
-      KeyConditionExpression: '#SK_GSI = :SK_GSI',
-      ExpressionAttributeNames: {
-        '#SK_GSI': 'SK_GSI',
-      },
-      ExpressionAttributeValues: {
-        ':SK_GSI': `orgDetails`,
-      },
-    })
-    .promise()
-    .then((data) => {
-      const items = data.Items || [];
-      return items
-        .map((i) => {
-          return {
-            id: i.PK.split(':')[1],
-            fullname: i.name,
-            profilePictureUrl: i.profilePictureUrl,
-            country: i.country,
-            email: i.GSI_SK?.split(':')[1],
-          };
-        })
-        .filter((i) => {
-          if (filter.country) {
-            return i.country?.toUpperCase() === filter.country.toUpperCase();
-          }
-          return true;
-        });
-    });
+export const getOrganizationDetailsFromEmail = async (email: string) => {
+  const organizations = await findOrganizationsFromEmail(email);
+  if (organizations.length === 0) {
+    return null;
+  }
+  const details = await getOrganizationDetails(organizations[0].id);
+  return details;
 };
 
 export const getUsersOfOrganization = async (organizationId: string) => {

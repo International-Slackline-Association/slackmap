@@ -2,7 +2,6 @@ import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import { logger } from 'core/utils/logger';
 import jwt_decode from 'jwt-decode';
 import { parseExpectedError } from 'core/utils/error';
-import { getCurrentInvoke } from '@vendia/serverless-express';
 import { generateISAIdFromUsername } from 'core/utils';
 
 export const injectCommonlyUsedHeadersMiddleware = async (req: Request, _res: Response, next: NextFunction) => {

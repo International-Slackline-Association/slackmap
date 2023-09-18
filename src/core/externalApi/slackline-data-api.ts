@@ -12,7 +12,7 @@ interface IsaMember {
   joinedDate?: string;
   email: string;
   infoUrl?: string;
-  profilePictureUrl?: string;
+  groupId?: string;
   memberType: 'national' | 'observer' | 'partner' | 'associate';
 }
 

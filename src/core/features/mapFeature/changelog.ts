@@ -8,6 +8,7 @@ import { diff } from 'deep-diff';
 import { MapFeatureType } from 'core/types';
 import { MapFeatureChangelog } from './types';
 import { DDBCountryItem } from 'core/db/country/types';
+import { getUserDetails } from '../isaUser';
 
 type AllFieldNames = keyof (DDBLineDetailItem & DDBSpotDetailItem & DDBGuideDetailItem);
 
@@ -113,9 +114,7 @@ export const getChangelogsOfFeature = async (
 ) => {
   const { items, lastEvaluatedKey } = await db.getFeatureChangelogs(featureId, featureType, opts);
 
-  const userNames = (await Promise.all(items.map((c) => db.isaUsersDb.getBasicUserDetails(c.userId)))).map(
-    (f) => f?.fullname,
-  );
+  const userNames = (await Promise.all(items.map((c) => getUserDetails(c.userId)))).map((f) => f?.fullname);
 
   const changelogs = items
     .map((c, index) => {
@@ -175,9 +174,7 @@ export const getChangelogsOfCountry = async (
 
   const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);
 
-  const userNames = (
-    await Promise.all(featureChangelogs.map((c) => db.isaUsersDb.getBasicUserDetails(c.userId)))
-  ).reduce((acc, f) => {
+  const userNames = (await Promise.all(featureChangelogs.map((c) => getUserDetails(c.userId)))).reduce((acc, f) => {
     if (f) {
       acc[f.id] = f?.fullname;
     }
@@ -203,7 +200,9 @@ export const getChangelogsOfCountry = async (
           item.htmlText = `<b>${item.userName}</b> has created the ${c.featureType}.`;
           break;
         case 'updatedDetails':
-          item.htmlText = `<b>${item.userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${c.featureType}.`;
+          item.htmlText = `<b>${item.userName}</b> updated the <b>${pathsString || 'details'}</b> of the ${
+            c.featureType
+          }.`;
           break;
         case 'grantedTemporaryEditor':
           item.htmlText = `<b>${item.userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
