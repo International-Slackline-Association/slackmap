@@ -35,7 +35,7 @@
   "JE": { "name": "Jersey", "iso3": "JEY", "geometry": { "type": "Point", "coordinates": [-2.129, 49.215] } },
   "BY": { "name": "Belarus", "iso3": "BLR", "geometry": { "type": "Point", "coordinates": [27.964, 53.468] } },
   "BZ": { "name": "Belize", "iso3": "BLZ", "geometry": { "type": "Point", "coordinates": [-88.683, 17.243] } },
-  "RE": { "name": "Reunion", "iso3": "REU", "geometry": { "type": "Point", "coordinates": [55.53,-21.143] } },
+  "RE": { "name": "Reunion", "iso3": "REU", "geometry": { "type": "Point", "coordinates": [55.53, -21.143] } },
   "RU": { "name": "Russia", "iso3": "RUS", "geometry": { "type": "Point", "coordinates": [98.67, 59.039] } },
   "RW": { "name": "Rwanda", "iso3": "RWA", "geometry": { "type": "Point", "coordinates": [29.919, -2.015] } },
   "RS": { "name": "Serbia", "iso3": "SRB", "geometry": { "type": "Point", "coordinates": [20.857, 44.027] } },
@@ -267,7 +267,7 @@
   "LC": { "name": "Saint Lucia", "iso3": "LCA", "geometry": { "type": "Point", "coordinates": [-60.969, 13.896] } },
   "LA": { "name": "Laos", "iso3": "LAO", "geometry": { "type": "Point", "coordinates": [103.764, 18.117] } },
   "TV": { "name": "Tuvalu", "iso3": "TUV", "geometry": { "type": "Point", "coordinates": [179.218, -8.515] } },
-  "TW": { "name": "Taiwan", "iso3": "TWN", "geometry": { "coordinates": [-68.56, 12.06], "type": "Point" } },
+  "TW": { "name": "Taiwan", "iso3": "TWN", "geometry": { "coordinates": [121.121, 23.81], "type": "Point" } },
   "TT": {
     "name": "Trinidad and Tobago",
     "iso3": "TTO",
