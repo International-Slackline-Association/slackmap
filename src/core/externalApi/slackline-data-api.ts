@@ -28,7 +28,8 @@ interface SlacklineGroup {
   createdDateTime: string; // only date
   updatedDateTime: string; // only date
   email?: string;
-  facebook?: string;
+  facebookPage?: string;
+  facebookGroup?: string;
   telegram?: string;
   instagram?: string;
   whatsapp?: string;

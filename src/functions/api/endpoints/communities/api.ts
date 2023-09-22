@@ -3,7 +3,6 @@ import { catchExpressJsErrorWrapper } from '../../utils';
 import { slacklineDataApi } from 'core/externalApi/slackline-data-api';
 import countriesJson from 'data/countryInfoDict.json';
 import { Feature, FeatureCollection } from '@turf/turf';
-import { getUserDetails } from 'core/features/isaUser';
 import { getOrganizationDetailsFromEmail } from 'core/db/isa-users';
 
 export const getCountriesGeoJson = async (req: Request, res: Response) => {
