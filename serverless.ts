@@ -19,6 +19,7 @@ const serverlessConfiguration: AWS = {
     runtime: 'nodejs16.x',
     region: 'eu-central-1',
     profile: '${env:AWS_PROFILE}',
+    stage: 'prod',
     apiGateway: {
       minimumCompressionSize: 1024,
       shouldStartNameWithService: true,
