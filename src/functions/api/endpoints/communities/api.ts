@@ -61,7 +61,9 @@ export const getCommunityCountryDetails = async (req: Request, res: Response) =>
     countryGroupIdsPromise,
   ]);
 
-  const slacklineGroups = allSlacklineGroups.filter((group) => countryGroupIds.includes(group.id));
+  const slacklineGroups = allSlacklineGroups
+    .filter((group) => countryGroupIds.includes(group.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
 
   res.json({ name: countryInfo.name, isaMembers, slacklineGroups });
 };
@@ -81,10 +83,10 @@ export const getGroupDetails = async (req: Request, res: Response) => {
 const fillOrganizationInformation = async (isaMembers: { email?: string; profilePictureUrl?: string }[]) => {
   const promises: Promise<any>[] = [];
   for (const isaMember of isaMembers) {
-    if (isaMember.email) {
+    if (isaMember.email && !isaMember.profilePictureUrl) {
       promises.push(
         getOrganizationDetailsFromEmail(isaMember.email).then((org) => {
-          if (org) {
+          if (org?.profilePictureUrl) {
             isaMember.profilePictureUrl = org.profilePictureUrl;
           }
         }),

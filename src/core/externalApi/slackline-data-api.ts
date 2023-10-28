@@ -14,6 +14,7 @@ interface IsaMember {
   infoUrl?: string;
   groupId?: string;
   memberType: 'national' | 'observer' | 'partner' | 'associate';
+  profilePictureUrl?: string;
 }
 
 interface SlacklineGroupGeoJsonProperties {

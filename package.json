@@ -8,7 +8,6 @@
     "checkTs": "tsc --noEmit",
     "package": "serverless package",
     "deploy": "serverless deploy --verbose",
-    "deploy:prod": "serverless deploy --verbose",
     "deploy:api": "serverless deploy function -f api",
     "deploy:ddbStreams": "serverless deploy function -f ddbStreams",
     "deploy:cronJob": "serverless deploy function -f cronJob",
