@@ -1,3 +1,4 @@
+import { s3ImageUploadZodSchema } from '@functions/api/utils';
 import { z } from 'zod';
 
 const guideTypeEnum = z.enum(['parkingLot', 'campingSpot', 'accessPath', 'riggingPath', 'information', 'other']);
@@ -8,17 +9,7 @@ export const createGuideSchema = z.object({
   }),
   type: guideTypeEnum,
   description: z.string().max(512).optional(),
-  images: z
-    .object({
-      id: z.string().max(256).optional(),
-      content: z
-        .string()
-        .max(1024 * 1024 * 3)
-        .optional(),
-      isCover: z.boolean().optional(),
-    })
-    .array()
-    .optional(),
+  images: s3ImageUploadZodSchema,
 });
 export type CreateGuidePostBody = z.infer<typeof createGuideSchema>;
 
@@ -30,17 +21,7 @@ export const updateGuideSchema = z
     }),
     type: guideTypeEnum,
     description: z.string().max(512).optional(),
-    images: z
-      .object({
-        id: z.string().max(256).optional(),
-        content: z
-          .string()
-          .max(1024 * 1024 * 3)
-          .optional(),
-        isCover: z.boolean().optional(),
-      })
-      .array()
-      .optional(),
+    images: s3ImageUploadZodSchema,
   })
   .strict();
 

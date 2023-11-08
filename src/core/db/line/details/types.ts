@@ -24,6 +24,7 @@ interface NonKeyAttrs {
   extraInfo?: string;
   createdDateTime: string;
   lastModifiedDateTime?: string;
+  anchorImages?: { s3Key: string; id: string; isCover?: boolean }[];
   images?: { s3Key: string; id: string; isCover?: boolean }[];
 }
 

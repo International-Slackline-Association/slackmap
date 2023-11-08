@@ -51,7 +51,9 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
     country: countryCode,
   });
 
-  const spotImages = await updateFeatureImagesInS3(spotId, body.images);
+  const spotImages = await updateFeatureImagesInS3(spotId, body.images, {
+    maxImageNumber: 3,
+  });
 
   const spot: DDBSpotDetailItem = {
     spotId,
@@ -94,7 +96,9 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
     throw new Error('Validation: Invalid geoJson');
   }
 
-  const spotImages = await updateFeatureImagesInS3(spotId, body.images);
+  const spotImages = await updateFeatureImagesInS3(spotId, body.images, {
+    maxImageNumber: 3,
+  });
 
   const processedGeoJson = processSpotGeoJson(geoJson, { spotId, country: spot.country });
   const payload = { ...req.body, images: spotImages, geoJson: JSON.stringify(processedGeoJson) };

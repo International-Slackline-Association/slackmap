@@ -46,3 +46,13 @@ export const constructPaginationResponse = (cursorObject: any) => {
   const cursor = cursorObject ? Buffer.from(JSON.stringify(cursorObject), 'utf8').toString('base64') : undefined;
   return { cursor };
 };
+
+export const s3ImageUploadZodSchema = z
+  .object({
+    id: z.string(),
+    isInProcessingBucket: z.boolean().optional(),
+    s3Key: z.string(),
+    isCover: z.boolean().optional(),
+  })
+  .array()
+  .optional();

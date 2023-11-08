@@ -1,3 +1,4 @@
+import { s3ImageUploadZodSchema } from '@functions/api/utils';
 import { z } from 'zod';
 
 const lineTypeSchema = z.enum([
@@ -29,17 +30,8 @@ export const createLineSchema = z
     extraInfo: z.string().max(512).optional(),
     restrictionInfo: z.string().max(512).optional(),
     isMeasured: z.boolean().optional(),
-    images: z
-      .object({
-        id: z.string().max(256).optional(),
-        content: z
-          .string()
-          .max(1024 * 1024 * 3)
-          .optional(),
-        isCover: z.boolean().optional(),
-      })
-      .array()
-      .optional(),
+    anchorImages: s3ImageUploadZodSchema,
+    images: s3ImageUploadZodSchema,
   })
   .strip();
 export type CreateLinePostBody = z.infer<typeof createLineSchema>;
@@ -63,17 +55,8 @@ export const updateLineSchema = z
     extraInfo: z.string().max(512).optional(),
     restrictionInfo: z.string().max(512).optional(),
     isMeasured: z.boolean().optional(),
-    images: z
-      .object({
-        id: z.string().max(256).optional(),
-        content: z
-          .string()
-          .max(1024 * 1024 * 3)
-          .optional(),
-        isCover: z.boolean().optional(),
-      })
-      .array()
-      .optional(),
+    anchorImages: s3ImageUploadZodSchema,
+    images: s3ImageUploadZodSchema,
   })
   .strip();
 

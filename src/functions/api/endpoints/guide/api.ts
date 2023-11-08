@@ -42,7 +42,9 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
     country: countryCode,
   });
 
-  const guideImages = await updateFeatureImagesInS3(guideId, body.images);
+  const guideImages = await updateFeatureImagesInS3(guideId, body.images, {
+    maxImageNumber: 2,
+  });
 
   const guide: DDBGuideDetailItem = {
     guideId,
@@ -86,7 +88,9 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
     country: guide.country,
   });
 
-  const guideImages = await updateFeatureImagesInS3(guideId, body.images);
+  const guideImages = await updateFeatureImagesInS3(guideId, body.images, {
+    maxImageNumber: 2,
+  });
 
   const payload = { ...req.body, images: guideImages, geoJson: JSON.stringify(processedGeoJson) };
   const updatedGuide = assignFromSourceToTarget(payload, guide);

@@ -55,7 +55,13 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     country: countryCode,
   });
 
-  const lineImages = await updateFeatureImagesInS3(lineId, body.images);
+  const anchorImages = await updateFeatureImagesInS3(lineId, body.anchorImages, {
+    prefix: 'anchors',
+    maxImageNumber: 5,
+  });
+  const lineImages = await updateFeatureImagesInS3(lineId, body.images, {
+    maxImageNumber: 3,
+  });
 
   const isMeasured = body.length ? body.isMeasured : false;
   const line: DDBLineDetailItem = {
@@ -78,6 +84,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
     lastModifiedDateTime: new Date().toISOString(),
     length: length,
     height: body.height,
+    anchorImages: anchorImages,
     images: lineImages,
   };
   await db.putLine(line);
@@ -114,9 +121,15 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
     country: line.country,
   });
 
-  const lineImages = await updateFeatureImagesInS3(lineId, body.images);
+  const anchorImages = await updateFeatureImagesInS3(lineId, body.anchorImages, {
+    prefix: 'anchors',
+    maxImageNumber: 5,
+  });
+  const lineImages = await updateFeatureImagesInS3(lineId, body.images, {
+    maxImageNumber: 3,
+  });
 
-  const payload = { ...req.body, images: lineImages, length, geoJson: JSON.stringify(processedGeoJson) };
+  const payload = { ...req.body, anchorImages, images: lineImages, length, geoJson: JSON.stringify(processedGeoJson) };
   const updatedLine = assignFromSourceToTarget(payload, line);
   updatedLine.lastModifiedDateTime = new Date().toISOString();
   await db.putLine(updatedLine);

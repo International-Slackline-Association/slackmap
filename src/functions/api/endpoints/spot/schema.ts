@@ -1,3 +1,4 @@
+import { s3ImageUploadZodSchema } from '@functions/api/utils';
 import { z } from 'zod';
 
 export const createSpotSchema = z.object({
@@ -12,17 +13,7 @@ export const createSpotSchema = z.object({
   restrictionLevel: z.enum(['partial', 'full', 'none']).optional(),
   extraInfo: z.string().max(512).optional(),
   restrictionInfo: z.string().max(512).optional(),
-  images: z
-    .object({
-      id: z.string().max(256).optional(),
-      content: z
-        .string()
-        .max(1024 * 1024 * 3)
-        .optional(),
-      isCover: z.boolean().optional(),
-    })
-    .array()
-    .optional(),
+  images: s3ImageUploadZodSchema,
 });
 export type CreateSpotPostBody = z.infer<typeof createSpotSchema>;
 
@@ -39,17 +30,7 @@ export const updateSpotSchema = z
     restrictionLevel: z.enum(['partial', 'full', 'none']).optional(),
     extraInfo: z.string().max(512).optional(),
     restrictionInfo: z.string().max(512).optional(),
-    images: z
-      .object({
-        id: z.string().max(256).optional(),
-        content: z
-          .string()
-          .max(1024 * 1024 * 3)
-          .optional(),
-        isCover: z.boolean().optional(),
-      })
-      .array()
-      .optional(),
+    images: s3ImageUploadZodSchema,
   })
   .strict();
 

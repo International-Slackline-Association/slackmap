@@ -26,6 +26,7 @@ const pathNamesMapping: { [p in AllFieldNames]: string | null } = {
   restrictionLevel: 'restriction level',
   restrictionInfo: 'restriction info',
   extraInfo: 'additional details',
+  anchorImages: 'anchor images',
   images: 'images',
   country: 'country',
   createdDateTime: null,

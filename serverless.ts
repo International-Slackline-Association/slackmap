@@ -130,6 +130,13 @@ const serverlessConfiguration: AWS = {
       ...backupResources,
       ...s3Resources,
     },
+    Outputs: {
+      SlackMapImagesS3BucketArn: {
+        Value: {
+          'Fn::GetAtt': ['SlackMapImagesS3Bucket', 'Arn'],
+        },
+      },
+    },
   },
 };
 

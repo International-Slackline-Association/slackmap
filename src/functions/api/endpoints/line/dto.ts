@@ -21,6 +21,7 @@ export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: b
     extraInfo: item.extraInfo,
     restrictionInfo: item.restrictionInfo,
     isMeasured: item.isMeasured,
+    anchorImages: item.anchorImages,
     images: item.images,
     isUserEditor: isUserEditor,
     hasNoEditors: hasNoEditors,
