@@ -25,6 +25,9 @@ interface ProcessImagePayload {
 }
 const api = axios.create({
   baseURL: `https://k6wagh946a.execute-api.eu-central-1.amazonaws.com/prod/image-processor`,
+  headers: {
+    'x-api-key': process.env.ISA_DOCUMENTS_IMAGE_PROCESSING_API_KEY,
+  },
 });
 
 const processImage = async (payload: ProcessImagePayload) => {

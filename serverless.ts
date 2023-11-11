@@ -33,6 +33,7 @@ const serverlessConfiguration: AWS = {
       SLACKMAP_APPLICATION_DATA_S3_BUCKET: { Ref: 'SlackMapApplicationDataS3Bucket' },
       SLACKMAP_IMAGES_S3_BUCKET: { Ref: 'SlackMapImagesS3Bucket' },
       GEONAMES_API_USERNAME: '${ssm:/slackmap-geonames-api-username}',
+      ISA_DOCUMENTS_IMAGE_PROCESSING_API_KEY: '${ssm:/isa-documents-image-processing-api-key}',
       DISABLE_STREAMS: 'false',
     },
     iam: {
@@ -86,7 +87,10 @@ const serverlessConfiguration: AWS = {
           {
             Effect: 'Allow',
             Action: ['ssm:GetParameters', 'ssm:GetParameter', 'ssm:GetParametersByPath'],
-            Resource: 'arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/slackmap*',
+            Resource: [
+              'arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/slackmap*',
+              'arn:aws:ssm:${aws:region}:${aws:accountId}:parameter/isa-documents*',
+            ],
           },
           {
             Effect: 'Allow',
