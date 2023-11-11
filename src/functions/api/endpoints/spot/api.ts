@@ -5,11 +5,7 @@ import { getSpotDetailsResponse } from './dto';
 import { FeatureCollection } from '@turf/turf';
 import { CreateSpotPostBody, createSpotSchema, UpdateSpotPostBody, updateSpotSchema } from './schema';
 import { processSpotGeoJson } from 'core/features/geojson';
-import {
-  addTemporaryEditorToMapFeature,
-  validateMapFeatureEditor,
-  validateMapFeatureHasNoEditors,
-} from 'core/features/mapFeature/editors';
+import { addTemporaryEditorToMapFeature, validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { assignFromSourceToTarget } from 'core/utils';
 import { nanoid } from 'nanoid';
 import { validateSpotGeoJson } from 'core/features/spot/validations';
@@ -29,9 +25,8 @@ export const getSpotDetails = async (req: Request, res: Response) => {
     throw new Error('NotFound: Spot not found');
   }
   const isUserEditor = Boolean(await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId));
-  const hasNoEditors = !isUserEditor && (await validateMapFeatureHasNoEditors(spot.spotId, 'spot'));
 
-  res.json(getSpotDetailsResponse(spot, isUserEditor, hasNoEditors));
+  res.json(getSpotDetailsResponse(spot, isUserEditor));
 };
 
 export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res: Response) => {
@@ -83,7 +78,7 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
   const spotId = req.params.id;
   const body = validateApiPayload(req.body, updateSpotSchema);
-  await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, true);
+  await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, { shouldThrow: true });
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -113,7 +108,10 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
 
 export const deleteSpot = async (req: Request, res: Response) => {
   const spotId = req.params.id;
-  await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, true);
+  const editor = await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, { shouldThrow: true });
+  if (editor?.reason === 'temporary') {
+    throw new Error('Forbidden: Temporary editor cannot delete spots');
+  }
   await db.deleteSpot(spotId);
   logger.info('deleted spot', { user: req.user, spotId });
   res.json({});

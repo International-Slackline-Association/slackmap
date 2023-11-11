@@ -1,7 +1,7 @@
 import { FeatureCollection } from '@turf/turf';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 
-export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: boolean, hasNoEditors?: boolean) => {
+export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: boolean) => {
   return {
     id: item.spotId,
     geoJson: JSON.parse(item.geoJson) as FeatureCollection,
@@ -17,6 +17,5 @@ export const getSpotDetailsResponse = (item: DDBSpotDetailItem, isUserEditor?: b
     restrictionInfo: item.restrictionInfo,
     images: item.images,
     isUserEditor: isUserEditor,
-    hasNoEditors: hasNoEditors,
   };
 };

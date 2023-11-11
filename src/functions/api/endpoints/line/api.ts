@@ -8,11 +8,7 @@ import { validateLineGeoJson } from 'core/features/line/validations';
 import { nanoid } from 'nanoid';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 import * as turf from '@turf/turf';
-import {
-  addTemporaryEditorToMapFeature,
-  validateMapFeatureEditor,
-  validateMapFeatureHasNoEditors,
-} from 'core/features/mapFeature/editors';
+import { addTemporaryEditorToMapFeature, validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { processLineGeoJson } from 'core/features/geojson';
 import { assignFromSourceToTarget } from 'core/utils';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
@@ -30,9 +26,8 @@ export const getLineDetails = async (req: Request, res: Response) => {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
   const isUserEditor = Boolean(await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId));
-  const hasNoEditors = !isUserEditor && (await validateMapFeatureHasNoEditors(line.lineId, 'line'));
 
-  res.json(getLineDetailsResponse(line, isUserEditor, hasNoEditors));
+  res.json(getLineDetailsResponse(line, isUserEditor));
 };
 
 export const createLine = async (req: Request<any, any, CreateLinePostBody>, res: Response) => {
@@ -99,7 +94,7 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
   const lineId = req.params.id;
   const body = validateApiPayload(req.body, updateLineSchema);
-  await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, true);
+  await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, { shouldThrow: true });
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -141,7 +136,10 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
 
 export const deleteLine = async (req: Request, res: Response) => {
   const lineId = req.params.id;
-  await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, true);
+  const editor = await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, { shouldThrow: true });
+  if (editor?.reason === 'temporary') {
+    throw new Error('Forbidden: Temporary editor cannot delete lines');
+  }
   await db.deleteLine(lineId);
 
   logger.info('deleted line', { user: req.user, lineId });

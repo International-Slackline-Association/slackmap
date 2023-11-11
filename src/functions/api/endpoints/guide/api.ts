@@ -69,7 +69,7 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
 
   const guideId = req.params.id;
   const body = validateApiPayload(req.body, updateGuideSchema);
-  await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, true);
+  await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, { shouldThrow: true });
 
   const geoJson = body.geoJson as unknown as FeatureCollection;
 
@@ -103,7 +103,10 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
 
 export const deleteGuide = async (req: Request, res: Response) => {
   const guideId = req.params.id;
-  await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, true);
+  const editor = await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, { shouldThrow: true });
+  if (editor?.reason === 'temporary') {
+    throw new Error('Forbidden: Temporary editor cannot delete guides');
+  }
   await db.deleteGuide(guideId);
 
   logger.info('deleted guide', { user: req.user, guideId });

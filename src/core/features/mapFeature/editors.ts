@@ -68,11 +68,6 @@ export const addTemporaryEditorToMapFeature = async (
   featureType: MapFeatureType,
   userId: string,
 ) => {
-  const hasNoEditors = await validateMapFeatureHasNoEditors(featureId, featureType);
-
-  if (!hasNoEditors) {
-    throw new Error(`Forbidden: This ${featureType} already has editors`);
-  }
   const isaUser = await getUserDetails(userId);
   if (isaUser) {
     await db.putFeatureEditor({
@@ -91,29 +86,20 @@ export const validateMapFeatureEditor = async (
   featureId: string,
   featureType: MapFeatureType,
   userId?: string,
-  shouldThrow?: boolean,
+  opts: {
+    shouldThrow?: boolean;
+  } = {},
 ) => {
   if (!userId) {
-    if (shouldThrow) {
+    if (opts.shouldThrow) {
       throw new Error('Forbidden: User is not logged in');
     }
     return null;
   }
   const featureEditor = await db.getFeatureEditor(featureId, featureType, userId);
 
-  if (!featureEditor && shouldThrow) {
+  if (!featureEditor && opts.shouldThrow) {
     throw new Error(`Forbidden: User is not an editor of this ${featureType}`);
   }
   return featureEditor;
-};
-
-export const validateMapFeatureHasNoEditors = async (featureId: string, featureType: MapFeatureType) => {
-  const editors = await db.getFeatureEditors(featureId, featureType, { limit: 2 });
-  if (editors.length === 0) {
-    return true;
-  }
-  if (editors.length === 1 && editors[0].reason === 'admin') {
-    return true;
-  }
-  return false;
 };
