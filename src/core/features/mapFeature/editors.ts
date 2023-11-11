@@ -13,14 +13,13 @@ export const refreshRepresentativeEditorsOfMapFeature = async (
   // TODO: Switch to loading organizations from DB
   for (const organization of organizationsJson) {
     if (organization.countries.includes(opts.countryCode)) {
-      representativeOrganizations.push(...organization.id);
+      representativeOrganizations.push(organization.id);
     }
   }
-  if (representativeOrganizations.length === 0) {
-    await db.deleteAllFeatureEditors(featureId, featureType, {
-      reason: ['areaRepresentative', 'representativeMember'],
-    });
-  } else {
+  await db.deleteAllFeatureEditors(featureId, featureType, {
+    reason: ['areaRepresentative', 'representativeMember'],
+  });
+  if (representativeOrganizations.length > 0) {
     const alreadyAddedMembersForFeature = new Set<string>();
     for (const assocId of representativeOrganizations) {
       await db.putFeatureEditor({
