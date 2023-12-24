@@ -1,10 +1,9 @@
-import * as db from 'core/db';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { featureChangelogDBUtils } from 'core/db';
+import { DDBAttributeItem } from 'core/db/types';
 
 export const processFeatureChangelogOperation = async (
-  newItem: DocumentClient.AttributeMap | undefined,
-  oldItem: DocumentClient.AttributeMap | undefined,
+  newItem: DDBAttributeItem | undefined,
+  oldItem: DDBAttributeItem | undefined,
   eventName: 'INSERT' | 'MODIFY' | 'REMOVE' | undefined,
 ) => {
   if (eventName === 'INSERT' && newItem) {
@@ -22,6 +21,5 @@ export const processFeatureChangelogOperation = async (
   if (eventName === 'REMOVE' && oldItem) {
     const oldChangelog = featureChangelogDBUtils.attrsToItem(oldItem);
     // update country geojson, remove if no features left
-    
   }
 };

@@ -1,5 +1,6 @@
 import type { DynamoDBRecord, DynamoDBStreamHandler } from 'aws-lambda';
-import AWS from 'aws-sdk';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
+import type { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { featureChangelogDBUtils, guideDetailsDBUtils, lineDetailsDBUtils, spotDetailsDBUtils } from 'core/db';
 import { logger } from 'core/utils/logger';
 import { processFeatureChangelogOperation } from './changelogHandler';
@@ -60,9 +61,9 @@ const parseRecord = (record: DynamoDBRecord) => {
     throw new Error('Validation: Invalid dynamodb streams record');
   }
 
-  const newItem = newImage ? AWS.DynamoDB.Converter.unmarshall(newImage) : undefined;
-  const oldItem = oldImage ? AWS.DynamoDB.Converter.unmarshall(oldImage) : undefined;
-  const keys = AWS.DynamoDB.Converter.unmarshall(keysAttrs);
+  const newItem = newImage ? unmarshall(newImage as Record<string, AttributeValue>) : undefined;
+  const oldItem = oldImage ? unmarshall(oldImage as Record<string, AttributeValue>) : undefined;
+  const keys = unmarshall(keysAttrs as Record<string, AttributeValue>);
 
   return { newItem, oldItem, keys: keys, eventName: record.eventName };
 };

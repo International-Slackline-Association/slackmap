@@ -1,6 +1,5 @@
 import { spotDetailsDBUtils } from 'core/db/spot/details';
 import * as db from 'core/db';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import isEqual from 'lodash.isequal';
 import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
@@ -13,10 +12,11 @@ import { DDBSpotDetailItem } from 'core/db/spot/details/types';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { FeatureCollection } from '@turf/turf';
 import { getUserDetails } from 'core/features/isaUser';
+import { DDBAttributeItem } from 'core/db/types';
 
 export const processSpotDetailsOperation = async (
-  newItem: DocumentClient.AttributeMap | undefined,
-  oldItem: DocumentClient.AttributeMap | undefined,
+  newItem: DDBAttributeItem | undefined,
+  oldItem: DDBAttributeItem | undefined,
   eventName: 'INSERT' | 'MODIFY' | 'REMOVE' | undefined,
 ) => {
   if (eventName === 'INSERT' && newItem) {

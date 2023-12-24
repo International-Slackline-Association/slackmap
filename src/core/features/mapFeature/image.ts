@@ -1,3 +1,4 @@
+import { DeleteObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import { s3ImageUploadZodSchema } from '@functions/api/utils';
 import { s3 } from 'core/aws/clients';
 import { isaDocumentApi } from 'core/externalApi/isa-documents-api';
@@ -57,11 +58,12 @@ export const deleteAllFeatureImages = async (featureId: string) => {
 
 const getAllFeatureImages = async (featureId: string, prefix: string) => {
   const keys = await s3
-    .listObjectsV2({
-      Bucket: process.env.SLACKMAP_IMAGES_S3_BUCKET,
-      Prefix: constructS3Key(featureId, prefix),
-    })
-    .promise()
+    .send(
+      new ListObjectsV2Command({
+        Bucket: process.env.SLACKMAP_IMAGES_S3_BUCKET,
+        Prefix: constructS3Key(featureId, prefix),
+      }),
+    )
     .then((data) => {
       return (data.Contents || [])
         .map((c) => {
@@ -109,12 +111,12 @@ const processAndPutFeatureImage = async (
 };
 
 const deleteFeatureImage = async (key: string) => {
-  await s3
-    .deleteObject({
+  await s3.send(
+    new DeleteObjectCommand({
       Bucket: process.env.SLACKMAP_IMAGES_S3_BUCKET,
       Key: key,
-    })
-    .promise();
+    }),
+  );
 };
 
 const constructS3Key = (featureId: string, prefix: string, imageId?: string, type?: string) => {

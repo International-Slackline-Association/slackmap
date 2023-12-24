@@ -68,24 +68,23 @@ export const addUpdatedDetailsChangelog = async (
 
   const updatedPaths = diff(oldItem, item)
     ?.filter((d) => d.path && d.path.length === 1 && validPathNames.includes(d.path[0]))
-    .map((d) => d.path?.[0]);
+    .map((d) => d.path?.[0] as string);
 
   if (!updatedPaths || updatedPaths.length === 0) {
     return;
   }
-  // const paths: string[] = [];
-  if (updatedPaths.length > 0) {
-    // const pathsString = paths.slice(0, -1).join(', ') + (paths.length > 1 ? 'and ' : '') + paths.slice(-1);
-    await db.putFeatureChangelog({
-      featureId: feature.id,
-      featureType: feature.type,
-      userId: userId,
-      action: 'updatedDetails',
-      date: date.toISOString(),
-      country: feature.country,
-      updatedPaths: updatedPaths,
-    });
-  }
+  const distinctUpdatedPaths = [...new Set(updatedPaths)];
+
+  // const pathsString = paths.slice(0, -1).join(', ') + (paths.length > 1 ? 'and ' : '') + paths.slice(-1);
+  await db.putFeatureChangelog({
+    featureId: feature.id,
+    featureType: feature.type,
+    userId: userId,
+    action: 'updatedDetails',
+    date: date.toISOString(),
+    country: feature.country,
+    updatedPaths: distinctUpdatedPaths,
+  });
 };
 
 export const addTemporaryEditorChangelogToFeature = async (

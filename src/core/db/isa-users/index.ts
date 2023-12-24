@@ -1,6 +1,7 @@
 import { ddb } from 'core/aws/clients';
 import { UserIdentityType } from 'core/types';
 import { chunkArray } from '../utils';
+import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const TABLE_NAME = process.env.USERS_TABLE_NAME;
 
@@ -13,8 +14,7 @@ const getUserDetails = async (
   country?: string;
 } | null> => {
   return ddb
-    .get({ TableName: TABLE_NAME, Key: { PK: `user:${userId}`, SK_GSI: `userDetails` } })
-    .promise()
+    .send(new GetCommand({ TableName: TABLE_NAME, Key: { PK: `user:${userId}`, SK_GSI: `userDetails` } }))
     .then((data) => {
       if (data.Item) {
         const user = {
@@ -37,8 +37,7 @@ const getOrganizationDetails = async (
   country?: string;
 } | null> => {
   return ddb
-    .get({ TableName: TABLE_NAME, Key: { PK: `org:${orgId}`, SK_GSI: `orgDetails` } })
-    .promise()
+    .send(new GetCommand({ TableName: TABLE_NAME, Key: { PK: `org:${orgId}`, SK_GSI: `orgDetails` } }))
     .then((data) => {
       if (data.Item) {
         const user = {
@@ -55,16 +54,17 @@ const getOrganizationDetails = async (
 
 const findOrganizationsFromEmail = async (email: string) => {
   return ddb
-    .query({
-      TableName: TABLE_NAME,
-      IndexName: 'GSI',
-      KeyConditionExpression: 'SK_GSI = :SK_GSI and GSI_SK = :GSI_SK',
-      ExpressionAttributeValues: {
-        ':SK_GSI': `orgDetails`,
-        ':GSI_SK': `email:${email}`,
-      },
-    })
-    .promise()
+    .send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: 'GSI',
+        KeyConditionExpression: 'SK_GSI = :SK_GSI and GSI_SK = :GSI_SK',
+        ExpressionAttributeValues: {
+          ':SK_GSI': `orgDetails`,
+          ':GSI_SK': `email:${email}`,
+        },
+      }),
+    )
     .then((data) => {
       const items = data.Items || [];
       return items.map((i) => ({
@@ -97,18 +97,19 @@ export const getOrganizationDetailsFromEmail = async (email: string) => {
 
 export const getUsersOfOrganization = async (organizationId: string) => {
   return ddb
-    .query({
-      TableName: TABLE_NAME,
-      IndexName: 'GSI',
-      KeyConditionExpression: '#SK_GSI = :SK_GSI',
-      ExpressionAttributeNames: {
-        '#SK_GSI': 'SK_GSI',
-      },
-      ExpressionAttributeValues: {
-        ':SK_GSI': `org:${organizationId}`,
-      },
-    })
-    .promise()
+    .send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: 'GSI',
+        KeyConditionExpression: '#SK_GSI = :SK_GSI',
+        ExpressionAttributeNames: {
+          '#SK_GSI': 'SK_GSI',
+        },
+        ExpressionAttributeValues: {
+          ':SK_GSI': `org:${organizationId}`,
+        },
+      }),
+    )
     .then((data) => {
       const items = data.Items || [];
       return items

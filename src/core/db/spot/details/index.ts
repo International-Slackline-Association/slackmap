@@ -1,7 +1,6 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBSpotDetailAttrs, DDBSpotDetailItem } from './types';
-import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
+import { TransformerParams, ConvertKeysToInterface, DDBAttributeItem } from 'core/db/types';
 import {
   chunkArray,
   composeKey,
@@ -11,6 +10,14 @@ import {
   TABLE_NAME,
   transformUtils,
 } from 'core/db/utils';
+import {
+  BatchGetCommand,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+  UpdateCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', 'GSI2_SK'] as const;
 
@@ -68,7 +75,7 @@ export const spotDetailsDBUtils = {
     }
     return true;
   },
-  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBSpotDetailAttrs),
+  attrsToItem: (attrs: DDBAttributeItem) => attrsToItem(attrs as DDBSpotDetailAttrs),
 };
 
 export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
@@ -79,24 +86,23 @@ export const getAllSpots = async <T extends keyof DDBSpotDetailAttrs>(
 
   const items: DDBSpotDetailItem[] = [];
   do {
-    const params: DocumentClient.QueryInput = {
-      TableName: TABLE_NAME,
-      IndexName: INDEX_NAMES.GSI,
-      Limit: opts.limit,
-      ExclusiveStartKey: exclusiveStartKey,
-      KeyConditionExpression: '#SK_GSI = :SK_GSI',
-      ProjectionExpression: fields ? fields.join(', ') : undefined,
-      ExpressionAttributeNames: {
-        '#SK_GSI': keyFields.SK_GSI,
-      },
-      ExpressionAttributeValues: {
-        ':SK_GSI': keyUtils.SK_GSI.compose(),
-      },
-    };
-
     const queryResult = await ddb
-      .query(params)
-      .promise()
+      .send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: INDEX_NAMES.GSI,
+          Limit: opts.limit,
+          ExclusiveStartKey: exclusiveStartKey,
+          KeyConditionExpression: '#SK_GSI = :SK_GSI',
+          ProjectionExpression: fields ? fields.join(', ') : undefined,
+          ExpressionAttributeNames: {
+            '#SK_GSI': keyFields.SK_GSI,
+          },
+          ExpressionAttributeValues: {
+            ':SK_GSI': keyUtils.SK_GSI.compose(),
+          },
+        }),
+      )
       .then((data) => {
         return {
           lastEvaluatedKey: data.LastEvaluatedKey,
@@ -123,14 +129,15 @@ export const getMultipleSpotDetails = async (spotIds: string[]) => {
   for (let keysToLoad of allKeys) {
     while (keysToLoad.length > 0) {
       const result = await ddb
-        .batchGet({
-          RequestItems: {
-            [TABLE_NAME]: {
-              Keys: keysToLoad,
+        .send(
+          new BatchGetCommand({
+            RequestItems: {
+              [TABLE_NAME]: {
+                Keys: keysToLoad,
+              },
             },
-          },
-        })
-        .promise()
+          }),
+        )
         .then((r) => {
           const items = r.Responses?.[TABLE_NAME] ?? [];
           return {
@@ -153,12 +160,13 @@ export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
 ) => {
   const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   return ddb
-    .get({
-      TableName: TABLE_NAME,
-      Key: key({ spotId }),
-      ProjectionExpression: fields ? fields.join(', ') : undefined,
-    })
-    .promise()
+    .send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: key({ spotId }),
+        ProjectionExpression: fields ? fields.join(', ') : undefined,
+      }),
+    )
     .then((data) => {
       if (data.Item) {
         return attrsToItem(data.Item as DDBSpotDetailAttrs);
@@ -168,7 +176,7 @@ export const getSpotDetails = async <T extends keyof DDBSpotDetailAttrs>(
 };
 
 export const putSpot = async (spot: DDBSpotDetailItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(spot) }).promise();
+  return ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: itemToAttrs(spot) }));
 };
 
 export const updateSpotField = async <T extends keyof DDBSpotDetailAttrs>(
@@ -176,21 +184,21 @@ export const updateSpotField = async <T extends keyof DDBSpotDetailAttrs>(
   field: T,
   value: DDBSpotDetailAttrs[T],
 ) => {
-  return ddb
-    .update({
+  return ddb.send(
+    new UpdateCommand({
       TableName: TABLE_NAME,
       Key: key({ spotId }),
       UpdateExpression: 'SET #field = :value',
       ExpressionAttributeNames: { '#field': field },
       ExpressionAttributeValues: { ':value': value },
       ConditionExpression: 'attribute_exists(PK)',
-    })
-    .promise();
+    }),
+  );
 };
 
 export const updateSpotCountry = async (spotId: string, country: string) => {
-  return ddb
-    .update({
+  return ddb.send(
+    new UpdateCommand({
       TableName: TABLE_NAME,
       Key: key({ spotId }),
       UpdateExpression: 'SET #GSI2 = :GSI2, #GSI2_SK = :GSI2_SK',
@@ -200,10 +208,10 @@ export const updateSpotCountry = async (spotId: string, country: string) => {
         ':GSI2_SK': country ? keyUtils.GSI2_SK.compose() : undefined,
       },
       ConditionExpression: 'attribute_exists(PK)',
-    })
-    .promise();
+    }),
+  );
 };
 
 export const deleteSpot = async (spotId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ spotId }) }).promise();
+  return ddb.send(new DeleteCommand({ TableName: TABLE_NAME, Key: key({ spotId }) }));
 };

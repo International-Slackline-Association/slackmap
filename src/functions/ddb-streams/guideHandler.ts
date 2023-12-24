@@ -1,5 +1,4 @@
 import * as db from 'core/db';
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import isEqual from 'lodash.isequal';
 import { deleteAllFeatureChangelogs, deleteAllFeatureEditors, guideDetailsDBUtils } from 'core/db';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
@@ -12,10 +11,11 @@ import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { FeatureCollection } from '@turf/turf';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { getUserDetails } from 'core/features/isaUser';
+import { DDBAttributeItem } from 'core/db/types';
 
 export const processGuideDetailsOperation = async (
-  newItem: DocumentClient.AttributeMap | undefined,
-  oldItem: DocumentClient.AttributeMap | undefined,
+  newItem: DDBAttributeItem | undefined,
+  oldItem: DDBAttributeItem | undefined,
   eventName: 'INSERT' | 'MODIFY' | 'REMOVE' | undefined,
 ) => {
   if (eventName === 'INSERT' && newItem) {

@@ -1,7 +1,6 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBGuideDetailAttrs, DDBGuideDetailItem } from './types';
-import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
+import { TransformerParams, ConvertKeysToInterface, DDBAttributeItem } from 'core/db/types';
 import {
   chunkArray,
   composeKey,
@@ -11,6 +10,7 @@ import {
   TABLE_NAME,
   transformUtils,
 } from 'core/db/utils';
+import { DeleteCommand, GetCommand, PutCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI_SK', 'GSI2', 'GSI2_SK'] as const;
 
@@ -68,7 +68,7 @@ export const guideDetailsDBUtils = {
     }
     return true;
   },
-  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBGuideDetailAttrs),
+  attrsToItem: (attrs: DDBAttributeItem) => attrsToItem(attrs as DDBGuideDetailAttrs),
 };
 
 export const getAllGuides = async <T extends keyof DDBGuideDetailAttrs>(
@@ -78,24 +78,23 @@ export const getAllGuides = async <T extends keyof DDBGuideDetailAttrs>(
   const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   const items: DDBGuideDetailItem[] = [];
   do {
-    const params: DocumentClient.QueryInput = {
-      TableName: TABLE_NAME,
-      IndexName: INDEX_NAMES.GSI,
-      Limit: opts.limit,
-      ExclusiveStartKey: exclusiveStartKey,
-      KeyConditionExpression: '#SK_GSI = :SK_GSI',
-      ProjectionExpression: fields ? fields.join(', ') : undefined,
-      ExpressionAttributeNames: {
-        '#SK_GSI': keyFields.SK_GSI,
-      },
-      ExpressionAttributeValues: {
-        ':SK_GSI': keyUtils.SK_GSI.compose(),
-      },
-    };
-
     const queryResult = await ddb
-      .query(params)
-      .promise()
+      .send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: INDEX_NAMES.GSI,
+          Limit: opts.limit,
+          ExclusiveStartKey: exclusiveStartKey,
+          KeyConditionExpression: '#SK_GSI = :SK_GSI',
+          ProjectionExpression: fields ? fields.join(', ') : undefined,
+          ExpressionAttributeNames: {
+            '#SK_GSI': keyFields.SK_GSI,
+          },
+          ExpressionAttributeValues: {
+            ':SK_GSI': keyUtils.SK_GSI.compose(),
+          },
+        }),
+      )
       .then((data) => {
         return {
           lastEvaluatedKey: data.LastEvaluatedKey,
@@ -120,12 +119,13 @@ export const getGuideDetails = async <T extends keyof DDBGuideDetailAttrs>(
 ) => {
   const fields = opts.fields?.length == 0 ? keysUsed : opts.fields;
   return ddb
-    .get({
-      TableName: TABLE_NAME,
-      Key: key({ guideId }),
-      ProjectionExpression: fields ? fields.join(', ') : undefined,
-    })
-    .promise()
+    .send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: key({ guideId }),
+        ProjectionExpression: fields ? fields.join(', ') : undefined,
+      }),
+    )
     .then((data) => {
       if (data.Item) {
         return attrsToItem(data.Item as DDBGuideDetailAttrs);
@@ -134,7 +134,7 @@ export const getGuideDetails = async <T extends keyof DDBGuideDetailAttrs>(
     });
 };
 export const putGuide = async (line: DDBGuideDetailItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(line) }).promise();
+  return ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: itemToAttrs(line) }));
 };
 
 export const updateGuideField = async <T extends keyof DDBGuideDetailAttrs>(
@@ -142,21 +142,21 @@ export const updateGuideField = async <T extends keyof DDBGuideDetailAttrs>(
   field: T,
   value: DDBGuideDetailAttrs[T],
 ) => {
-  return ddb
-    .update({
+  return ddb.send(
+    new UpdateCommand({
       TableName: TABLE_NAME,
       Key: key({ guideId }),
       UpdateExpression: 'SET #field = :value',
       ExpressionAttributeNames: { '#field': field },
       ExpressionAttributeValues: { ':value': value },
       ConditionExpression: 'attribute_exists(PK)',
-    })
-    .promise();
+    }),
+  );
 };
 
 export const updateGuideCountry = async (guideId: string, country: string) => {
-  return ddb
-    .update({
+  return ddb.send(
+    new UpdateCommand({
       TableName: TABLE_NAME,
       Key: key({ guideId }),
       UpdateExpression: 'SET #GSI2 = :GSI2, #GSI2_SK = :GSI2_SK',
@@ -166,10 +166,10 @@ export const updateGuideCountry = async (guideId: string, country: string) => {
         ':GSI2_SK': country ? keyUtils.GSI2_SK.compose() : undefined,
       },
       ConditionExpression: 'attribute_exists(PK)',
-    })
-    .promise();
+    }),
+  );
 };
 
 export const deleteGuide = async (guideId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ guideId }) }).promise();
+  return ddb.send(new DeleteCommand({ TableName: TABLE_NAME, Key: key({ guideId }) }));
 };

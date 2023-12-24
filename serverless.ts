@@ -16,7 +16,7 @@ const serverlessConfiguration: AWS = {
   plugins: ['serverless-plugin-log-subscription', 'serverless-esbuild', 'serverless-prune-plugin'],
   provider: {
     name: 'aws',
-    runtime: 'nodejs16.x',
+    runtime: 'nodejs20.x',
     region: 'eu-central-1',
     profile: '${env:AWS_PROFILE}',
     stage: 'prod',
@@ -110,7 +110,7 @@ const serverlessConfiguration: AWS = {
       minify: false,
       sourcemap: true,
       exclude: ['aws-sdk'],
-      target: 'node16',
+      target: 'node20',
       define: { 'require.resolve': undefined },
       platform: 'node',
       concurrency: 10,

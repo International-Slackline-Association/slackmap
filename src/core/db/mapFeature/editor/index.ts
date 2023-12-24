@@ -1,4 +1,3 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBMapFeatureEditorItem, DDBMapFeatureEditorAttrs, EditorshipReason, EditorType } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
@@ -12,6 +11,14 @@ import {
   transformUtils,
 } from 'core/db/utils';
 import { MapFeatureType } from 'core/types';
+import {
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  DeleteCommand,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 const keysUsed = ['PK', 'SK_GSI', 'LSI', 'GSI_SK'] as const;
 
@@ -66,11 +73,12 @@ const { key, attrsToItem, itemToAttrs, keyFields, isKeyValueMatching } = transfo
 
 export const getFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
   return ddb
-    .get({
-      TableName: TABLE_NAME,
-      Key: key({ featureId, featureType, userId }),
-    })
-    .promise()
+    .send(
+      new GetCommand({
+        TableName: TABLE_NAME,
+        Key: key({ featureId, featureType, userId }),
+      }),
+    )
     .then((data) => {
       if (data.Item) {
         return attrsToItem(data.Item as DDBMapFeatureEditorAttrs);
@@ -85,20 +93,21 @@ export const getFeatureEditors = async (
   opts: { limit?: number } = {},
 ) => {
   return ddb
-    .query({
-      TableName: TABLE_NAME,
-      Limit: opts.limit,
-      KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
-      ExpressionAttributeNames: {
-        '#PK': keyFields.PK,
-        '#SK_SGI': keyFields.SK_GSI,
-      },
-      ExpressionAttributeValues: {
-        ':PK': keyUtils.PK.compose({ featureId, featureType }),
-        ':SK_SGI': keyUtils.SK_GSI?.compose({}),
-      },
-    })
-    .promise()
+    .send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        Limit: opts.limit,
+        KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
+        ExpressionAttributeNames: {
+          '#PK': keyFields.PK,
+          '#SK_SGI': keyFields.SK_GSI,
+        },
+        ExpressionAttributeValues: {
+          ':PK': keyUtils.PK.compose({ featureId, featureType }),
+          ':SK_SGI': keyUtils.SK_GSI?.compose({}),
+        },
+      }),
+    )
     .then((data) => {
       const items = data.Items || [];
       return items.map((i) => attrsToItem(i as DDBMapFeatureEditorAttrs));
@@ -106,11 +115,11 @@ export const getFeatureEditors = async (
 };
 
 export const putFeatureEditor = async (editor: DDBMapFeatureEditorItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(editor) }).promise();
+  return ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: itemToAttrs(editor) }));
 };
 
 export const deleteFeatureEditor = async (featureId: string, featureType: MapFeatureType, userId: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, featureType, userId }) }).promise();
+  return ddb.send(new DeleteCommand({ TableName: TABLE_NAME, Key: key({ featureId, featureType, userId }) }));
 };
 
 export const deleteAllFeatureEditors = async (
@@ -127,7 +136,7 @@ export const deleteAllFeatureEditors = async (
   const editorsBatch = chunkArray(allEditors, 25);
 
   for (const editors of editorsBatch) {
-    let processingItems: DocumentClient.BatchWriteItemRequestMap = {
+    const processingItems: BatchWriteCommandInput['RequestItems'] = {
       [TABLE_NAME]: editors.map((m) => ({
         DeleteRequest: {
           Key: key({ featureId, featureType, userId: m.userId }),
@@ -136,13 +145,14 @@ export const deleteAllFeatureEditors = async (
     };
     while (processingItems[TABLE_NAME]?.length > 0) {
       const unprocessedItems = await ddb
-        .batchWrite({
-          RequestItems: processingItems,
-        })
-        .promise()
+        .send(
+          new BatchWriteCommand({
+            RequestItems: processingItems,
+          }),
+        )
         .then((r) => r.UnprocessedItems);
 
-      processingItems = unprocessedItems as any;
+      processingItems[TABLE_NAME] = unprocessedItems?.[TABLE_NAME] ?? [];
     }
   }
 };

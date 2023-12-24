@@ -2,7 +2,6 @@ import * as turf from '@turf/turf';
 import { s3 } from 'core/aws/clients';
 import * as db from 'core/db';
 import { Feature, featureCollection, FeatureCollection, LineString } from '@turf/turf';
-import { invalidateCloudfrontCache } from 'core/aws/cloudfront';
 import { calculateCenterOfFeature, optimizeGeoJsonFeature } from './utils';
 import zlib from 'zlib';
 import { guideTypeLabel } from '../guide';
@@ -10,6 +9,7 @@ import { GuideType, SlacklineType } from 'core/types';
 import { AsyncReturnType } from 'type-fest';
 
 import countriesJson from 'data/countryInfoDict.json';
+import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const processLineGeoJson = (
   geoJson: FeatureCollection,
@@ -317,31 +317,29 @@ const generatePointFeature = (feature: Feature) => {
 const writeToS3 = async (key: string, geoJson: FeatureCollection) => {
   const body = zlib.gzipSync(JSON.stringify(geoJson));
 
-  await s3
-    .putObject({
+  await s3.send(
+    new PutObjectCommand({
       Bucket: process.env.SLACKMAP_APPLICATION_DATA_S3_BUCKET,
       Key: key,
       Body: body,
       ContentType: 'application/json; charset=utf-8',
       CacheControl: 'public, no-cache',
       ContentEncoding: 'gzip',
-    })
-    .promise();
+    }),
+  );
 };
 
 const getFromS3 = async (key: string) => {
-  const body = await s3
-    .getObject({
+  const s3Image = await s3.send(
+    new GetObjectCommand({
       Bucket: process.env.SLACKMAP_APPLICATION_DATA_S3_BUCKET,
       Key: key,
-    })
-    .promise()
-    .then((data) => {
-      if (data.Body) {
-        const body = zlib.gunzipSync(data.Body as Buffer);
-        return body.toString('utf-8');
-      }
-    });
+    }),
+  );
+
+  const streamToString = await s3Image.Body!.transformToString('base64');
+  const body = zlib.gunzipSync(Buffer.from(streamToString, 'base64')).toString('utf-8');
+
   if (!body) {
     throw new Error('Could not get geojson from S3');
   }

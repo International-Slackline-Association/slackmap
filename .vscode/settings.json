@@ -1,6 +1,6 @@
 {
   "terminal.integrated.env.osx": {
-    "AWS_PROFILE": "ISA_Can",
+    "AWS_PROFILE": "isa_can",
     "AWS_REGION": "eu-central-1"
   },
   "typescript.preferences.importModuleSpecifier": "shortest",

@@ -1,13 +1,13 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import { logger } from 'core/utils/logger';
-import jwt_decode from 'jwt-decode';
+import { jwtDecode } from 'jwt-decode';
 import { parseExpectedError } from 'core/utils/error';
 import { generateISAIdFromUsername } from 'core/utils';
 
 export const injectCommonlyUsedHeadersMiddleware = async (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = (req.header('Authorization') || req.header('authorization')) as string;
   if (authHeader) {
-    const claims: any = jwt_decode(authHeader.split(' ')[1]) as { [key: string]: string };
+    const claims: any = jwtDecode(authHeader.split(' ')[1]) as { [key: string]: string };
     if (claims) {
       req.user = {
         isaId: claims.sub && generateISAIdFromUsername(claims.sub),

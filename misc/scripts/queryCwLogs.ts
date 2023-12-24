@@ -1,5 +1,6 @@
 import { cwLogs } from 'core/aws/clients';
 import { parseCliArgs } from './utils';
+import { FilterLogEventsCommand } from '@aws-sdk/client-cloudwatch-logs';
 
 const parseTimeRange = (duration: string) => {
   const num = parseInt(duration.slice(0, -1));
@@ -25,15 +26,8 @@ const queryCwLogs = async () => {
   const args = parseCliArgs();
   const { startTime, endTime } = parseTimeRange(args.time ?? '8d');
 
-  const params = {
-    logGroupName: 'slackmap/applicationLogs-prod',
-    startTime,
-    endTime,
-  };
-
   cwLogs
-    .filterLogEvents(params)
-    .promise()
+    .send(new FilterLogEventsCommand({ logGroupName: 'slackmap/applicationLogs-prod', startTime, endTime }))
     .then((data) => {
       const logs = data.events?.map((e) => {
         const msg = JSON.parse(e.message || '{}');

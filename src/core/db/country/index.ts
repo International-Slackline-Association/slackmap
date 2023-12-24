@@ -1,4 +1,3 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBCountryAttrs, DDBCountryItem } from './types';
 import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
@@ -12,6 +11,8 @@ import {
   transformUtils,
 } from 'core/db/utils';
 import { MapFeatureType, SlacklineType } from 'core/types';
+import { QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { QueryInput } from '@aws-sdk/client-dynamodb';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI2', 'GSI2_SK'] as const;
 
@@ -77,23 +78,23 @@ export const getCountryFeatures = async (code: string) => {
   let exclusiveStartKey: any = undefined;
   const items: DDBCountryItem[] = [];
   do {
-    const params: DocumentClient.QueryInput = {
-      TableName: TABLE_NAME,
-      IndexName: INDEX_NAMES.GSI2,
-      ExclusiveStartKey: exclusiveStartKey,
-      KeyConditionExpression: '#GSI2 = :GSI2 AND begins_with(#GSI2_SK, :GSI2_SK)',
-      ExpressionAttributeNames: {
-        '#GSI2': keyFields.GSI2,
-        '#GSI2_SK': keyFields.GSI2_SK,
-      },
-      ExpressionAttributeValues: {
-        ':GSI2': keyUtils.GSI2.compose({ code }),
-        ':GSI2_SK': keyUtils.GSI2_SK.compose({ featureType: '' as any }),
-      },
-    };
     const queryResult = await ddb
-      .query(params)
-      .promise()
+      .send(
+        new QueryCommand({
+          TableName: TABLE_NAME,
+          IndexName: INDEX_NAMES.GSI2,
+          ExclusiveStartKey: exclusiveStartKey,
+          KeyConditionExpression: '#GSI2 = :GSI2 AND begins_with(#GSI2_SK, :GSI2_SK)',
+          ExpressionAttributeNames: {
+            '#GSI2': keyFields.GSI2,
+            '#GSI2_SK': keyFields.GSI2_SK,
+          },
+          ExpressionAttributeValues: {
+            ':GSI2': keyUtils.GSI2.compose({ code }),
+            ':GSI2_SK': keyUtils.GSI2_SK.compose({ featureType: '' as any }),
+          },
+        }),
+      )
       .then((data) => {
         return {
           lastEvaluatedKey: data.LastEvaluatedKey,
@@ -109,25 +110,25 @@ export const getCountryFeatures = async (code: string) => {
 };
 
 export const getCountryChangelogs = async (code: string, opts: { startKey?: any; limit?: number } = {}) => {
-  const params: DocumentClient.QueryInput = {
-    TableName: TABLE_NAME,
-    IndexName: INDEX_NAMES.GSI2,
-    ExclusiveStartKey: opts.startKey,
-    Limit: opts.limit,
-    ScanIndexForward: false,
-    KeyConditionExpression: '#GSI2 = :GSI2 AND begins_with(#GSI2_SK, :GSI2_SK)',
-    ExpressionAttributeNames: {
-      '#GSI2': keyFields.GSI2,
-      '#GSI2_SK': keyFields.GSI2_SK,
-    },
-    ExpressionAttributeValues: {
-      ':GSI2': keyUtils.GSI2.compose({ code }),
-      ':GSI2_SK': keyUtils.GSI2_SK.compose({ changelogDate: '' }),
-    },
-  };
   return ddb
-    .query(params)
-    .promise()
+    .send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: INDEX_NAMES.GSI2,
+        ExclusiveStartKey: opts.startKey,
+        Limit: opts.limit,
+        ScanIndexForward: false,
+        KeyConditionExpression: '#GSI2 = :GSI2 AND begins_with(#GSI2_SK, :GSI2_SK)',
+        ExpressionAttributeNames: {
+          '#GSI2': keyFields.GSI2,
+          '#GSI2_SK': keyFields.GSI2_SK,
+        },
+        ExpressionAttributeValues: {
+          ':GSI2': keyUtils.GSI2.compose({ code }),
+          ':GSI2_SK': keyUtils.GSI2_SK.compose({ changelogDate: '' }),
+        },
+      }),
+    )
     .then((data) => {
       return {
         lastEvaluatedKey: data.LastEvaluatedKey,

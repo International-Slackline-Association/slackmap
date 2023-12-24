@@ -1,4 +1,3 @@
-import { MetricDatum, StandardUnit } from 'aws-sdk/clients/cloudwatch';
 import { Logger } from './logger';
 
 type DimensionValue = '';

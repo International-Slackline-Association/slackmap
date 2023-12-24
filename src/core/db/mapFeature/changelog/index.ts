@@ -1,7 +1,6 @@
-import { DocumentClient } from 'aws-sdk/clients/dynamodb';
 import { ddb } from 'core/aws/clients';
 import { DDBMapFeatureChangelogItem, DDBMapFeatureChangelogAttrs } from './types';
-import { TransformerParams, ConvertKeysToInterface } from 'core/db/types';
+import { TransformerParams, ConvertKeysToInterface, DDBAttributeItem } from 'core/db/types';
 import {
   chunkArray,
   composeKey,
@@ -12,6 +11,14 @@ import {
   transformUtils,
 } from 'core/db/utils';
 import { MapFeatureType } from 'core/types';
+import {
+  BatchGetCommand,
+  BatchWriteCommand,
+  BatchWriteCommandInput,
+  DeleteCommand,
+  PutCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 const keysUsed = ['PK', 'SK_GSI', 'GSI2', 'GSI2_SK'] as const;
 
@@ -73,7 +80,7 @@ export const featureChangelogDBUtils = {
     }
     return true;
   },
-  attrsToItem: (attrs: DocumentClient.AttributeMap) => attrsToItem(attrs as DDBMapFeatureChangelogAttrs),
+  attrsToItem: (attrs: DDBAttributeItem) => attrsToItem(attrs as DDBMapFeatureChangelogAttrs),
 };
 
 export const getFeatureChangelogs = async (
@@ -82,22 +89,23 @@ export const getFeatureChangelogs = async (
   opts: { startKey?: any; limit?: number } = {},
 ) => {
   return ddb
-    .query({
-      TableName: TABLE_NAME,
-      Limit: opts.limit,
-      ExclusiveStartKey: opts.startKey,
-      ScanIndexForward: false,
-      KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
-      ExpressionAttributeNames: {
-        '#PK': keyFields.PK,
-        '#SK_SGI': keyFields.SK_GSI,
-      },
-      ExpressionAttributeValues: {
-        ':PK': keyUtils.PK.compose({ featureId, featureType }),
-        ':SK_SGI': keyUtils.SK_GSI.compose({}),
-      },
-    })
-    .promise()
+    .send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        Limit: opts.limit,
+        ExclusiveStartKey: opts.startKey,
+        ScanIndexForward: false,
+        KeyConditionExpression: '#PK = :PK AND begins_with(#SK_SGI, :SK_SGI)',
+        ExpressionAttributeNames: {
+          '#PK': keyFields.PK,
+          '#SK_SGI': keyFields.SK_GSI,
+        },
+        ExpressionAttributeValues: {
+          ':PK': keyUtils.PK.compose({ featureId, featureType }),
+          ':SK_SGI': keyUtils.SK_GSI.compose({}),
+        },
+      }),
+    )
     .then((data) => {
       const items = data.Items || [];
       return {
@@ -119,14 +127,15 @@ export const getMultipleFeatureChangelog = async (
   for (let keysToLoad of allKeys) {
     while (keysToLoad.length > 0) {
       const result = await ddb
-        .batchGet({
-          RequestItems: {
-            [TABLE_NAME]: {
-              Keys: keysToLoad,
+        .send(
+          new BatchGetCommand({
+            RequestItems: {
+              [TABLE_NAME]: {
+                Keys: keysToLoad,
+              },
             },
-          },
-        })
-        .promise()
+          }),
+        )
         .then((r) => {
           const items = r.Responses?.[TABLE_NAME] ?? [];
           return {
@@ -142,11 +151,11 @@ export const getMultipleFeatureChangelog = async (
 };
 
 export const putFeatureChangelog = async (changelog: DDBMapFeatureChangelogItem) => {
-  return ddb.put({ TableName: TABLE_NAME, Item: itemToAttrs(changelog) }).promise();
+  return ddb.send(new PutCommand({ TableName: TABLE_NAME, Item: itemToAttrs(changelog) }));
 };
 
 export const deleteFeatureChangelog = async (featureId: string, featureType: MapFeatureType, date: string) => {
-  return ddb.delete({ TableName: TABLE_NAME, Key: key({ featureId, featureType, date }) }).promise();
+  return ddb.send(new DeleteCommand({ TableName: TABLE_NAME, Key: key({ featureId, featureType, date }) }));
 };
 
 export const deleteAllFeatureChangelogs = async (featureId: string, featureType: MapFeatureType) => {
@@ -156,7 +165,7 @@ export const deleteAllFeatureChangelogs = async (featureId: string, featureType:
   const editorsBatch = chunkArray(items, 25);
 
   for (const editors of editorsBatch) {
-    let processingItems: DocumentClient.BatchWriteItemRequestMap = {
+    const processingItems: BatchWriteCommandInput['RequestItems'] = {
       [TABLE_NAME]: editors.map((m) => ({
         DeleteRequest: {
           Key: key({ featureId, featureType, date: m.date }),
@@ -165,13 +174,14 @@ export const deleteAllFeatureChangelogs = async (featureId: string, featureType:
     };
     while (processingItems[TABLE_NAME]?.length > 0) {
       const unprocessedItems = await ddb
-        .batchWrite({
-          RequestItems: processingItems,
-        })
-        .promise()
+        .send(
+          new BatchWriteCommand({
+            RequestItems: processingItems,
+          }),
+        )
         .then((r) => r.UnprocessedItems);
 
-      processingItems = unprocessedItems as any;
+      processingItems[TABLE_NAME] = unprocessedItems?.[TABLE_NAME] ?? [];
     }
   }
 };
