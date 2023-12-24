@@ -75,7 +75,17 @@ export const addUpdatedDetailsChangelog = async (
   }
   const distinctUpdatedPaths = [...new Set(updatedPaths)];
 
-  // const pathsString = paths.slice(0, -1).join(', ') + (paths.length > 1 ? 'and ' : '') + paths.slice(-1);
+  // Filter out paths that were added with default values
+  const filteredPathsWithDefaultValues = distinctUpdatedPaths.filter((p) => {
+    const newValue = (item as any)[p];
+    if (newValue instanceof Array) {
+      if ((oldItem as any)[p] === undefined && newValue.length === 0) {
+        return false; // recently added array with default value of []
+      }
+    }
+    return true;
+  });
+
   await db.putFeatureChangelog({
     featureId: feature.id,
     featureType: feature.type,
@@ -83,7 +93,7 @@ export const addUpdatedDetailsChangelog = async (
     action: 'updatedDetails',
     date: date.toISOString(),
     country: feature.country,
-    updatedPaths: distinctUpdatedPaths,
+    updatedPaths: filteredPathsWithDefaultValues,
   });
 };
 
@@ -174,12 +184,15 @@ export const getChangelogsOfCountry = async (
 
   const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);
 
-  const userNames = (await Promise.all(featureChangelogs.map((c) => getUserDetails(c.userId)))).reduce((acc, f) => {
-    if (f) {
-      acc[f.id] = f?.fullname;
-    }
-    return acc;
-  }, {} as { [userId: string]: string });
+  const userNames = (await Promise.all(featureChangelogs.map((c) => getUserDetails(c.userId)))).reduce(
+    (acc, f) => {
+      if (f) {
+        acc[f.id] = f?.fullname;
+      }
+      return acc;
+    },
+    {} as { [userId: string]: string },
+  );
 
   const changelogs = featureChangelogs
     .sort((a, b) => (a.date > b.date ? -1 : 1))
