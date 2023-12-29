@@ -3,6 +3,7 @@ import { s3ImageUploadZodSchema } from '@functions/api/utils';
 import { s3 } from 'core/aws/clients';
 import { isaDocumentApi } from 'core/externalApi/isa-documents-api';
 import { z } from 'zod';
+import * as crypto from 'crypto';
 
 export const updateFeatureImagesInS3 = async (
   featureId: string,
@@ -26,7 +27,6 @@ export const updateFeatureImagesInS3 = async (
   }
 
   s3Images = await getAllFeatureImages(featureId, prefix);
-  let nextImageId = s3Images.reduce((max, image) => Math.max(max, parseInt(image.imageId)), 0) + 1;
 
   let totalImageCount = s3Images.length;
   const addedImages = images?.filter((i) => i.isInProcessingBucket) ?? [];
@@ -34,9 +34,8 @@ export const updateFeatureImagesInS3 = async (
     if (totalImageCount >= opts.maxImageNumber) {
       break;
     }
-    await processAndPutFeatureImage(addedImage.s3Key, featureId, prefix, nextImageId.toString());
+    await processAndPutFeatureImage(addedImage.s3Key, featureId, prefix, generateImageId());
     totalImageCount++;
-    nextImageId++;
   }
 
   s3Images = await getAllFeatureImages(featureId, prefix);
@@ -128,4 +127,8 @@ const constructS3Key = (featureId: string, prefix: string, imageId?: string, typ
     path += `${imageId}.${type}`;
   }
   return path;
+};
+
+const generateImageId = () => {
+  return crypto.randomBytes(2).toString('hex'); // 4 characters
 };
