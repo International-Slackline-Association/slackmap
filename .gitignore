@@ -1,12 +1,17 @@
-# package directories
 node_modules
-jspm_packages
-
-# Serverless directories
 .serverless
-
-# esbuild directories
 .esbuild
-
 .DS_Store
 .env
+dist
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.DS_Store
+
+server/lib
+web/.env.development
+web/.env.production
