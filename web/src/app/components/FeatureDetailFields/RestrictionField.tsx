@@ -1,5 +1,6 @@
 import { Alert, AlertColor, AlertTitle, Box } from '@mui/material';
 
+import { SlacklineRestrictionLevel } from '@server/core/types';
 import { trimString } from 'utils';
 
 interface Props {

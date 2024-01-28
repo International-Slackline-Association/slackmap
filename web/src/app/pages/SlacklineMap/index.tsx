@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useState } from 'react';
 import { MapboxGeoJSONFeature, ViewStateChangeEvent } from 'react-map-gl';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Stack } from '@mui/material';
+import { Slide, Stack } from '@mui/material';
 import { Box } from '@mui/system';
 
 import { getSlacklinePointFeaturesOfCountry } from 'app/api/geojson-data';
@@ -41,9 +41,12 @@ export function SlacklineMapPage() {
     type: SlacklineMapFeatureType;
   }>();
 
+  const { activeFeature } = useActiveSlacklineFeature();
+
+  const [lastActiveFeature, setLastActiveFeature] = useState(activeFeature);
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { activeFeature } = useActiveSlacklineFeature();
   const lastMapLocation = useSelector(selectLastMapLocation);
 
   const { isDesktop } = useMediaQuery();
@@ -86,6 +89,9 @@ export function SlacklineMapPage() {
 
   useEffect(() => {
     updateActiveFeatureGeoJson();
+    if (activeFeature) {
+      setLastActiveFeature(activeFeature);
+    }
   }, [activeFeature]);
 
   const onSelectedFeatureChange = useCallback(
@@ -166,7 +172,13 @@ export function SlacklineMapPage() {
           highlightedSlacklineFeature={highlightedFeature}
         />
       </Box>
-      {activeFeature && (
+
+      <Slide
+        in={Boolean(activeFeature)}
+        direction="left"
+        timeout={isDesktop ? undefined : 0}
+        onExited={() => setLastActiveFeature(undefined)}
+      >
         <Box
           sx={{
             flex: 1,
@@ -178,24 +190,33 @@ export function SlacklineMapPage() {
             zIndex: 4,
           }}
         >
-          {activeFeature.type === 'line' && (
-            <LineDetailCard lineId={activeFeature.id} onDetailsLoaded={onFeatureDetailsLoaded} />
+          {lastActiveFeature?.type === 'line' && (
+            <LineDetailCard
+              lineId={lastActiveFeature.id}
+              onDetailsLoaded={onFeatureDetailsLoaded}
+            />
           )}
-          {activeFeature.type === 'spot' && (
-            <SpotDetailCard spotId={activeFeature.id} onDetailsLoaded={onFeatureDetailsLoaded} />
+          {lastActiveFeature?.type === 'spot' && (
+            <SpotDetailCard
+              spotId={lastActiveFeature.id}
+              onDetailsLoaded={onFeatureDetailsLoaded}
+            />
           )}
-          {activeFeature.type === 'guide' && (
-            <GuideDetailCard guideId={activeFeature.id} onDetailsLoaded={onFeatureDetailsLoaded} />
+          {lastActiveFeature?.type === 'guide' && (
+            <GuideDetailCard
+              guideId={lastActiveFeature.id}
+              onDetailsLoaded={onFeatureDetailsLoaded}
+            />
           )}
-          {activeFeature.type === 'country' && (
+          {lastActiveFeature?.type === 'country' && (
             <CountryDetailCard
-              countryCode={activeFeature.id}
+              countryCode={lastActiveFeature.id}
               onChangelogHover={highlightFeature}
               onChangelogClick={navigateToFeature}
             />
           )}
         </Box>
-      )}
+      </Slide>
     </Stack>
   );
 }

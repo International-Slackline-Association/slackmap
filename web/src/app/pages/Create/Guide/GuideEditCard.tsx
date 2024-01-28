@@ -15,6 +15,7 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardHeader from '@mui/material/CardHeader';
 
+import { GuideType } from '@server/core/types';
 import { S3ImageList, S3PhotoMeta } from 'app/components/ImageList';
 import { useFormik } from 'formik';
 

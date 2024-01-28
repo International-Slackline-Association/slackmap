@@ -1,3 +1,4 @@
+import { SlacklineRestrictionLevel, SlacklineType } from '@server/core/types';
 import { S3PhotoMeta } from 'app/components/ImageList';
 
 export interface LineDetailsForm {

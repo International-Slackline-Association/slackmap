@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Layer, Source } from 'react-map-gl';
 
+import { SlacklineType } from '@server/core/types';
 import { geoJsonURL } from 'app/api/constants';
 
 import { SelectedDisplayFeature } from '../SlacklineMap/useMapOptions';

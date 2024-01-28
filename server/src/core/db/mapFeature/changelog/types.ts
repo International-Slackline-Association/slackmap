@@ -1,5 +1,5 @@
 import { DDBTableKeyAttrs } from 'core/db/types';
-import { MapFeatureType } from 'core/types';
+import { MapFeatureChangelogAction, MapFeatureType } from 'core/types';
 
 interface ParsedKeyAttrs {
   featureId: string;
@@ -14,11 +14,6 @@ interface NonKeyAttrs {
   updatedPaths?: string[];
 }
 
-export type MapFeatureChangelogAction =
-  | 'created'
-  | 'updatedDetails'
-  | 'updatedOwners'
-  | 'grantedTemporaryEditor';
 export type DDBMapFeatureChangelogItem = ParsedKeyAttrs & NonKeyAttrs;
 export type DDBMapFeatureChangelogAttrs = DDBTableKeyAttrs & NonKeyAttrs;
 

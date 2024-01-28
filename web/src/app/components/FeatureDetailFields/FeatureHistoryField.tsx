@@ -14,6 +14,7 @@ import TimelineItem from '@mui/lab/TimelineItem';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import { Box, Typography } from '@mui/material';
 
+import { MapFeatureChangelogAction } from '@server/core/types';
 import { featureApi } from 'app/api/feature-api';
 import { format } from 'date-fns';
 import ReactHtmlParser from 'html-react-parser';

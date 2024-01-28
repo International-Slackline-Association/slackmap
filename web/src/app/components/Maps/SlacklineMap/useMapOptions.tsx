@@ -22,6 +22,7 @@ import {
   Typography,
 } from '@mui/material';
 
+import { SlacklineType } from '@server/core/types';
 import { SlacklineFeatureIcon } from 'app/components/Icons/SlacklineFeatureIcon';
 
 export type SelectedDisplayFeature = SlacklineMapFeatureType | 'all';

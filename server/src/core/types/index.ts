@@ -18,4 +18,10 @@ export type GuideType =
   | 'riggingPath'
   | 'information'
   | 'other';
-export type MapFeatureType = 'spot' | 'guide' | 'line';
+export type MapFeatureType = 'line' | 'spot' | 'guide';
+
+export type MapFeatureChangelogAction =
+  | 'created'
+  | 'updatedDetails'
+  | 'updatedOwners'
+  | 'grantedTemporaryEditor';

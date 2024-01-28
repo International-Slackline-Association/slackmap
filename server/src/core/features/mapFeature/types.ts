@@ -1,9 +1,8 @@
 import { FeatureCollection } from '@turf/turf';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
-import { MapFeatureChangelogAction } from 'core/db/mapFeature/changelog/types';
 import { DDBSpotDetailItem } from 'core/db/spot/details/types';
-import { MapFeatureType } from 'core/types';
+import { MapFeatureChangelogAction, MapFeatureType } from 'core/types';
 
 export type GenericMapFeatureItemType = DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem;
 export interface MapFeatureChangelog {
