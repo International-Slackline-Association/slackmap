@@ -108,13 +108,22 @@ export const SlacklineMap = (props: Props) => {
         width: '100%',
         height: '100%',
         '& .mapboxgl-ctrl-top-left': {
-          'margin-left': { xs: '18%', lg: 0 },
-          'margin-right': { xs: '12%', lg: 'auto' },
+          'margin-left': { xs: '20%', lg: 0 },
+          'margin-right': { xs: '18%', lg: 'auto' },
         },
         '& .mapboxgl-ctrl-geocoder': {
-          'margin-top': '10px',
+          'margin-top': { xs: '20px', lg: '10px' },
           'margin-left': { xs: '0', lg: '10px' },
         },
+        '& .mapboxgl-ctrl-geocoder--input': {
+          height: { xs: 'unset', lg: '36px' },
+          fontSize: { xs: '1rem' },
+        },
+        '& .mapboxgl-ctrl-geocoder--icon-search': {
+          height: { xs: '15px', lg: '15px' },
+          top: { xs: '12px', lg: '12px' },
+        },
+
         '& .mapboxgl-ctrl-logo': {
           display: 'none',
         },

@@ -7,16 +7,11 @@ import GlobalStyles from '@mui/material/GlobalStyles';
 
 import NotificationSnackbar from 'app/components/NotificationSnackbar';
 import { appActions, useAppSlice } from 'app/slices/app';
-import {
-  selectAuthState,
-  selectIsUserSignedIn,
-  selectSnackbarNotification,
-} from 'app/slices/app/selectors';
+import { selectAuthState, selectIsUserSignedIn } from 'app/slices/app/selectors';
 import { AuthState } from 'app/slices/app/types';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { showErrorNotification } from 'utils';
 
 import { AppDrawer } from './components/AppDrawer';
 import { withErrorBoundry } from './components/ErrorBoundary';

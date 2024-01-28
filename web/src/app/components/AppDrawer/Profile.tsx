@@ -21,7 +21,6 @@ import { selectIsUserSignedIn } from 'app/slices/app/selectors';
 import { AuthState } from 'app/slices/app/types';
 import { signInWithRedirect } from 'aws-amplify/auth';
 
-import { ISALogoWideIcon } from '../Icons/ISALogoWideIcon';
 import { LoadingIndicator } from '../LoadingIndicator';
 
 export const Profile = () => {
@@ -47,7 +46,12 @@ export const Profile = () => {
 
   return !isSignedIn ? (
     <Box>
-      <Button fullWidth variant="contained" startIcon={<ISALogoWideIcon />} onClick={signInClicked}>
+      <Button
+        fullWidth
+        variant="contained"
+        startIcon={<img src="/images/isa-logo-no-text.svg" width={30} />}
+        onClick={signInClicked}
+      >
         Sign In / Sign Up
       </Button>
     </Box>
