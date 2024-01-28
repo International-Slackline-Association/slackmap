@@ -14,6 +14,7 @@ import { Stack } from '@mui/system';
 import { centerOfMass } from '@turf/turf';
 import { featureApi } from 'app/api/feature-api';
 import { GetGuideDetailsAPIResponse, guideApi } from 'app/api/guide-api';
+import { FeatureHistoryField } from 'app/components/FeatureDetailFields/FeatureHistoryField';
 import { FeatureMenuActions } from 'app/components/FeatureDetailFields/FeatureMenuActions';
 import { FeatureDetailInfoField } from 'app/components/FeatureDetailFields/InfoField';
 import { FeatureMediaField } from 'app/components/FeatureDetailFields/MediaField';
@@ -79,7 +80,7 @@ export const GuideDetailCard = (props: Props) => {
             }
             action={
               <FeatureMenuActions
-                isUserEditor={guideDetails.isUserEditor}
+                editorPermissions={guideDetails.editorPermissions}
                 feature={{ id: props.guideId, type: 'guide' }}
                 onRefreshClick={onRefreshClicked}
               />
@@ -115,6 +116,11 @@ export const GuideDetailCard = (props: Props) => {
             />
 
             <FeatureMediaField images={guideDetails.images} />
+            <FeatureHistoryField
+              featureId={props.guideId}
+              featureType="guide"
+              createdDateTime={guideDetails.createdDateTime}
+            />
           </CardContent>
           <CardActions>
             {guideCenter && (

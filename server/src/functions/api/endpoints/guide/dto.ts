@@ -2,7 +2,13 @@ import { FeatureCollection } from '@turf/turf';
 import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { guideTypeLabel } from 'core/features/guide';
 
-export const getGuideDetailsResponse = (item: DDBGuideDetailItem, isUserEditor?: boolean) => {
+export const getGuideDetailsResponse = (
+  item: DDBGuideDetailItem,
+  editorPermissions?: {
+    canDelete: boolean;
+    canEdit: boolean;
+  },
+) => {
   return {
     id: item.guideId,
     geoJson: JSON.parse(item.geoJson) as FeatureCollection,
@@ -12,7 +18,7 @@ export const getGuideDetailsResponse = (item: DDBGuideDetailItem, isUserEditor?:
     type: item.type,
     typeLabel: guideTypeLabel(item.type),
     creatorUserId: item.creatorUserId,
-    isUserEditor: isUserEditor,
     images: item.images,
+    editorPermissions,
   };
 };

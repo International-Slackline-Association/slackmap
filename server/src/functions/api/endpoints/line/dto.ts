@@ -1,7 +1,13 @@
 import { FeatureCollection } from '@turf/turf';
 import { DDBLineDetailItem } from 'core/db/line/details/types';
 
-export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: boolean) => {
+export const getLineDetailsResponse = (
+  item: DDBLineDetailItem,
+  editorPermissions?: {
+    canDelete: boolean;
+    canEdit: boolean;
+  },
+) => {
   return {
     id: item.lineId,
     geoJson: JSON.parse(item.geoJson) as FeatureCollection,
@@ -23,6 +29,6 @@ export const getLineDetailsResponse = (item: DDBLineDetailItem, isUserEditor?: b
     isMeasured: item.isMeasured,
     anchorImages: item.anchorImages,
     images: item.images,
-    isUserEditor: isUserEditor,
+    editorPermissions,
   };
 };

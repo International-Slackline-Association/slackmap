@@ -3,20 +3,6 @@ import { MapFeatureType } from 'core/types';
 
 import { checkUserExists } from '../isaUser';
 
-// Add SlackMap Admin Account as an editor
-export const addAdminAsEditorToMapFeature = async (
-  featureId: string,
-  featureType: MapFeatureType,
-) => {
-  await db.putFeatureEditor({
-    featureId: featureId,
-    featureType: featureType,
-    userId: 'ISA_C87BE5F6',
-    createdDateTime: new Date().toISOString(),
-    reason: 'admin',
-  });
-};
-
 export const addTemporaryEditorToMapFeature = async (
   featureId: string,
   featureType: MapFeatureType,

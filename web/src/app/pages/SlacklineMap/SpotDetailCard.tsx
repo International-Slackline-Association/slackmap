@@ -77,7 +77,7 @@ export const SpotDetailCard = (props: Props) => {
             }
             action={
               <FeatureMenuActions
-                isUserEditor={spotDetails.isUserEditor}
+                editorPermissions={spotDetails.editorPermissions}
                 feature={{ id: props.spotId, type: 'spot' }}
                 onRefreshClick={onRefreshClicked}
               />

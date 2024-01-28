@@ -31,9 +31,11 @@ export const getLineDetails = async (req: Request) => {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
   const editPermission = await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId);
-  const isUserEditor = editPermission?.reason === 'explicit';
 
-  return getLineDetailsResponse(line, isUserEditor);
+  return getLineDetailsResponse(line, {
+    canDelete: editPermission?.reason === 'explicit',
+    canEdit: Boolean(editPermission),
+  });
 };
 
 export const createLine = async (req: Request<any, any, CreateLinePostBody>) => {

@@ -79,7 +79,7 @@ export const LineDetailCard = (props: Props) => {
             }
             action={
               <FeatureMenuActions
-                isUserEditor={lineDetails.isUserEditor}
+                editorPermissions={lineDetails.editorPermissions}
                 feature={{ id: props.lineId, type: 'line' }}
                 onRefreshClick={onRefreshClicked}
               />

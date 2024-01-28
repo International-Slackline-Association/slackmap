@@ -4,7 +4,6 @@ import { lineDetailsDBUtils } from 'core/db/line/details';
 import { DDBAttributeItem } from 'core/db/types';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
 import { checkUserExists } from 'core/features/isaUser';
-import { addAdminAsEditorToMapFeature } from 'core/features/mapFeature/editors';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import isEqual from 'lodash.isequal';
 
@@ -26,8 +25,6 @@ export const processLineDetailsOperation = async (
       reason: 'explicit',
       type: 'owner',
     });
-
-    await addAdminAsEditorToMapFeature(newLine.lineId, 'line');
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {

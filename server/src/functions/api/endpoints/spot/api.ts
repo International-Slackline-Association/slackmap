@@ -30,9 +30,11 @@ export const getSpotDetails = async (req: Request) => {
     throw new Error('NotFound: Spot not found');
   }
   const editPermission = await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId);
-  const isUserEditor = editPermission?.reason === 'explicit';
 
-  return getSpotDetailsResponse(spot, isUserEditor);
+  return getSpotDetailsResponse(spot, {
+    canDelete: editPermission?.reason === 'explicit',
+    canEdit: Boolean(editPermission),
+  });
 };
 
 export const createSpot = async (req: Request<any, any, CreateSpotPostBody>) => {

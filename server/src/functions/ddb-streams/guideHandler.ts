@@ -3,7 +3,6 @@ import { deleteAllFeatureChangelogs, deleteAllFeatureEditors, guideDetailsDBUtil
 import { DDBAttributeItem } from 'core/db/types';
 import { refreshGuideGeoJsonFiles } from 'core/features/geojson';
 import { checkUserExists } from 'core/features/isaUser';
-import { addAdminAsEditorToMapFeature } from 'core/features/mapFeature/editors';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import isEqual from 'lodash.isequal';
 
@@ -25,8 +24,6 @@ export const processGuideDetailsOperation = async (
       reason: 'explicit',
       type: 'owner',
     });
-
-    await addAdminAsEditorToMapFeature(newGuide.guideId, 'guide');
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {

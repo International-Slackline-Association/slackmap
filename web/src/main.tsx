@@ -8,7 +8,6 @@ import { ThemeProvider } from '@mui/material';
 import { amplifyConfig } from 'amplifyConfig';
 import App from 'app';
 import { Amplify } from 'aws-amplify';
-import { ConfirmProvider } from 'material-ui-confirm';
 import { configureAppStore } from 'store';
 import { initAnalytics } from 'utils/analytics';
 
@@ -25,13 +24,11 @@ initAnalytics();
 root.render(
   <Provider store={store}>
     <ThemeProvider theme={theme}>
-      <ConfirmProvider>
-        <HelmetProvider>
-          <StrictMode>
-            <App />
-          </StrictMode>
-        </HelmetProvider>
-      </ConfirmProvider>
+      <HelmetProvider>
+        <StrictMode>
+          <App />
+        </StrictMode>
+      </HelmetProvider>
     </ThemeProvider>
   </Provider>,
 );

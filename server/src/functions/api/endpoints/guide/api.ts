@@ -4,7 +4,10 @@ import { DDBGuideDetailItem } from 'core/db/guide/details/types';
 import { processGuideGeoJson } from 'core/features/geojson';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { validateGuideGeoJson } from 'core/features/guide/validations';
-import { addCreatedChangelogToFeature } from 'core/features/mapFeature/changelog';
+import {
+  addCreatedChangelogToFeature,
+  addUpdatedDetailsChangelog,
+} from 'core/features/mapFeature/changelog';
 import { validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { GuideType } from 'core/types';
@@ -28,9 +31,11 @@ export const getGuideDetails = async (req: Request) => {
     throw new Error(`NotFound: Guide ${req.params.id} not found`);
   }
   const editPermission = await validateMapFeatureEditor(guide.guideId, 'guide', req.user?.isaId);
-  const isUserEditor = editPermission?.reason === 'explicit';
 
-  return getGuideDetailsResponse(guide, isUserEditor);
+  return getGuideDetailsResponse(guide, {
+    canDelete: editPermission?.reason === 'explicit',
+    canEdit: Boolean(editPermission),
+  });
 };
 export const createGuide = async (req: Request<any, any, CreateGuidePostBody>) => {
   const requestClaims = verifyRequestClaims(req);
@@ -73,7 +78,7 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>) =
 };
 
 export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>) => {
-  verifyRequestClaims(req);
+  const requestClaims = verifyRequestClaims(req);
 
   const guideId = req.params.id;
   const body = validateApiPayload(req.body, updateGuideSchema);
@@ -104,6 +109,8 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>) =
   const updatedGuide = assignFromSourceToTarget(payload, guide);
   updatedGuide.lastModifiedDateTime = new Date().toISOString();
   await db.putGuide(updatedGuide);
+
+  await addUpdatedDetailsChangelog(updatedGuide, guide, requestClaims.isaId, new Date());
 
   logger.info('updated guide', { user: req.user, updatedGuide });
   return getGuideDetailsResponse(updatedGuide);

@@ -9,16 +9,14 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 interface Props {
   title: string;
-  description: string;
-  confirmText?: string;
-  onConfirm: () => void;
+  description: string | React.ReactNode;
 }
 
-export const useConfirmDialog = () => {
+export const useInfoDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [dialogProps, setDialogProps] = useState<Props | null>(null);
 
-  const ConfirmDialog: React.FC = () => (
+  const InfoDialog: React.FC = () => (
     <Dialog
       open={isOpen}
       onClose={() => {
@@ -38,25 +36,16 @@ export const useConfirmDialog = () => {
             setIsOpen(false);
           }}
         >
-          {'Cancel'}
-        </Button>
-        <Button
-          variant="contained"
-          onClick={() => {
-            setIsOpen(false);
-            dialogProps?.onConfirm();
-          }}
-        >
-          {dialogProps?.confirmText || 'Confirm'}
+          Dismiss
         </Button>
       </DialogActions>
     </Dialog>
   );
 
-  const showConfirmDialog = (props: Props) => {
+  const showInfoDialog = (props: Props) => {
     setDialogProps(props);
     setIsOpen(true);
   };
 
-  return { ConfirmDialog, showConfirmDialog };
+  return { InfoDialog, showInfoDialog };
 };

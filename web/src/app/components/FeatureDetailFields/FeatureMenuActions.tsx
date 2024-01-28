@@ -10,6 +10,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { IconButton, Menu, MenuItem } from '@mui/material';
 
+import { EditorshipReason } from '@server/core/db/mapFeature/editor/types';
 import { featureApi } from 'app/api/feature-api';
 import { useConfirmDialog } from 'app/components/Dialogs/useConfirmDialog';
 import { selectIsUserSignedIn } from 'app/slices/app/selectors';
@@ -18,7 +19,12 @@ import { bindMenu, bindTrigger, usePopupState } from 'material-ui-popup-state/ho
 import { useTextBoxDialog } from '../Dialogs/useTextBoxDialog';
 
 interface Props {
-  isUserEditor?: boolean;
+  editorPermissions:
+    | {
+        canDelete: boolean;
+        canEdit: boolean;
+      }
+    | undefined;
   feature: {
     id: string;
     type: SlacklineMapFeatureType;
@@ -54,9 +60,9 @@ export const FeatureMenuActions = (props: Props) => {
 
   const onDeleteClick = async () => {
     cardHeaderPopupState.close();
-    if (props.isUserEditor) {
+    if (props.editorPermissions?.canDelete) {
       showConfirmDialog({
-        title: `Deletet this ${props.feature.type}?`,
+        title: `Delete this ${props.feature.type}?`,
         description:
           'Please confirm that you want to delete this feature. This action cannot be undone',
         onConfirm: () => deleteFeature({ id: props.feature.id, type: props.feature.type }),
@@ -122,20 +128,20 @@ export const FeatureMenuActions = (props: Props) => {
           Refresh
         </MenuItem>
         {props.feature.type !== 'country' && [
-          props.isUserEditor ? (
+          props.editorPermissions?.canEdit ? (
             <MenuItem key="edit" onClick={onEditClick}>
               <EditIcon />
               Edit
             </MenuItem>
           ) : (
-            <MenuItem key="request" onClick={onRequestEditorshipClick}>
+            <MenuItem key="request" onClick={onRequestEditorshipClick} disabled={!isSignedIn}>
               <ManageHistoryIcon />
-              {isSignedIn ? 'Request to Edit' : 'Sign-in to edit'}
+              {isSignedIn ? 'Request to Edit' : 'Request to Edit(Sign-in)'}
             </MenuItem>
           ),
-          <MenuItem key="delete" onClick={onDeleteClick}>
+          <MenuItem key="delete" onClick={onDeleteClick} disabled={!isSignedIn}>
             <DeleteIcon />
-            {isSignedIn ? 'Delete' : 'Sign-in to delete'}
+            {isSignedIn ? 'Delete' : 'Delete(Sign-in)'}
           </MenuItem>,
         ]}
       </Menu>

@@ -4,7 +4,6 @@ import { spotDetailsDBUtils } from 'core/db/spot/details';
 import { DDBAttributeItem } from 'core/db/types';
 import { refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import { checkUserExists } from 'core/features/isaUser';
-import { addAdminAsEditorToMapFeature } from 'core/features/mapFeature/editors';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import isEqual from 'lodash.isequal';
 
@@ -26,8 +25,6 @@ export const processSpotDetailsOperation = async (
       reason: 'explicit',
       type: 'owner',
     });
-
-    await addAdminAsEditorToMapFeature(newSpot.spotId, 'spot');
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {
