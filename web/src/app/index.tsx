@@ -16,6 +16,7 @@ import { AuthState } from 'app/slices/app/types';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import { showErrorNotification } from 'utils';
 
 import { AppDrawer } from './components/AppDrawer';
 import { withErrorBoundry } from './components/ErrorBoundary';
@@ -31,12 +32,10 @@ import { SpotEditPage } from './pages/Spot/SpotEditPage/Loadable';
 
 export function App() {
   useAppSlice();
-
   const dispatch = useDispatch();
 
   const authState = useSelector(selectAuthState);
   const isSignedIn = useSelector(selectIsUserSignedIn);
-  const snackbarNotification = useSelector(selectSnackbarNotification);
 
   useEffect(() => {
     Hub.listen('auth', async ({ payload: { event } }) => {
@@ -64,10 +63,6 @@ export function App() {
       signOut();
     }
   }, [authState, dispatch]);
-
-  const onSnackbarClose = () => {
-    dispatch(appActions.updateSnackbarNotification(null));
-  };
 
   return (
     <BrowserRouter>
@@ -106,7 +101,7 @@ export function App() {
         </Routes>
       </AppDrawer>
 
-      <NotificationSnackbar snackbarNotification={snackbarNotification} onClose={onSnackbarClose} />
+      <NotificationSnackbar />
     </BrowserRouter>
   );
 }
