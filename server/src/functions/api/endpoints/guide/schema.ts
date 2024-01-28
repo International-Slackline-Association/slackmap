@@ -12,7 +12,7 @@ const guideTypeEnum = z.enum([
 export const createGuideSchema = z.object({
   geoJson: z.object({
     type: z.literal('FeatureCollection'),
-    features: z.array(z.object({}).passthrough()).nonempty(),
+    features: z.array(z.any()),
   }),
   type: guideTypeEnum,
   description: z.string().max(512).optional(),
@@ -24,7 +24,7 @@ export const updateGuideSchema = z
   .object({
     geoJson: z.object({
       type: z.literal('FeatureCollection'),
-      features: z.array(z.object({}).passthrough()).nonempty(),
+      features: z.array(z.any()),
     }),
     type: guideTypeEnum,
     description: z.string().max(512).optional(),

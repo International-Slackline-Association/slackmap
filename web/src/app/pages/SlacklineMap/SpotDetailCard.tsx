@@ -1,15 +1,7 @@
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 
-import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
-import ManageHistoryIcon from '@mui/icons-material/ManageHistory';
 import MapIcon from '@mui/icons-material/Map';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { Menu, MenuItem } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -21,20 +13,17 @@ import { Stack } from '@mui/system';
 
 import { centerOfMass } from '@turf/turf';
 import { featureApi } from 'app/api/feature-api';
-import { spotApi } from 'app/api/spot-api';
-import { GetSpotDetailsAPIResponse } from 'app/api/types';
+import { GetSpotDetailsAPIResponse, spotApi } from 'app/api/spot-api';
 import { FeatureHistoryField } from 'app/components/FeatureDetailFields/FeatureHistoryField';
+import { FeatureMenuActions } from 'app/components/FeatureDetailFields/FeatureMenuActions';
 import { FeatureDetailInfoField } from 'app/components/FeatureDetailFields/InfoField';
 import { FeatureMediaField } from 'app/components/FeatureDetailFields/MediaField';
 import { OutdatedInfoField } from 'app/components/FeatureDetailFields/OutdatedInfoField';
 import { FeatureDetailRestrictionField } from 'app/components/FeatureDetailFields/RestrictionField';
 import { LoadingIndicator } from 'app/components/LoadingIndicator';
-import { selectIsUserSignedIn } from 'app/slices/app/selectors';
 import { format } from 'date-fns';
-import { bindMenu, bindTrigger, usePopupState } from 'material-ui-popup-state/hooks';
 import { appColors } from 'styles/theme/colors';
 import { imageUrlFromS3Key } from 'utils';
-import { useConfirmDialog } from 'utils/hooks/useConfirmDialog';
 
 interface Props {
   spotId: string;
@@ -42,27 +31,9 @@ interface Props {
 }
 
 export const SpotDetailCard = (props: Props) => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const isSignedIn = useSelector(selectIsUserSignedIn);
-
-  const cardHeaderPopupState = usePopupState({
-    variant: 'popover',
-    popupId: 'cardHeaderMenu',
-  });
-  const confirmDialog = useConfirmDialog();
   const dispatch = useDispatch();
 
   const { data: spotDetails, isFetching, refetch } = spotApi.useGetSpotDetailsQuery(props.spotId);
-  const [deleteSpot, { isSuccess: isDeleted }] = spotApi.useDeleteSpotMutation();
-
-  const [requestEditorship] = featureApi.useRequestTemporaryEditorshipMutation();
-
-  useEffect(() => {
-    if (isDeleted) {
-      navigate({ pathname: '/', search: searchParams.toString() });
-    }
-  }, [isDeleted]);
 
   useEffect(() => {
     if (spotDetails) {
@@ -70,38 +41,7 @@ export const SpotDetailCard = (props: Props) => {
     }
   }, [spotDetails]);
 
-  const onEditClick = async () => {
-    cardHeaderPopupState.close();
-    navigate(`/spot/${props.spotId}/edit`);
-  };
-
-  const onDeleteClick = async () => {
-    cardHeaderPopupState.close();
-    await confirmDialog({
-      title: 'Delete spot?',
-      content: 'Are you sure you want to delete this spot?',
-    }).then(() => {
-      deleteSpot(props.spotId);
-    });
-  };
-
-  const onRequestEditorshipClick = async () => {
-    cardHeaderPopupState.close();
-    await confirmDialog({
-      title: 'Get Temporary Permissions',
-      content: `This spot seems to have no editors. You can get temporary permissions to edit this spot. 
-        The permissions will be revoked after 24 hours (1 day).`,
-    }).then(() => {
-      requestEditorship({ id: props.spotId, type: 'spot' });
-    });
-  };
-
-  const onCloseClicked = () => {
-    navigate({ pathname: '/', search: searchParams.toString() });
-  };
-
   const onRefreshClicked = () => {
-    cardHeaderPopupState.close();
     refetch();
     dispatch(featureApi.util.invalidateTags(['featureChangelogs']));
   };
@@ -136,44 +76,11 @@ export const SpotDetailCard = (props: Props) => {
               </Avatar>
             }
             action={
-              <>
-                <IconButton onClick={onCloseClicked}>
-                  <CloseIcon />
-                </IconButton>
-
-                <IconButton {...bindTrigger(cardHeaderPopupState)}>
-                  <MoreVertIcon />
-                </IconButton>
-
-                <Menu
-                  {...bindMenu(cardHeaderPopupState)}
-                  sx={{
-                    '& svg': {
-                      mr: 1,
-                      color: (t) => t.palette.primary.main,
-                    },
-                  }}
-                >
-                  <MenuItem onClick={onRefreshClicked}>
-                    <RefreshIcon />
-                    Refresh
-                  </MenuItem>
-                  <MenuItem onClick={onEditClick} disabled={!spotDetails.isUserEditor}>
-                    <EditIcon />
-                    Edit
-                  </MenuItem>
-                  <MenuItem onClick={onDeleteClick} disabled={!spotDetails.isUserEditor}>
-                    <DeleteIcon />
-                    Delete
-                  </MenuItem>
-                  {!spotDetails.isUserEditor && (
-                    <MenuItem onClick={onRequestEditorshipClick} disabled={!isSignedIn}>
-                      <ManageHistoryIcon />
-                      Request to Edit
-                    </MenuItem>
-                  )}
-                </Menu>
-              </>
+              <FeatureMenuActions
+                isUserEditor={spotDetails.isUserEditor}
+                feature={{ id: props.spotId, type: 'spot' }}
+                onRefreshClick={onRefreshClicked}
+              />
             }
             title={spotDetails.name || 'Unknown Name'}
             subheader={`Last updated: ${format(

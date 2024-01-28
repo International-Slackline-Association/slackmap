@@ -6,7 +6,7 @@ const api = axios.create({
   baseURL: `https://raw.githubusercontent.com/International-Slackline-Association/slackline-data/master/data`,
 });
 
-interface IsaMember {
+export interface IsaMember {
   country: string;
   name: string;
   joinedDate?: string;
@@ -17,13 +17,13 @@ interface IsaMember {
   profilePictureUrl?: string;
 }
 
-interface SlacklineGroupGeoJsonProperties {
+export interface SlacklineGroupGeoJsonProperties {
   id: string;
   ft: 'sg';
   c: string; // country
 }
 
-interface SlacklineGroup {
+export interface SlacklineGroup {
   id: string;
   name: string;
   createdDateTime: string; // only date

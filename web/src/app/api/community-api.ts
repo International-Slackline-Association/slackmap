@@ -1,9 +1,12 @@
+import {
+  getCommunityCountryDetails,
+  getGroupDetails,
+} from '@server/functions/api/endpoints/communities/api';
 import { baseApi } from 'store/rtk-query';
+import { AsyncReturnType } from 'type-fest';
 
-import type {
-  GetCommunityCountryDetailsAPIResponse,
-  GetSlacklineGroupDetailsAPIResponse,
-} from './types';
+type GetCommunityCountryDetailsAPIResponse = AsyncReturnType<typeof getCommunityCountryDetails>;
+type GetSlacklineGroupDetailsAPIResponse = AsyncReturnType<typeof getGroupDetails>;
 
 export const communityApi = baseApi
   .enhanceEndpoints({

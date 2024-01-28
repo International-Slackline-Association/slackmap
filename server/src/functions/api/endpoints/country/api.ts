@@ -1,21 +1,21 @@
 import { getChangelogsOfCountry } from 'core/features/mapFeature/changelog';
 import countriesJson from 'data/countryInfoDict.json';
-import express, { Request, Response } from 'express';
+import express, { Request } from 'express';
 
 import {
-  catchExpressJsErrorWrapper,
   constructPaginationResponse,
   destructPaginationQueryParam,
+  expressRoute,
 } from '../../utils';
 
-export const getCountryDetails = async (req: Request, res: Response) => {
+export const getCountryDetails = async (req: Request) => {
   const countryCode = req.params.code;
   const countryInfo = countriesJson[countryCode.toUpperCase() as keyof typeof countriesJson];
 
-  res.json({ name: countryInfo.name });
+  return { name: countryInfo.name };
 };
 
-export const getCountryChangelogs = async (req: Request, res: Response) => {
+export const getCountryChangelogs = async (req: Request) => {
   const countryCode = req.params.code;
   const { cursor } = destructPaginationQueryParam(req.query);
 
@@ -24,9 +24,9 @@ export const getCountryChangelogs = async (req: Request, res: Response) => {
     startKey: cursor,
   });
 
-  res.json({ items: changelogs, pagination: constructPaginationResponse(lastEvaluatedKey) });
+  return { items: changelogs, pagination: constructPaginationResponse(lastEvaluatedKey) };
 };
 
 export const countryApi = express.Router();
-countryApi.get('/:code/details', catchExpressJsErrorWrapper(getCountryDetails));
-countryApi.get('/:code/changelogs', catchExpressJsErrorWrapper(getCountryChangelogs));
+countryApi.get('/:code/details', expressRoute(getCountryDetails));
+countryApi.get('/:code/changelogs', expressRoute(getCountryChangelogs));

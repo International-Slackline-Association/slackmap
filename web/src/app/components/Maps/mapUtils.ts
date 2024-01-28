@@ -8,12 +8,6 @@ import { FlyToOptions, MapboxGeoJSONFeature, PaddingOptions } from 'mapbox-gl';
 
 import { MapFeatureCommonProperties, MapFeatureEntity } from './types';
 
-// (mapboxgl as any).workerClass = MapboxWorker;
-
-// // FIX: https://github.com/visgl/react-map-gl/issues/1266
-// // @ts-expect-error - mapbox-gl-csp-worker is not typed
-// mapboxgl.workerClass = require('worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker').default;
-
 export const mapUrlSearchParams = {
   parse: (searchParams: URLSearchParams) => {
     const [longitude, latitude, zoom] =

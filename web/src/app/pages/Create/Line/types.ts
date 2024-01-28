@@ -1,7 +1,7 @@
 import { S3PhotoMeta } from 'app/components/ImageList';
 
 export interface LineDetailsForm {
-  type?: SlacklineType;
+  type: SlacklineType;
   name?: string;
   description?: string;
   length?: number;

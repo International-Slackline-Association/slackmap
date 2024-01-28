@@ -18,9 +18,9 @@ import { uploadData } from 'aws-amplify/storage';
 import { imageUrlFromS3Key, showErrorNotification } from 'utils';
 
 export interface S3PhotoMeta {
-  s3Key?: string;
+  s3Key: string;
   isInProcessingBucket?: boolean;
-  id?: string;
+  id: string;
   isCover?: boolean;
 }
 

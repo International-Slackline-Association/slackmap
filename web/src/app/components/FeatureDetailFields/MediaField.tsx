@@ -38,7 +38,7 @@ export const FeatureMediaField = (props: Props) => {
             maxHeight: 'unset',
             p: 1,
             'div > div:nth-child(1)': {
-              pointerEvents: { xs: 'none', lg: 'auto' },
+              pointerEvents: { xs: 'none', lg: 'auto' }, // enable pinch zoom on mobile
             },
           },
         }}

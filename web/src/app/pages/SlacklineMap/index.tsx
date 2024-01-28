@@ -7,11 +7,9 @@ import { Stack } from '@mui/material';
 import { Box } from '@mui/system';
 
 import { getSlacklinePointFeaturesOfCountry } from 'app/api/geojson-data';
-import {
-  GetGuideDetailsAPIResponse,
-  GetLineDetailsAPIResponse,
-  GetSpotDetailsAPIResponse,
-} from 'app/api/types';
+import { GetGuideDetailsAPIResponse } from 'app/api/guide-api';
+import { GetLineDetailsAPIResponse } from 'app/api/line-api';
+import { GetSpotDetailsAPIResponse } from 'app/api/spot-api';
 import { SlacklineMap } from 'app/components/Maps/SlacklineMap';
 import { mapUrlSearchParams, parseMapFeature } from 'app/components/Maps/mapUtils';
 import { appActions } from 'app/slices/app';
@@ -108,7 +106,8 @@ export function SlacklineMapPage() {
         | GetGuideDetailsAPIResponse,
     ) => {
       if (!featureDetailsResponse) return;
-      featureGeoJsonDict[featureDetailsResponse.id] = featureDetailsResponse.geoJson;
+      featureGeoJsonDict[featureDetailsResponse.id] =
+        featureDetailsResponse.geoJson as FeatureCollection;
 
       if (activeFeature?.id === featureDetailsResponse.id) {
         updateActiveFeatureGeoJson();

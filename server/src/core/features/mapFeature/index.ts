@@ -1,12 +1,6 @@
-import { DDBGuideDetailItem } from 'core/db/guide/details/types';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
-import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { GenericMapFeature, GenericMapFeatureItemType } from './types';
 
-import { GenericFeature } from './types';
-
-export const genericFeatureFromItem = (
-  feature: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem,
-): GenericFeature => {
+export const genericFeatureFromItem = (feature: GenericMapFeatureItemType): GenericMapFeature => {
   if ('lineId' in feature) {
     return {
       type: 'line',

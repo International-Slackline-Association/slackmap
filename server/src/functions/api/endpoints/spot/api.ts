@@ -5,21 +5,17 @@ import { processSpotGeoJson } from 'core/features/geojson';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import {
   addCreatedChangelogToFeature,
-  addTemporaryEditorChangelogToFeature,
   addUpdatedDetailsChangelog,
 } from 'core/features/mapFeature/changelog';
-import {
-  addTemporaryEditorToMapFeature,
-  validateMapFeatureEditor,
-} from 'core/features/mapFeature/editors';
+import { validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { validateSpotGeoJson } from 'core/features/spot/validations';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
-import express, { Request, Response } from 'express';
+import express, { Request } from 'express';
 import { nanoid } from 'nanoid';
 
-import { catchExpressJsErrorWrapper, validateApiPayload, verifyRequestClaims } from '../../utils';
+import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';
 import { getSpotDetailsResponse } from './dto';
 import {
   CreateSpotPostBody,
@@ -28,19 +24,18 @@ import {
   updateSpotSchema,
 } from './schema';
 
-export const getSpotDetails = async (req: Request, res: Response) => {
+export const getSpotDetails = async (req: Request) => {
   const spot = await db.getSpotDetails(req.params.id);
   if (!spot) {
     throw new Error('NotFound: Spot not found');
   }
-  const isUserEditor = Boolean(
-    await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId),
-  );
+  const editPermission = await validateMapFeatureEditor(spot.spotId, 'spot', req.user?.isaId);
+  const isUserEditor = editPermission?.reason === 'explicit';
 
-  res.json(getSpotDetailsResponse(spot, isUserEditor));
+  return getSpotDetailsResponse(spot, isUserEditor);
 };
 
-export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res: Response) => {
+export const createSpot = async (req: Request<any, any, CreateSpotPostBody>) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createSpotSchema);
   const geoJson = body.geoJson as unknown as FeatureCollection;
@@ -81,10 +76,10 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>, res
   await addCreatedChangelogToFeature(spot, requestClaims.isaId, new Date());
 
   logger.info('created spot', { user: req.user, spot });
-  res.json(getSpotDetailsResponse(spot));
+  return getSpotDetailsResponse(spot);
 };
 
-export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res: Response) => {
+export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>) => {
   const requestClaims = verifyRequestClaims(req);
 
   const spotId = req.params.id;
@@ -114,48 +109,10 @@ export const updateSpot = async (req: Request<any, any, UpdateSpotPostBody>, res
   await addUpdatedDetailsChangelog(updatedSpot, spot, requestClaims.isaId, new Date());
 
   logger.info('updated spot', { user: req.user, updatedSpot });
-  res.json(getSpotDetailsResponse(updatedSpot));
-};
-
-export const deleteSpot = async (req: Request, res: Response) => {
-  const spotId = req.params.id;
-  const editor = await validateMapFeatureEditor(spotId, 'spot', req.user?.isaId, {
-    shouldThrow: true,
-  });
-  if (editor?.reason === 'temporary') {
-    throw new Error('Forbidden: Temporary editor cannot delete spots');
-  }
-  await db.deleteSpot(spotId);
-  logger.info('deleted spot', { user: req.user, spotId });
-  res.json({});
-};
-
-export const requestTemporaryEditorship = async (req: Request, res: Response) => {
-  const requestClaims = verifyRequestClaims(req);
-  const spotId = req.params.id;
-  const spot = await db.getSpotDetails(spotId, { fields: [] });
-  if (!spot) {
-    throw new Error('NotFound: Spot not found');
-  }
-  await addTemporaryEditorToMapFeature(spotId, 'spot', requestClaims.isaId);
-  await addTemporaryEditorChangelogToFeature(
-    spotId,
-    'spot',
-    requestClaims.isaId,
-    new Date(),
-    spot.country,
-  );
-
-  logger.info('added temporary editor for spot', { user: req.user, spotId });
-  res.json({});
+  return getSpotDetailsResponse(updatedSpot);
 };
 
 export const spotApi = express.Router();
-spotApi.post('/', catchExpressJsErrorWrapper(createSpot));
-spotApi.get('/:id/details', catchExpressJsErrorWrapper(getSpotDetails));
-spotApi.put('/:id', catchExpressJsErrorWrapper(updateSpot));
-spotApi.delete('/:id', catchExpressJsErrorWrapper(deleteSpot));
-spotApi.put(
-  '/:id/requestTemporaryEditorship',
-  catchExpressJsErrorWrapper(requestTemporaryEditorship),
-);
+spotApi.post('/', expressRoute(createSpot));
+spotApi.get('/:id/details', expressRoute(getSpotDetails));
+spotApi.put('/:id', expressRoute(updateSpot));

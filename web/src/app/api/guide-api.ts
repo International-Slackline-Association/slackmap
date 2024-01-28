@@ -1,11 +1,13 @@
+import { getGuideDetails } from '@server/functions/api/endpoints/guide/api';
+import {
+  CreateGuidePostBody,
+  UpdateGuidePostBody,
+} from '@server/functions/api/endpoints/guide/schema';
 import { baseApi } from 'store/rtk-query';
+import { AsyncReturnType } from 'type-fest';
 import { showInfoNotification, showSuccessNotification } from 'utils';
 
-import type {
-  CreateGuideDetailsPayload,
-  GetGuideDetailsAPIResponse,
-  UpdateGuideDetailsPayload,
-} from './types';
+export type GetGuideDetailsAPIResponse = AsyncReturnType<typeof getGuideDetails>;
 
 export const guideApi = baseApi
   .enhanceEndpoints({
@@ -17,7 +19,7 @@ export const guideApi = baseApi
         query: (id) => ({ url: `guide/${id}/details` }),
         providesTags: ['guideDetails'],
       }),
-      createGuide: builder.mutation<GetGuideDetailsAPIResponse, CreateGuideDetailsPayload>({
+      createGuide: builder.mutation<GetGuideDetailsAPIResponse, CreateGuidePostBody>({
         query: (body) => ({
           url: `guide`,
           method: 'POST',
@@ -31,7 +33,7 @@ export const guideApi = baseApi
       }),
       updateGuide: builder.mutation<
         GetGuideDetailsAPIResponse,
-        { id: string; payload: UpdateGuideDetailsPayload }
+        { id: string; payload: UpdateGuidePostBody }
       >({
         query: ({ id, payload }) => ({
           url: `guide/${id}`,
@@ -42,17 +44,6 @@ export const guideApi = baseApi
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           await queryFulfilled.then(() => {
             dispatch(showSuccessNotification('Changes Saved'));
-          });
-        },
-      }),
-      deleteGuide: builder.mutation<void, string>({
-        query: (id) => ({
-          url: `guide/${id}`,
-          method: 'DELETE',
-        }),
-        async onQueryStarted(_, { dispatch, queryFulfilled }) {
-          await queryFulfilled.then(() => {
-            dispatch(showSuccessNotification('Guide Deleted'));
           });
         },
       }),

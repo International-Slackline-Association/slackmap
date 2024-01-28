@@ -1,7 +1,18 @@
+import {
+  deleteFeature,
+  deleteFeatureRequest,
+  getFeatureChangelogs,
+  requestTemporaryEditorship,
+} from '@server/functions/api/endpoints/feature/api';
+import { DeleteFeatureRequestPostBody } from '@server/functions/api/endpoints/feature/schema';
 import { baseApi } from 'store/rtk-query';
+import { AsyncReturnType } from 'type-fest';
 import { showSuccessNotification } from 'utils';
 
-import type { MapFeatureChangelogResponse } from './types';
+type GetFeatureChangelogsResponse = AsyncReturnType<typeof getFeatureChangelogs>;
+type RequestTemporaryEditorshipResponse = AsyncReturnType<typeof requestTemporaryEditorship>;
+type DeleteFeatureAPIResponse = AsyncReturnType<typeof deleteFeature>;
+type DeleteFeatureRequestAPIResponse = AsyncReturnType<typeof deleteFeatureRequest>;
 
 export const featureApi = baseApi
   .enhanceEndpoints({
@@ -10,7 +21,7 @@ export const featureApi = baseApi
   .injectEndpoints({
     endpoints: (builder) => ({
       getChangelogs: builder.query<
-        MapFeatureChangelogResponse,
+        GetFeatureChangelogsResponse,
         {
           id: string;
           type: SlacklineMapFeatureType;
@@ -44,7 +55,7 @@ export const featureApi = baseApi
         },
       }),
       requestTemporaryEditorship: builder.mutation<
-        void,
+        RequestTemporaryEditorshipResponse,
         { id: string; type: SlacklineMapFeatureType }
       >({
         query: (params) => ({
@@ -55,6 +66,36 @@ export const featureApi = baseApi
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           await queryFulfilled.then(() => {
             dispatch(showSuccessNotification('Editorship Granted'));
+          });
+        },
+      }),
+      deleteFeature: builder.mutation<
+        DeleteFeatureAPIResponse,
+        { id: string; type: SlacklineMapFeatureType }
+      >({
+        query: (params) => ({
+          url: `feature/${params.id}/${params.type}`,
+          method: 'DELETE',
+        }),
+        async onQueryStarted(_, { dispatch, queryFulfilled }) {
+          await queryFulfilled.then(() => {
+            dispatch(showSuccessNotification('Feature Deleted'));
+          });
+        },
+      }),
+      deleteFeatureRequest: builder.mutation<
+        DeleteFeatureRequestAPIResponse,
+        { id: string; type: SlacklineMapFeatureType; payload: DeleteFeatureRequestPostBody }
+      >({
+        query: (params) => ({
+          url: `feature/${params.id}/${params.type}/deleteRequest`,
+          method: 'POST',
+          body: params.payload,
+        }),
+        invalidatesTags: [],
+        async onQueryStarted(_, { dispatch, queryFulfilled }) {
+          await queryFulfilled.then(() => {
+            dispatch(showSuccessNotification('Delete Request Sent'));
           });
         },
       }),

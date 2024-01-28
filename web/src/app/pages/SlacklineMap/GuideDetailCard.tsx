@@ -1,14 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import CloseIcon from '@mui/icons-material/Close';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 import MapIcon from '@mui/icons-material/Map';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { Menu, MenuItem } from '@mui/material';
 import Avatar from '@mui/material/Avatar';
 import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
@@ -20,17 +13,15 @@ import { Stack } from '@mui/system';
 
 import { centerOfMass } from '@turf/turf';
 import { featureApi } from 'app/api/feature-api';
-import { guideApi } from 'app/api/guide-api';
-import { GetGuideDetailsAPIResponse } from 'app/api/types';
+import { GetGuideDetailsAPIResponse, guideApi } from 'app/api/guide-api';
+import { FeatureMenuActions } from 'app/components/FeatureDetailFields/FeatureMenuActions';
 import { FeatureDetailInfoField } from 'app/components/FeatureDetailFields/InfoField';
 import { FeatureMediaField } from 'app/components/FeatureDetailFields/MediaField';
 import { OutdatedInfoField } from 'app/components/FeatureDetailFields/OutdatedInfoField';
 import { LoadingIndicator } from 'app/components/LoadingIndicator';
 import { format } from 'date-fns';
-import { bindMenu, bindTrigger, usePopupState } from 'material-ui-popup-state/hooks';
 import { appColors } from 'styles/theme/colors';
 import { imageUrlFromS3Key } from 'utils';
-import { useConfirmDialog } from 'utils/hooks/useConfirmDialog';
 
 interface Props {
   guideId: string;
@@ -38,14 +29,6 @@ interface Props {
 }
 
 export const GuideDetailCard = (props: Props) => {
-  const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-
-  const cardHeaderPopupState = usePopupState({
-    variant: 'popover',
-    popupId: 'cardHeaderMenu',
-  });
-  const confirmDialog = useConfirmDialog();
   const dispatch = useDispatch();
 
   const {
@@ -53,13 +36,6 @@ export const GuideDetailCard = (props: Props) => {
     isFetching,
     refetch,
   } = guideApi.useGetGuideDetailsQuery(props.guideId);
-  const [deleteGuide, { isSuccess: isDeleted }] = guideApi.useDeleteGuideMutation();
-
-  useEffect(() => {
-    if (isDeleted) {
-      navigate({ pathname: '/', search: searchParams.toString() });
-    }
-  }, [isDeleted]);
 
   useEffect(() => {
     if (guideDetails) {
@@ -67,27 +43,7 @@ export const GuideDetailCard = (props: Props) => {
     }
   }, [guideDetails]);
 
-  const onEditClick = async () => {
-    cardHeaderPopupState.close();
-    navigate(`/guide/${props.guideId}/edit`);
-  };
-
-  const onDeleteClick = async () => {
-    cardHeaderPopupState.close();
-    await confirmDialog({
-      title: 'Delete guide?',
-      content: 'Are you sure you want to delete this guide?',
-    }).then(() => {
-      deleteGuide(props.guideId);
-    });
-  };
-
-  const onCloseClicked = () => {
-    navigate({ pathname: '/', search: searchParams.toString() });
-  };
-
   const onRefreshClicked = () => {
-    cardHeaderPopupState.close();
     refetch();
     dispatch(featureApi.util.invalidateTags(['featureChangelogs']));
   };
@@ -122,38 +78,11 @@ export const GuideDetailCard = (props: Props) => {
               </Avatar>
             }
             action={
-              <>
-                <IconButton onClick={onCloseClicked}>
-                  <CloseIcon />
-                </IconButton>
-
-                <IconButton {...bindTrigger(cardHeaderPopupState)}>
-                  <MoreVertIcon />
-                </IconButton>
-
-                <Menu
-                  {...bindMenu(cardHeaderPopupState)}
-                  sx={{
-                    '& svg': {
-                      mr: 1,
-                      color: (t) => t.palette.primary.main,
-                    },
-                  }}
-                >
-                  <MenuItem onClick={onRefreshClicked}>
-                    <RefreshIcon />
-                    Refresh
-                  </MenuItem>
-                  <MenuItem onClick={onEditClick} disabled={!guideDetails.isUserEditor}>
-                    <EditIcon />
-                    Edit
-                  </MenuItem>
-                  <MenuItem onClick={onDeleteClick} disabled={!guideDetails.isUserEditor}>
-                    <DeleteIcon />
-                    Delete
-                  </MenuItem>
-                </Menu>
-              </>
+              <FeatureMenuActions
+                isUserEditor={guideDetails.isUserEditor}
+                feature={{ id: props.guideId, type: 'guide' }}
+                onRefreshClick={onRefreshClicked}
+              />
             }
             title={`${guideDetails.typeLabel}`}
             subheader={`Last updated: ${format(

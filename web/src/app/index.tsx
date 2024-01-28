@@ -5,7 +5,6 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
 
-import { amplifyConfig } from 'amplifyConfig';
 import NotificationSnackbar from 'app/components/NotificationSnackbar';
 import { appActions, useAppSlice } from 'app/slices/app';
 import {
@@ -14,7 +13,6 @@ import {
   selectSnackbarNotification,
 } from 'app/slices/app/selectors';
 import { AuthState } from 'app/slices/app/types';
-import { Amplify } from 'aws-amplify';
 import { getCurrentUser, signOut } from 'aws-amplify/auth';
 import { Hub } from 'aws-amplify/utils';
 import 'mapbox-gl/dist/mapbox-gl.css';

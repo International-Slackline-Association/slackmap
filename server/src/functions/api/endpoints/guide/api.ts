@@ -10,10 +10,10 @@ import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { GuideType } from 'core/types';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
-import express, { Request, Response } from 'express';
+import express, { Request } from 'express';
 import { nanoid } from 'nanoid';
 
-import { catchExpressJsErrorWrapper, validateApiPayload, verifyRequestClaims } from '../../utils';
+import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';
 import { getGuideDetailsResponse } from './dto';
 import {
   CreateGuidePostBody,
@@ -22,17 +22,17 @@ import {
   updateGuideSchema,
 } from './schema';
 
-export const getGuideDetails = async (req: Request, res: Response) => {
+export const getGuideDetails = async (req: Request) => {
   const guide = await db.getGuideDetails(req.params.id);
   if (!guide) {
     throw new Error(`NotFound: Guide ${req.params.id} not found`);
   }
-  const isUserEditor = Boolean(
-    await validateMapFeatureEditor(guide.guideId, 'guide', req.user?.isaId),
-  );
-  res.json(getGuideDetailsResponse(guide, isUserEditor));
+  const editPermission = await validateMapFeatureEditor(guide.guideId, 'guide', req.user?.isaId);
+  const isUserEditor = editPermission?.reason === 'explicit';
+
+  return getGuideDetailsResponse(guide, isUserEditor);
 };
-export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, res: Response) => {
+export const createGuide = async (req: Request<any, any, CreateGuidePostBody>) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createGuideSchema);
   const geoJson = body.geoJson as unknown as FeatureCollection;
@@ -69,10 +69,10 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>, r
   await addCreatedChangelogToFeature(guide, requestClaims.isaId, new Date());
 
   logger.info('created guide', { user: req.user, guide });
-  res.json(getGuideDetailsResponse(guide));
+  return getGuideDetailsResponse(guide);
 };
 
-export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, res: Response) => {
+export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>) => {
   verifyRequestClaims(req);
 
   const guideId = req.params.id;
@@ -106,25 +106,10 @@ export const updateGuide = async (req: Request<any, any, UpdateGuidePostBody>, r
   await db.putGuide(updatedGuide);
 
   logger.info('updated guide', { user: req.user, updatedGuide });
-  res.json(getGuideDetailsResponse(updatedGuide));
-};
-
-export const deleteGuide = async (req: Request, res: Response) => {
-  const guideId = req.params.id;
-  const editor = await validateMapFeatureEditor(guideId, 'guide', req.user?.isaId, {
-    shouldThrow: true,
-  });
-  if (editor?.reason === 'temporary') {
-    throw new Error('Forbidden: Temporary editor cannot delete guides');
-  }
-  await db.deleteGuide(guideId);
-
-  logger.info('deleted guide', { user: req.user, guideId });
-  res.json({});
+  return getGuideDetailsResponse(updatedGuide);
 };
 
 export const guideApi = express.Router();
-guideApi.post('/', catchExpressJsErrorWrapper(createGuide));
-guideApi.get('/:id/details', catchExpressJsErrorWrapper(getGuideDetails));
-guideApi.put('/:id', catchExpressJsErrorWrapper(updateGuide));
-guideApi.delete('/:id', catchExpressJsErrorWrapper(deleteGuide));
+guideApi.post('/', expressRoute(createGuide));
+guideApi.get('/:id/details', expressRoute(getGuideDetails));
+guideApi.put('/:id', expressRoute(updateGuide));

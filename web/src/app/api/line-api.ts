@@ -1,11 +1,13 @@
+import { getLineDetails } from '@server/functions/api/endpoints/line/api';
+import {
+  CreateLinePostBody,
+  UpdateLinePostBody,
+} from '@server/functions/api/endpoints/line/schema';
 import { baseApi } from 'store/rtk-query';
+import { AsyncReturnType } from 'type-fest';
 import { showInfoNotification, showSuccessNotification } from 'utils';
 
-import type {
-  CreateLineDetailsPayload,
-  GetLineDetailsAPIResponse,
-  UpdateLineDetailsPayload,
-} from './types';
+export type GetLineDetailsAPIResponse = AsyncReturnType<typeof getLineDetails>;
 
 export const lineApi = baseApi
   .enhanceEndpoints({
@@ -17,7 +19,7 @@ export const lineApi = baseApi
         query: (id) => ({ url: `line/${id}/details` }),
         providesTags: ['lineDetails', 'featureEditors'],
       }),
-      createLine: builder.mutation<GetLineDetailsAPIResponse, CreateLineDetailsPayload>({
+      createLine: builder.mutation<GetLineDetailsAPIResponse, CreateLinePostBody>({
         query: (body) => ({
           url: `line`,
           method: 'POST',
@@ -31,7 +33,7 @@ export const lineApi = baseApi
       }),
       updateLine: builder.mutation<
         GetLineDetailsAPIResponse,
-        { id: string; payload: UpdateLineDetailsPayload }
+        { id: string; payload: UpdateLinePostBody }
       >({
         query: ({ id, payload }) => ({
           url: `line/${id}`,
@@ -42,17 +44,6 @@ export const lineApi = baseApi
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           await queryFulfilled.then(() => {
             dispatch(showSuccessNotification('Changes Saved'));
-          });
-        },
-      }),
-      deleteLine: builder.mutation<void, string>({
-        query: (id) => ({
-          url: `line/${id}`,
-          method: 'DELETE',
-        }),
-        async onQueryStarted(_, { dispatch, queryFulfilled }) {
-          await queryFulfilled.then(() => {
-            dispatch(showSuccessNotification('Line Deleted'));
           });
         },
       }),

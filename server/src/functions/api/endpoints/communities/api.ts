@@ -1,12 +1,11 @@
 import { Feature, FeatureCollection } from '@turf/turf';
-import { getOrganizationDetailsFromEmail } from 'core/db/isa-users';
 import { slacklineDataApi } from 'core/externalApi/slackline-data-api';
 import countriesJson from 'data/countryInfoDict.json';
-import express, { Request, Response } from 'express';
+import express, { Request } from 'express';
 
-import { catchExpressJsErrorWrapper } from '../../utils';
+import { expressRoute } from '../../utils';
 
-export const getCountriesGeoJson = async (req: Request, res: Response) => {
+export const getCountriesGeoJson = async () => {
   const isaMembers = await slacklineDataApi.getIsaMembersList();
   const slacklineGroupsGeoJson = await slacklineDataApi.getSlacklineGroupsGeoJson();
 
@@ -37,17 +36,16 @@ export const getCountriesGeoJson = async (req: Request, res: Response) => {
     countriesGeoJson.features.push(feature);
   }
 
-  res.json(countriesGeoJson);
+  return countriesGeoJson;
 };
 
-export const getCommunityCountryDetails = async (req: Request, res: Response) => {
+export const getCommunityCountryDetails = async (req: Request) => {
   const countryCode = req.params.code;
   const countryInfo = countriesJson[countryCode.toUpperCase() as keyof typeof countriesJson];
 
   const allSlacklineGroupsPromise = slacklineDataApi.getSlacklineGroups();
   const isaMembersPromise = slacklineDataApi.getIsaMembersList().then(async (members) => {
     const filtered = members.filter((member) => member.country === countryCode);
-    await fillOrganizationInformation(filtered);
     return filtered;
   });
   const countryGroupIdsPromise = slacklineDataApi.getSlacklineGroupsGeoJson().then((geoJson) => {
@@ -66,10 +64,10 @@ export const getCommunityCountryDetails = async (req: Request, res: Response) =>
     .filter((group) => countryGroupIds.includes(group.id))
     .sort((a, b) => a.name.localeCompare(b.name));
 
-  res.json({ name: countryInfo.name, isaMembers, slacklineGroups });
+  return { name: countryInfo.name, isaMembers, slacklineGroups };
 };
 
-export const getGroupDetails = async (req: Request, res: Response) => {
+export const getGroupDetails = async (req: Request) => {
   const groupId = req.params.groupId;
 
   const allSlacklineGroups = await slacklineDataApi.getSlacklineGroups();
@@ -78,28 +76,10 @@ export const getGroupDetails = async (req: Request, res: Response) => {
     throw new Error(`NotFound: Group with id: ${groupId} not found`);
   }
 
-  res.json({ info: groupInfo });
-};
-
-const fillOrganizationInformation = async (
-  isaMembers: { email?: string; profilePictureUrl?: string }[],
-) => {
-  const promises: Promise<any>[] = [];
-  for (const isaMember of isaMembers) {
-    if (isaMember.email && !isaMember.profilePictureUrl) {
-      promises.push(
-        getOrganizationDetailsFromEmail(isaMember.email).then((org) => {
-          if (org?.profilePictureUrl) {
-            isaMember.profilePictureUrl = org.profilePictureUrl;
-          }
-        }),
-      );
-    }
-  }
-  await Promise.all(promises);
+  return { info: groupInfo };
 };
 
 export const communitiesApi = express.Router();
-communitiesApi.get('/countriesGeoJson', catchExpressJsErrorWrapper(getCountriesGeoJson));
-communitiesApi.get('/country/:code', catchExpressJsErrorWrapper(getCommunityCountryDetails));
-communitiesApi.get('/group/:groupId', catchExpressJsErrorWrapper(getGroupDetails));
+communitiesApi.get('/countriesGeoJson', expressRoute(getCountriesGeoJson));
+communitiesApi.get('/country/:code', expressRoute(getCommunityCountryDetails));
+communitiesApi.get('/group/:groupId', expressRoute(getGroupDetails));

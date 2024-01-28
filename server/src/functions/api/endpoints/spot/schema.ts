@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const createSpotSchema = z.object({
   geoJson: z.object({
     type: z.literal('FeatureCollection'),
-    features: z.array(z.object({}).passthrough()).nonempty(),
+    features: z.array(z.any()),
   }),
   name: z.string().max(128).optional(),
   description: z.string().max(512).optional(),
@@ -21,7 +21,7 @@ export const updateSpotSchema = z
   .object({
     geoJson: z.object({
       type: z.literal('FeatureCollection'),
-      features: z.array(z.object({}).passthrough()).nonempty(),
+      features: z.array(z.any()),
     }),
     name: z.string().max(128).optional(),
     description: z.string().max(512).optional(),

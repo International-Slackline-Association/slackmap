@@ -1,16 +1,10 @@
 import * as db from 'core/db';
-import { FeatureCollection } from '@turf/turf';
 import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
 import { lineDetailsDBUtils } from 'core/db/line/details';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
 import { DDBAttributeItem } from 'core/db/types';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
-import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
-import { getUserDetails } from 'core/features/isaUser';
-import {
-  addAdminAsEditorToMapFeature,
-  refreshRepresentativeEditorsOfMapFeature,
-} from 'core/features/mapFeature/editors';
+import { checkUserExists } from 'core/features/isaUser';
+import { addAdminAsEditorToMapFeature } from 'core/features/mapFeature/editors';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
 import isEqual from 'lodash.isequal';
 
@@ -23,20 +17,17 @@ export const processLineDetailsOperation = async (
     const newLine = lineDetailsDBUtils.attrsToItem(newItem);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: newLine.lineId });
 
-    const isaUser = await getUserDetails(newLine.creatorUserId);
-    if (isaUser) {
-      await db.putFeatureEditor({
-        featureId: newLine.lineId,
-        featureType: 'line',
-        userId: newLine.creatorUserId,
-        createdDateTime: new Date().toISOString(),
-        reason: 'explicit',
-        userIdentityType: isaUser.identityType,
-        type: 'owner',
-      });
-    }
+    await checkUserExists(newLine.creatorUserId);
+    await db.putFeatureEditor({
+      featureId: newLine.lineId,
+      featureType: 'line',
+      userId: newLine.creatorUserId,
+      createdDateTime: new Date().toISOString(),
+      reason: 'explicit',
+      type: 'owner',
+    });
+
     await addAdminAsEditorToMapFeature(newLine.lineId, 'line');
-    await refreshCountryAndEditors(newLine);
   }
 
   if (eventName === 'MODIFY' && newItem && oldItem) {
@@ -44,7 +35,6 @@ export const processLineDetailsOperation = async (
     const updatedLine = lineDetailsDBUtils.attrsToItem(newItem);
     if (!isEqual(oldLine.geoJson, updatedLine.geoJson)) {
       await refreshLineGeoJsonFiles({ lineIdToUpdate: updatedLine.lineId });
-      await refreshCountryAndEditors(updatedLine);
     }
   }
 
@@ -55,16 +45,4 @@ export const processLineDetailsOperation = async (
     await deleteAllFeatureImages(oldLine.lineId);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
   }
-};
-
-const refreshCountryAndEditors = async (line: DDBLineDetailItem) => {
-  const countryCode = await getCountryCodeOfGeoJson(JSON.parse(line.geoJson) as FeatureCollection, {
-    dontThrowError: true,
-  });
-  if (countryCode && countryCode !== line.country) {
-    await db.updateLineCountry(line.lineId, countryCode);
-  }
-  await refreshRepresentativeEditorsOfMapFeature(line.lineId, 'line', {
-    countryCode: countryCode || line.country,
-  });
 };

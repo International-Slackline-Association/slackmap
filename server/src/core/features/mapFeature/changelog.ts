@@ -8,7 +8,7 @@ import { diff } from 'deep-diff';
 
 import { genericFeatureFromItem } from '.';
 import { getUserDetails } from '../isaUser';
-import { MapFeatureChangelog } from './types';
+import { GenericMapFeatureItemType, MapFeatureChangelog } from './types';
 
 type AllFieldNames = keyof (DDBLineDetailItem & DDBSpotDetailItem & DDBGuideDetailItem);
 
@@ -43,7 +43,7 @@ const validPathNames = Object.entries(pathNamesMapping)
   .map(([k]) => k);
 
 export const addCreatedChangelogToFeature = async (
-  item: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem,
+  item: GenericMapFeatureItemType,
   userId: string,
   date: Date,
 ) => {
@@ -59,8 +59,8 @@ export const addCreatedChangelogToFeature = async (
 };
 
 export const addUpdatedDetailsChangelog = async (
-  item: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem,
-  oldItem: DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem,
+  item: GenericMapFeatureItemType,
+  oldItem: GenericMapFeatureItemType,
   userId: string,
   date: Date,
 ) => {

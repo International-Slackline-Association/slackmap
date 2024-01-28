@@ -1,11 +1,13 @@
+import { getSpotDetails } from '@server/functions/api/endpoints/spot/api';
+import {
+  CreateSpotPostBody,
+  UpdateSpotPostBody,
+} from '@server/functions/api/endpoints/spot/schema';
 import { baseApi } from 'store/rtk-query';
-import { showInfoNotification, showSuccessNotification } from 'utils';
+import { AsyncReturnType } from 'type-fest';
+import { showInfoNotification } from 'utils';
 
-import type {
-  CreateSpotDetailsPayload,
-  GetSpotDetailsAPIResponse,
-  UpdateSpotDetailsPayload,
-} from './types';
+export type GetSpotDetailsAPIResponse = AsyncReturnType<typeof getSpotDetails>;
 
 export const spotApi = baseApi
   .enhanceEndpoints({
@@ -17,7 +19,7 @@ export const spotApi = baseApi
         query: (id) => ({ url: `spot/${id}/details` }),
         providesTags: ['spotDetails'],
       }),
-      createSpot: builder.mutation<GetSpotDetailsAPIResponse, CreateSpotDetailsPayload>({
+      createSpot: builder.mutation<GetSpotDetailsAPIResponse, CreateSpotPostBody>({
         query: (body) => ({
           url: `spot`,
           method: 'POST',
@@ -31,7 +33,7 @@ export const spotApi = baseApi
       }),
       updateSpot: builder.mutation<
         GetSpotDetailsAPIResponse,
-        { id: string; payload: UpdateSpotDetailsPayload }
+        { id: string; payload: UpdateSpotPostBody }
       >({
         query: ({ id, payload }) => ({
           url: `spot/${id}`,
@@ -42,17 +44,6 @@ export const spotApi = baseApi
         async onQueryStarted(_, { dispatch, queryFulfilled }) {
           await queryFulfilled.then(() => {
             dispatch(showInfoNotification('Refresh the page after few seconds', 5000));
-          });
-        },
-      }),
-      deleteSpot: builder.mutation<void, string>({
-        query: (id) => ({
-          url: `spot/${id}`,
-          method: 'DELETE',
-        }),
-        async onQueryStarted(_, { dispatch, queryFulfilled }) {
-          await queryFulfilled.then(() => {
-            dispatch(showSuccessNotification('Spot Deleted'));
           });
         },
       }),

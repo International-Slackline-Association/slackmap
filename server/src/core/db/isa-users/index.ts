@@ -1,4 +1,4 @@
-import { GetCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { ddb } from 'core/aws/clients';
 import { UserIdentityType } from 'core/types';
 
@@ -58,27 +58,6 @@ const getOrganizationDetails = async (
     });
 };
 
-const findOrganizationsFromEmail = async (email: string) => {
-  return ddb
-    .send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: 'GSI',
-        KeyConditionExpression: 'SK_GSI = :SK_GSI and GSI_SK = :GSI_SK',
-        ExpressionAttributeValues: {
-          ':SK_GSI': `orgDetails`,
-          ':GSI_SK': `email:${email}`,
-        },
-      }),
-    )
-    .then((data) => {
-      const items = data.Items || [];
-      return items.map((i) => ({
-        id: i.PK.split(':')[1] as string,
-      }));
-    });
-};
-
 export const getBasicUserDetails = async (userId: string) => {
   let identityType: UserIdentityType = 'individual';
   let details = await getUserDetails(userId);
@@ -90,36 +69,4 @@ export const getBasicUserDetails = async (userId: string) => {
     return { ...details, identityType };
   }
   return null;
-};
-
-export const getOrganizationDetailsFromEmail = async (email: string) => {
-  const organizations = await findOrganizationsFromEmail(email);
-  if (organizations.length === 0) {
-    return null;
-  }
-  const details = await getOrganizationDetails(organizations[0].id);
-  return details;
-};
-
-export const getUsersOfOrganization = async (organizationId: string) => {
-  return ddb
-    .send(
-      new QueryCommand({
-        TableName: TABLE_NAME,
-        IndexName: 'GSI',
-        KeyConditionExpression: '#SK_GSI = :SK_GSI',
-        ExpressionAttributeNames: {
-          '#SK_GSI': 'SK_GSI',
-        },
-        ExpressionAttributeValues: {
-          ':SK_GSI': `org:${organizationId}`,
-        },
-      }),
-    )
-    .then((data) => {
-      const items = data.Items || [];
-      return items
-        .filter((i) => i.PK.startsWith('user:') && !i.isPendingApproval)
-        .map((i) => i.PK.split(':')[1] as string);
-    });
 };

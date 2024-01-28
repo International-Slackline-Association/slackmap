@@ -1,6 +1,12 @@
 import { isaAccountApi } from 'store/rtk-query';
 
-import type { GetUserBasicDetailsAPIResponse } from './types';
+interface GetUserBasicDetailsAPIResponse {
+  name: string;
+  surname?: string;
+  email: string;
+  profilePictureUrl?: string;
+  isaId: string;
+}
 
 export const accountApi = isaAccountApi
   .enhanceEndpoints({

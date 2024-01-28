@@ -30,11 +30,11 @@ export const initAnalytics = () => {
       console.error(error);
       // Ignore errors thrown during CloudWatch RUM web client initialization
     }
+    configureAutoTrack({
+      enable: true,
+      type: 'session',
+    });
   }
-  configureAutoTrack({
-    enable: true,
-    type: 'session',
-  });
 };
 
 export const recordAnalyticsPageView = (pageId: string) => {

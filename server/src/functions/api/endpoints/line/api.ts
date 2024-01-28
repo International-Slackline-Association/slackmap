@@ -7,20 +7,16 @@ import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { validateLineGeoJson } from 'core/features/line/validations';
 import {
   addCreatedChangelogToFeature,
-  addTemporaryEditorChangelogToFeature,
   addUpdatedDetailsChangelog,
 } from 'core/features/mapFeature/changelog';
-import {
-  addTemporaryEditorToMapFeature,
-  validateMapFeatureEditor,
-} from 'core/features/mapFeature/editors';
+import { validateMapFeatureEditor } from 'core/features/mapFeature/editors';
 import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
-import express, { Request, Response } from 'express';
+import express, { Request } from 'express';
 import { nanoid } from 'nanoid';
 
-import { catchExpressJsErrorWrapper, validateApiPayload, verifyRequestClaims } from '../../utils';
+import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';
 import { getLineDetailsResponse } from './dto';
 import {
   CreateLinePostBody,
@@ -29,19 +25,18 @@ import {
   updateLineSchema,
 } from './schema';
 
-export const getLineDetails = async (req: Request, res: Response) => {
+export const getLineDetails = async (req: Request) => {
   const line = await db.getLineDetails(req.params.id);
   if (!line) {
     throw new Error(`NotFound: Line ${req.params.id} not found`);
   }
-  const isUserEditor = Boolean(
-    await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId),
-  );
+  const editPermission = await validateMapFeatureEditor(line.lineId, 'line', req.user?.isaId);
+  const isUserEditor = editPermission?.reason === 'explicit';
 
-  res.json(getLineDetailsResponse(line, isUserEditor));
+  return getLineDetailsResponse(line, isUserEditor);
 };
 
-export const createLine = async (req: Request<any, any, CreateLinePostBody>, res: Response) => {
+export const createLine = async (req: Request<any, any, CreateLinePostBody>) => {
   const requestClaims = verifyRequestClaims(req);
   const body = validateApiPayload(req.body, createLineSchema);
   const geoJson = body.geoJson as unknown as FeatureCollection;
@@ -99,10 +94,10 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>, res
   await addCreatedChangelogToFeature(line, requestClaims.isaId, new Date());
 
   logger.info('created line', { user: req.user, line });
-  res.json(getLineDetailsResponse(line));
+  return getLineDetailsResponse(line);
 };
 
-export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res: Response) => {
+export const updateLine = async (req: Request<any, any, UpdateLinePostBody>) => {
   const requestClaims = verifyRequestClaims(req);
 
   const lineId = req.params.id;
@@ -152,51 +147,10 @@ export const updateLine = async (req: Request<any, any, UpdateLinePostBody>, res
   await addUpdatedDetailsChangelog(updatedLine, line, requestClaims.isaId, new Date());
 
   logger.info('updated line', { user: req.user, updatedLine });
-  res.json(getLineDetailsResponse(updatedLine));
-};
-
-export const deleteLine = async (req: Request, res: Response) => {
-  const lineId = req.params.id;
-  const editor = await validateMapFeatureEditor(lineId, 'line', req.user?.isaId, {
-    shouldThrow: true,
-  });
-  if (editor?.reason === 'temporary') {
-    throw new Error('Forbidden: Temporary editor cannot delete lines');
-  }
-  await db.deleteLine(lineId);
-
-  logger.info('deleted line', { user: req.user, lineId });
-  res.json({});
-};
-
-export const requestTemporaryEditorship = async (req: Request, res: Response) => {
-  const requestClaims = verifyRequestClaims(req);
-  const lineId = req.params.id;
-
-  const line = await db.getLineDetails(lineId, { fields: [] });
-  if (!line) {
-    throw new Error('NotFound: Line not found');
-  }
-
-  await addTemporaryEditorToMapFeature(lineId, 'line', requestClaims.isaId);
-  await addTemporaryEditorChangelogToFeature(
-    lineId,
-    'line',
-    requestClaims.isaId,
-    new Date(),
-    line.country,
-  );
-
-  logger.info('added temporary editor for line', { user: req.user, lineId });
-  res.json({});
+  return getLineDetailsResponse(updatedLine);
 };
 
 export const lineApi = express.Router();
-lineApi.post('/', catchExpressJsErrorWrapper(createLine));
-lineApi.get('/:id/details', catchExpressJsErrorWrapper(getLineDetails));
-lineApi.put('/:id', catchExpressJsErrorWrapper(updateLine));
-lineApi.delete('/:id', catchExpressJsErrorWrapper(deleteLine));
-lineApi.put(
-  '/:id/requestTemporaryEditorship',
-  catchExpressJsErrorWrapper(requestTemporaryEditorship),
-);
+lineApi.post('/', expressRoute(createLine));
+lineApi.get('/:id/details', expressRoute(getLineDetails));
+lineApi.put('/:id', expressRoute(updateLine));

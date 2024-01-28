@@ -15,7 +15,7 @@ export const createLineSchema = z
   .object({
     geoJson: z.object({
       type: z.literal('FeatureCollection'),
-      features: z.array(z.object({}).passthrough()).nonempty(),
+      features: z.array(z.any()),
     }),
     type: lineTypeSchema,
     name: z.string().max(128).optional(),
@@ -40,7 +40,7 @@ export const updateLineSchema = z
   .object({
     geoJson: z.object({
       type: z.literal('FeatureCollection'),
-      features: z.array(z.object({}).passthrough()).nonempty(),
+      features: z.array(z.any()),
     }),
     type: lineTypeSchema,
     name: z.string().max(128).optional(),

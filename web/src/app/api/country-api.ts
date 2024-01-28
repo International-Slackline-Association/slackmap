@@ -1,6 +1,12 @@
+import {
+  getCountryChangelogs,
+  getCountryDetails,
+} from '@server/functions/api/endpoints/country/api';
 import { baseApi } from 'store/rtk-query';
+import { AsyncReturnType } from 'type-fest';
 
-import type { GetCountryChangelogsAPIResponse, GetCountryDetailsAPIResponse } from './types';
+type GetCountryDetailsAPIResponse = AsyncReturnType<typeof getCountryDetails>;
+type GetCountryChangelogsAPIResponse = AsyncReturnType<typeof getCountryChangelogs>;
 
 export const countryApi = baseApi
   .enhanceEndpoints({
