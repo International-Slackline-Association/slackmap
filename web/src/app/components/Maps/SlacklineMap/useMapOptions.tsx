@@ -1,5 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
-import { useLocalStorage } from 'react-use';
+import { ReactNode, useState } from 'react';
 
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import FollowTheSignsIcon from '@mui/icons-material/FollowTheSigns';
@@ -24,6 +23,7 @@ import {
 
 import { SlacklineType } from '@server/core/types';
 import { SlacklineFeatureIcon } from 'app/components/Icons/SlacklineFeatureIcon';
+import { useAppLocalStorage } from 'utils/hooks/useAppLocalStorage';
 
 export type SelectedDisplayFeature = SlacklineMapFeatureType | 'all';
 export type SelectedMapStyle = 'default' | 'satellite' | 'outdoors' | 'streets';
@@ -100,29 +100,7 @@ export const useMapOptions = () => {
     useState<SelectedDisplayFeature>('all');
   const [selectedSlacklineType, setSelectedSlacklineType] = useState<SelectedSlacklineType>('none');
 
-  const [localStorageSavedSettings, setLocalStorageSavedSettings] = useLocalStorage<{
-    mapStyle: SelectedMapStyle;
-  }>('savedMapSettings');
-
-  const [selectedMapStyle, setSelectedMapStyle] = useState<SelectedMapStyle>(
-    localStorageSavedSettings?.mapStyle === undefined
-      ? 'default'
-      : localStorageSavedSettings?.mapStyle,
-  );
-
-  const [savedSettings, setSavedSettings] = useState<{
-    mapStyle: SelectedMapStyle;
-  }>();
-
-  useEffect(() => {
-    setLocalStorageSavedSettings(savedSettings);
-  }, [savedSettings]);
-
-  useEffect(() => {
-    setSavedSettings({
-      mapStyle: selectedMapStyle,
-    });
-  }, [selectedMapStyle]);
+  const savedMapStyle = useAppLocalStorage('mapSettings.mapStyle', 'default');
 
   const Item = (props: { text: string; children: ReactNode }) => {
     return (
@@ -250,33 +228,33 @@ export const useMapOptions = () => {
               <IconOption
                 icon={<CheckBoxIcon />}
                 label={'Default'}
-                checked={selectedMapStyle === 'default'}
+                checked={savedMapStyle.value === 'default'}
                 onClick={() => {
-                  setSelectedMapStyle('default');
+                  savedMapStyle.set('default');
                 }}
               />
               <IconOption
                 icon={<SatelliteAltIcon />}
                 label={'Satellite'}
-                checked={selectedMapStyle === 'satellite'}
+                checked={savedMapStyle.value === 'satellite'}
                 onClick={() => {
-                  setSelectedMapStyle('satellite');
+                  savedMapStyle.set('satellite');
                 }}
               />
               <IconOption
                 icon={<ForestIcon />}
                 label={'Outdoors'}
-                checked={selectedMapStyle === 'outdoors'}
+                checked={savedMapStyle.value === 'outdoors'}
                 onClick={() => {
-                  setSelectedMapStyle('outdoors');
+                  savedMapStyle.set('outdoors');
                 }}
               />
               <IconOption
                 icon={<SignpostIcon />}
                 label={'Streets'}
-                checked={selectedMapStyle === 'streets'}
+                checked={savedMapStyle.value === 'streets'}
                 onClick={() => {
-                  setSelectedMapStyle('streets');
+                  savedMapStyle.set('streets');
                 }}
               />
             </Item>
@@ -319,6 +297,6 @@ export const useMapOptions = () => {
     MapOptionsComponent,
     selectedDisplayFeature,
     selectedSlacklineType,
-    selectedMapStyle,
+    selectedMapStyle: savedMapStyle.value,
   };
 };

@@ -1,4 +1,4 @@
-import { forwardRef, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { MapboxGeoJSONFeature, ViewStateChangeEvent } from 'react-map-gl';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { GetLineDetailsAPIResponse } from 'app/api/line-api';
 import { GetSpotDetailsAPIResponse } from 'app/api/spot-api';
 import { SlacklineMap } from 'app/components/Maps/SlacklineMap';
 import { mapUrlSearchParams, parseMapFeature } from 'app/components/Maps/mapUtils';
+import { WelcomeTutorial } from 'app/components/Tutorials/WelcomeTutorial';
 import { appActions } from 'app/slices/app';
 import { selectLastMapLocation } from 'app/slices/app/selectors';
 import { FeatureCollection } from 'geojson';
@@ -152,8 +153,10 @@ export function SlacklineMapPage() {
         minHeight: '100%',
         position: 'relative',
         height: '100%',
+        overflowX: 'hidden',
       }}
     >
+      {!activeFeature && <WelcomeTutorial />}
       <Box
         sx={{
           height: { xs: activeFeature ? '75vh' : '100%', lg: '100vh' },

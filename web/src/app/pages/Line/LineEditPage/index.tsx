@@ -6,6 +6,7 @@ import { Box, Stack } from '@mui/system';
 import { lineApi } from 'app/api/line-api';
 import { DrawableMap } from 'app/components/Maps/SlacklineMap/DrawableMap';
 import { drawControlStyles } from 'app/components/Maps/SlacklineMap/DrawableMap/DrawControl/styles';
+import { CreateLineTutorial } from 'app/components/Tutorials/CreateLineTutorial';
 import { LineEditCard } from 'app/pages/Create/Line/LineEditCard';
 import { LineDetailsForm } from 'app/pages/Create/Line/types';
 import { validateLineFeatures } from 'app/pages/Create/Line/validations';
@@ -71,6 +72,7 @@ export function LineEditPage() {
           position: 'relative',
         }}
       >
+        <CreateLineTutorial />
         {lineDetails?.geoJson && (
           <DrawableMap
             drawControls={{

@@ -10,7 +10,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { IconButton, Menu, MenuItem } from '@mui/material';
 
-import { EditorshipReason } from '@server/core/db/mapFeature/editor/types';
 import { featureApi } from 'app/api/feature-api';
 import { useConfirmDialog } from 'app/components/Dialogs/useConfirmDialog';
 import { selectIsUserSignedIn } from 'app/slices/app/selectors';

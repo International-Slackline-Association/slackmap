@@ -7,6 +7,7 @@ import { lineApi } from 'app/api/line-api';
 import { DrawableMap } from 'app/components/Maps/SlacklineMap/DrawableMap';
 import { drawControlStyles } from 'app/components/Maps/SlacklineMap/DrawableMap/DrawControl/styles';
 import { mapUrlSearchParams } from 'app/components/Maps/mapUtils';
+import { CreateLineTutorial } from 'app/components/Tutorials/CreateLineTutorial';
 import { Feature, FeatureCollection } from 'geojson';
 import { usePageViewAnalytics } from 'utils/hooks/usePageViewAnalytics';
 
@@ -67,6 +68,7 @@ export function CreateLinePage() {
           position: 'relative',
         }}
       >
+        <CreateLineTutorial />
         <DrawableMap
           initialViewState={mapUrlSearchParams.parse(searchParams)}
           drawControls={{

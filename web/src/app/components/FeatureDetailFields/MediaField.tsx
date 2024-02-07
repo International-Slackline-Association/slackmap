@@ -5,6 +5,7 @@ import LandscapeIcon from '@mui/icons-material/Landscape';
 import { Dialog, ImageList, ImageListItem, Paper, Typography } from '@mui/material';
 
 import { imageUrlFromS3Key } from 'utils';
+import { useCarouselIndex } from 'utils/hooks/useCarouselIndex';
 
 import { FeatureDetailFieldLayout } from './DetailFieldLayout';
 
@@ -16,7 +17,9 @@ interface Props {
 }
 export const FeatureMediaField = (props: Props) => {
   const images = props.images?.filter((i) => i.s3Key).map((i) => imageUrlFromS3Key(i.s3Key)) || [];
-  const [carouselIndex, setCarouselIndex] = useState<number>();
+  const { carouselIndex, setCarouselIndex } = useCarouselIndex(props.images?.length ?? 0);
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const title = props.type === 'anchor-images' ? 'Anchor Photos' : 'Photos';
   const noDataMessage =
@@ -26,9 +29,9 @@ export const FeatureMediaField = (props: Props) => {
   return (
     <FeatureDetailFieldLayout icon={<LandscapeIcon />} header={title}>
       <Dialog
-        open={carouselIndex !== undefined}
+        open={isDialogOpen}
         onClose={() => {
-          setCarouselIndex(undefined);
+          setIsDialogOpen(false);
         }}
         sx={{
           '& .MuiDialog-paper': {
@@ -49,6 +52,7 @@ export const FeatureMediaField = (props: Props) => {
           navButtonsAlwaysVisible
           indicators={false}
           index={carouselIndex}
+          onChange={(index) => setCarouselIndex(index as number)}
           sx={{
             width: '80vw',
             maxHeight: { xs: '80vh', lg: 'unset' },
@@ -94,6 +98,7 @@ export const FeatureMediaField = (props: Props) => {
               key={index}
               onClick={() => {
                 setCarouselIndex(index);
+                setIsDialogOpen(true);
               }}
             >
               <img src={image} alt={''} loading="lazy" />

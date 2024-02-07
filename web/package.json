@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "checkTs": "tsc --noEmit",
-    "start": "vite dev",
+    "start": "vite dev --host",
     "build": "eslint . && vite build",
     "preview": "vite preview",
     "deploy": "npm run build && sh ./internals/deployToS3.sh"
