@@ -34,6 +34,14 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
           AttributeName: 'GSI2_SK',
           AttributeType: 'S',
         },
+        {
+          AttributeName: 'GSI3',
+          AttributeType: 'S',
+        },
+        {
+          AttributeName: 'GSI3_SK',
+          AttributeType: 'S',
+        },
       ],
       KeySchema: [
         {
@@ -86,6 +94,17 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
           ],
           Projection: {
             NonKeyAttributes: ['GSI_SK'],
+            ProjectionType: 'INCLUDE',
+          },
+        },
+        {
+          IndexName: 'GSI3',
+          KeySchema: [
+            { AttributeName: 'GSI3', KeyType: 'HASH' },
+            { AttributeName: 'GSI3_SK', KeyType: 'RANGE' },
+          ],
+          Projection: {
+            NonKeyAttributes: ['GSI_SK, GSI2', 'GSI2_SK'],
             ProjectionType: 'INCLUDE',
           },
         },

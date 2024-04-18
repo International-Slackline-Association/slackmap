@@ -1,6 +1,6 @@
-import * as db from 'core/db';
 import { FeatureCollection } from '@turf/turf';
-import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { db } from 'core/db';
+import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { processSpotGeoJson } from 'core/features/geojson';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import {
@@ -58,7 +58,7 @@ export const createSpot = async (req: Request<any, any, CreateSpotPostBody>) => 
     maxImageNumber: 3,
   });
 
-  const spot: DDBSpotDetailItem = {
+  const spot: DDBSpotDetailTypes['Entity'] = {
     spotId,
     geoJson: JSON.stringify(processedGeoJson),
     name: body.name,

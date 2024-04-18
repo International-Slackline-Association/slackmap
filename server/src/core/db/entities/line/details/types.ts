@@ -1,13 +1,16 @@
-import { DDBTableKeyAttrs } from 'core/db/types';
+import { DDBGenericItemTypes } from 'core/db/utils/types';
 import { SlacklineRestrictionLevel, SlacklineType } from 'core/types';
 
-interface ParsedKeyAttrs {
+type PrimaryKeyAttrs = {
   lineId: string;
+};
+
+type IndexedKeyAttrs = {
   type: SlacklineType;
   country: string;
-}
+};
 
-export interface NonKeyAttrs {
+type NonKeyAttrs = {
   creatorUserId: string;
   geoJson: string; // Always FeatureCollection type
   name?: string;
@@ -26,7 +29,6 @@ export interface NonKeyAttrs {
   lastModifiedDateTime?: string;
   anchorImages?: { s3Key: string; id: string; isCover?: boolean }[];
   images?: { s3Key: string; id: string; isCover?: boolean }[];
-}
+};
 
-export type DDBLineDetailItem = ParsedKeyAttrs & NonKeyAttrs;
-export type DDBLineDetailAttrs = DDBTableKeyAttrs & NonKeyAttrs;
+export type DDBLineDetailTypes = DDBGenericItemTypes<PrimaryKeyAttrs, IndexedKeyAttrs, NonKeyAttrs>;

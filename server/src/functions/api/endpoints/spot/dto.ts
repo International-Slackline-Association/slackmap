@@ -1,8 +1,8 @@
 import { FeatureCollection } from '@turf/turf';
-import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 
 export const getSpotDetailsResponse = (
-  item: DDBSpotDetailItem,
+  item: DDBSpotDetailTypes['Entity'],
   editorPermissions?: {
     canDelete: boolean;
     canEdit: boolean;

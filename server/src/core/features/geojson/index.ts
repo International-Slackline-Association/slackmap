@@ -1,8 +1,8 @@
 import * as turf from '@turf/turf';
-import * as db from 'core/db';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Feature, FeatureCollection, featureCollection } from '@turf/turf';
 import { s3 } from 'core/aws/clients';
+import { db } from 'core/db';
 import { GuideType, SlacklineType } from 'core/types';
 import countriesJson from 'data/countryInfoDict.json';
 import { AsyncReturnType } from 'type-fest';
@@ -109,7 +109,7 @@ export const refreshLineGeoJsonFiles = async (
         country: line.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
-      updatedLines = { items: [line], lastEvaluatedKey: undefined };
+      updatedLines = [line];
     }
   } else {
     mainGeoJSON = {
@@ -117,7 +117,7 @@ export const refreshLineGeoJsonFiles = async (
       features: [],
     };
     updatedLines = await db.getAllLines();
-    for (const line of updatedLines.items) {
+    for (const line of updatedLines) {
       if (line) {
         const geoJson = processLineGeoJson(JSON.parse(line.geoJson), {
           lineId: line.lineId,
@@ -159,7 +159,7 @@ export const refreshSpotGeoJsonFiles = async (
         country: spot.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
-      updatedSpots = { items: [spot], lastEvaluatedKey: undefined };
+      updatedSpots = [spot];
     }
   } else {
     mainGeoJSON = {
@@ -167,7 +167,7 @@ export const refreshSpotGeoJsonFiles = async (
       features: [],
     };
     updatedSpots = await db.getAllSpots();
-    for (const spot of updatedSpots.items) {
+    for (const spot of updatedSpots) {
       if (spot) {
         const geoJson = processSpotGeoJson(JSON.parse(spot.geoJson), {
           spotId: spot.spotId,
@@ -208,7 +208,7 @@ export const refreshGuideGeoJsonFiles = async (
         country: guide.country,
       });
       mainGeoJSON.features.push(...geoJson.features);
-      updatedGuides = { items: [guide], lastEvaluatedKey: undefined };
+      updatedGuides = [guide];
     }
   } else {
     mainGeoJSON = {
@@ -216,7 +216,7 @@ export const refreshGuideGeoJsonFiles = async (
       features: [],
     };
     updatedGuides = await db.getAllGuides();
-    for (const guide of updatedGuides.items) {
+    for (const guide of updatedGuides) {
       if (guide) {
         const geoJson = processGuideGeoJson(JSON.parse(guide.geoJson), {
           guideId: guide.guideId,

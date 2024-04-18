@@ -1,8 +1,8 @@
 import { FeatureCollection } from '@turf/turf';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
+import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
 
 export const getLineDetailsResponse = (
-  item: DDBLineDetailItem,
+  item: DDBLineDetailTypes['Entity'],
   editorPermissions?: {
     canDelete: boolean;
     canEdit: boolean;

@@ -1,7 +1,7 @@
-import * as db from 'core/db';
-import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
-import { lineDetailsDBUtils } from 'core/db/line/details';
-import { DDBAttributeItem } from 'core/db/types';
+import { db } from 'core/db';
+import { lineDetailsDB } from 'core/db/entities/line/details';
+import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
+import { DDBAttributeItem } from 'core/db/utils/types';
 import { refreshLineGeoJsonFiles } from 'core/features/geojson';
 import { checkUserExists } from 'core/features/isaUser';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
@@ -12,8 +12,12 @@ export const processLineDetailsOperation = async (
   oldItem: DDBAttributeItem | undefined,
   eventName: 'INSERT' | 'MODIFY' | 'REMOVE' | undefined,
 ) => {
-  if (eventName === 'INSERT' && newItem) {
-    const newLine = lineDetailsDBUtils.attrsToItem(newItem);
+  const newLine =
+    newItem && lineDetailsDB.converter.itemToEntity(newItem as DDBLineDetailTypes['Item']);
+  const oldLine =
+    oldItem && lineDetailsDB.converter.itemToEntity(oldItem as DDBLineDetailTypes['Item']);
+
+  if (eventName === 'INSERT' && newLine) {
     await refreshLineGeoJsonFiles({ lineIdToUpdate: newLine.lineId });
 
     await checkUserExists(newLine.creatorUserId);
@@ -27,18 +31,15 @@ export const processLineDetailsOperation = async (
     });
   }
 
-  if (eventName === 'MODIFY' && newItem && oldItem) {
-    const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
-    const updatedLine = lineDetailsDBUtils.attrsToItem(newItem);
-    if (!isEqual(oldLine.geoJson, updatedLine.geoJson)) {
-      await refreshLineGeoJsonFiles({ lineIdToUpdate: updatedLine.lineId });
+  if (eventName === 'MODIFY' && newLine && oldLine) {
+    if (!isEqual(oldLine.geoJson, newLine.geoJson)) {
+      await refreshLineGeoJsonFiles({ lineIdToUpdate: newLine.lineId });
     }
   }
 
-  if (eventName === 'REMOVE' && oldItem) {
-    const oldLine = lineDetailsDBUtils.attrsToItem(oldItem);
-    await deleteAllFeatureEditors(oldLine.lineId, 'line');
-    await deleteAllFeatureChangelogs(oldLine.lineId, 'line');
+  if (eventName === 'REMOVE' && oldLine) {
+    await db.deleteAllFeatureEditors(oldLine.lineId, 'line');
+    await db.deleteAllFeatureChangelogs(oldLine.lineId, 'line');
     await deleteAllFeatureImages(oldLine.lineId);
     await refreshLineGeoJsonFiles({ lineIdToUpdate: oldLine.lineId });
   }

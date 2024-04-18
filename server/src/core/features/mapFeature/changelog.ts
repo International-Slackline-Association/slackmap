@@ -1,8 +1,7 @@
-import * as db from 'core/db';
-import { DDBCountryItem } from 'core/db/country/types';
-import { DDBGuideDetailItem } from 'core/db/guide/details/types';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
-import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { db } from 'core/db';
+import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
+import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
+import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { MapFeatureType } from 'core/types';
 import { diff } from 'deep-diff';
 
@@ -10,7 +9,9 @@ import { genericFeatureFromItem } from '.';
 import { getUserDetails } from '../isaUser';
 import { GenericMapFeatureItemType, MapFeatureChangelog } from './types';
 
-type AllFieldNames = keyof (DDBLineDetailItem & DDBSpotDetailItem & DDBGuideDetailItem);
+type AllFieldNames = keyof (DDBLineDetailTypes['Entity'] &
+  DDBSpotDetailTypes['Entity'] &
+  DDBGuideDetailTypes['Entity']);
 
 const pathNamesMapping: { [p in AllFieldNames]: string | null } = {
   name: 'name',
@@ -178,16 +179,15 @@ export const getChangelogsOfCountry = async (
     limit?: number;
   } = {},
 ) => {
-  const { items, lastEvaluatedKey } = await db.getCountryChangelogs(code, opts);
+  const {
+    items: { mapFeatureChangelogs },
+    lastEvaluatedKey,
+  } = await db.getCountryChangelogs(code, opts);
 
-  const isChangelog = (c: any): c is Required<DDBCountryItem> => {
-    return c.changelogDate && c.featureType;
-  };
-
-  const countryChangelogs = items.filter(isChangelog).map((c) => ({
+  const countryChangelogs = mapFeatureChangelogs.map((c) => ({
     featureId: c.featureId,
     featureType: c.featureType,
-    date: c.changelogDate,
+    date: c.date,
   }));
 
   const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);

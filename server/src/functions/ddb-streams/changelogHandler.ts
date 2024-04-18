@@ -1,4 +1,4 @@
-import { DDBAttributeItem } from 'core/db/types';
+import { DDBAttributeItem } from 'core/db/utils/types';
 
 export const processFeatureChangelogOperation = async (
   newItem: DDBAttributeItem | undefined,

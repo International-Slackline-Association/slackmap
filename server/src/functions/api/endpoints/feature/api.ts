@@ -1,4 +1,4 @@
-import * as db from 'core/db';
+import { db } from 'core/db';
 import { genericFeatureFromItem } from 'core/features/mapFeature';
 import {
   addTemporaryEditorChangelogToFeature,

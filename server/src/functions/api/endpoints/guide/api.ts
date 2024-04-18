@@ -1,6 +1,6 @@
-import * as db from 'core/db';
 import { FeatureCollection, Geometry } from '@turf/turf';
-import { DDBGuideDetailItem } from 'core/db/guide/details/types';
+import { db } from 'core/db';
+import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { processGuideGeoJson } from 'core/features/geojson';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { validateGuideGeoJson } from 'core/features/guide/validations';
@@ -59,7 +59,7 @@ export const createGuide = async (req: Request<any, any, CreateGuidePostBody>) =
     maxImageNumber: 2,
   });
 
-  const guide: DDBGuideDetailItem = {
+  const guide: DDBGuideDetailTypes['Entity'] = {
     guideId,
     geoJson: JSON.stringify(processedGeoJson),
     description: body.description,

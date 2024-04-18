@@ -1,7 +1,7 @@
 import * as turf from '@turf/turf';
-import * as db from 'core/db';
 import { FeatureCollection } from '@turf/turf';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
+import { db } from 'core/db';
+import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
 import { processLineGeoJson } from 'core/features/geojson';
 import { getCountryCodeOfGeoJson } from 'core/features/geojson/utils';
 import { validateLineGeoJson } from 'core/features/line/validations';
@@ -69,7 +69,7 @@ export const createLine = async (req: Request<any, any, CreateLinePostBody>) => 
   });
 
   const isMeasured = body.length ? body.isMeasured : false;
-  const line: DDBLineDetailItem = {
+  const line: DDBLineDetailTypes['Entity'] = {
     lineId,
     geoJson: JSON.stringify(processedGeoJson),
     name: body.name,

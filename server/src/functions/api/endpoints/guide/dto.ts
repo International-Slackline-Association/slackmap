@@ -1,9 +1,9 @@
 import { FeatureCollection } from '@turf/turf';
-import { DDBGuideDetailItem } from 'core/db/guide/details/types';
+import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { guideTypeLabel } from 'core/features/guide';
 
 export const getGuideDetailsResponse = (
-  item: DDBGuideDetailItem,
+  item: DDBGuideDetailTypes['Entity'],
   editorPermissions?: {
     canDelete: boolean;
     canEdit: boolean;

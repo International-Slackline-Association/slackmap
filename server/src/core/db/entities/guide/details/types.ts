@@ -1,12 +1,15 @@
-import { DDBTableKeyAttrs } from 'core/db/types';
+import { DDBGenericItemTypes } from 'core/db/utils/types';
 import { GuideType } from 'core/types';
 
-interface ParsedKeyAttrs {
+type PrimaryKeyAttrs = {
   guideId: string;
-  country: string;
-}
+};
 
-export interface NonKeyAttrs {
+type IndexedKeyAttrs = {
+  country: string;
+};
+
+type NonKeyAttrs = {
   type: GuideType;
   creatorUserId: string;
   geoJson: string; // Always FeatureCollection type
@@ -14,7 +17,10 @@ export interface NonKeyAttrs {
   createdDateTime: string;
   lastModifiedDateTime?: string;
   images?: { s3Key: string; id: string; isCover?: boolean }[];
-}
+};
 
-export type DDBGuideDetailItem = ParsedKeyAttrs & NonKeyAttrs;
-export type DDBGuideDetailAttrs = DDBTableKeyAttrs & NonKeyAttrs;
+export type DDBGuideDetailTypes = DDBGenericItemTypes<
+  PrimaryKeyAttrs,
+  IndexedKeyAttrs,
+  NonKeyAttrs
+>;

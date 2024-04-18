@@ -1,4 +1,4 @@
-import * as db from 'core/db';
+import { db } from 'core/db';
 import { MapFeatureType } from 'core/types';
 
 import { checkUserExists } from '../isaUser';

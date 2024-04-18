@@ -58,7 +58,7 @@ const getOrganizationDetails = async (
     });
 };
 
-export const getBasicUserDetails = async (userId: string) => {
+const getBasicUserDetails = async (userId: string) => {
   let identityType: UserIdentityType = 'individual';
   let details = await getUserDetails(userId);
   if (!details) {
@@ -69,4 +69,9 @@ export const getBasicUserDetails = async (userId: string) => {
     return { ...details, identityType };
   }
   return null;
+};
+
+export const isaUsersDb = {
+  getUserDetails,
+  getBasicUserDetails,
 };

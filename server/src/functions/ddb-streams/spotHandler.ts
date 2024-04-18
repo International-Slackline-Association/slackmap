@@ -1,7 +1,7 @@
-import * as db from 'core/db';
-import { deleteAllFeatureChangelogs, deleteAllFeatureEditors } from 'core/db';
-import { spotDetailsDBUtils } from 'core/db/spot/details';
-import { DDBAttributeItem } from 'core/db/types';
+import { db } from 'core/db';
+import { spotDetailsDB } from 'core/db/entities/spot/details';
+import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
+import { DDBAttributeItem } from 'core/db/utils/types';
 import { refreshSpotGeoJsonFiles } from 'core/features/geojson';
 import { checkUserExists } from 'core/features/isaUser';
 import { deleteAllFeatureImages } from 'core/features/mapFeature/image';
@@ -12,8 +12,12 @@ export const processSpotDetailsOperation = async (
   oldItem: DDBAttributeItem | undefined,
   eventName: 'INSERT' | 'MODIFY' | 'REMOVE' | undefined,
 ) => {
-  if (eventName === 'INSERT' && newItem) {
-    const newSpot = spotDetailsDBUtils.attrsToItem(newItem);
+  const newSpot =
+    newItem && spotDetailsDB.converter.itemToEntity(newItem as DDBSpotDetailTypes['Item']);
+  const oldSpot =
+    oldItem && spotDetailsDB.converter.itemToEntity(oldItem as DDBSpotDetailTypes['Item']);
+
+  if (eventName === 'INSERT' && newSpot) {
     await refreshSpotGeoJsonFiles({ spotIdToUpdate: newSpot.spotId });
 
     await checkUserExists(newSpot.creatorUserId);
@@ -27,18 +31,15 @@ export const processSpotDetailsOperation = async (
     });
   }
 
-  if (eventName === 'MODIFY' && newItem && oldItem) {
-    const oldSpot = spotDetailsDBUtils.attrsToItem(oldItem);
-    const updatedSpot = spotDetailsDBUtils.attrsToItem(newItem);
-    if (!isEqual(oldSpot.geoJson, updatedSpot.geoJson)) {
-      await refreshSpotGeoJsonFiles({ spotIdToUpdate: updatedSpot.spotId });
+  if (eventName === 'MODIFY' && newSpot && oldSpot) {
+    if (!isEqual(oldSpot.geoJson, newSpot.geoJson)) {
+      await refreshSpotGeoJsonFiles({ spotIdToUpdate: newSpot.spotId });
     }
   }
 
-  if (eventName === 'REMOVE' && oldItem) {
-    const oldSpot = spotDetailsDBUtils.attrsToItem(oldItem);
-    await deleteAllFeatureEditors(oldSpot.spotId, 'spot');
-    await deleteAllFeatureChangelogs(oldSpot.spotId, 'spot');
+  if (eventName === 'REMOVE' && oldSpot) {
+    await db.deleteAllFeatureEditors(oldSpot.spotId, 'spot');
+    await db.deleteAllFeatureChangelogs(oldSpot.spotId, 'spot');
     await deleteAllFeatureImages(oldSpot.spotId);
     await refreshSpotGeoJsonFiles({ spotIdToUpdate: oldSpot.spotId });
   }

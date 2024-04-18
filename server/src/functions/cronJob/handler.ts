@@ -30,9 +30,9 @@ const runGenericCronJob = async () => {
   const { updatedSpots } = await refreshSpotGeoJsonFiles();
   const { updatedGuides } = await refreshGuideGeoJsonFiles();
 
-  console.log('Lines:', updatedLines?.items?.length);
-  console.log('Spots:', updatedSpots?.items?.length);
-  console.log('Guides:', updatedGuides?.items?.length);
+  console.log('Lines:', updatedLines?.length);
+  console.log('Spots:', updatedSpots?.length);
+  console.log('Guides:', updatedGuides?.length);
 
   // const allFeatures = [
   //   ...(updatedLines?.items ?? []),

@@ -1,22 +1,27 @@
-import { DDBTableKeyAttrs } from 'core/db/types';
+import { DDBGenericItemTypes } from 'core/db/utils/types';
 import { MapFeatureType } from 'core/types';
 
-interface ParsedKeyAttrs {
+type PrimaryKeyAttrs = {
   featureId: string;
   featureType: MapFeatureType;
   userId: string;
+};
+type IndexedKeyAttrs = {
   reason: EditorshipReason;
   type?: EditorType;
-}
+};
 
-interface NonKeyAttrs {
+type NonKeyAttrs = {
   grantedByUserId?: string;
   ddb_ttl?: number;
   createdDateTime: string;
   lastModifiedDateTime?: string;
-}
+};
 
 export type EditorshipReason = 'explicit' | 'temporary' | 'admin';
 export type EditorType = 'owner';
-export type DDBMapFeatureEditorItem = ParsedKeyAttrs & NonKeyAttrs;
-export type DDBMapFeatureEditorAttrs = DDBTableKeyAttrs & NonKeyAttrs;
+export type DDBMapFeatureEditorTypes = DDBGenericItemTypes<
+  PrimaryKeyAttrs,
+  IndexedKeyAttrs,
+  NonKeyAttrs
+>;

@@ -1,10 +1,13 @@
 import { FeatureCollection } from '@turf/turf';
-import { DDBGuideDetailItem } from 'core/db/guide/details/types';
-import { DDBLineDetailItem } from 'core/db/line/details/types';
-import { DDBSpotDetailItem } from 'core/db/spot/details/types';
+import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
+import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
+import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { MapFeatureChangelogAction, MapFeatureType } from 'core/types';
 
-export type GenericMapFeatureItemType = DDBLineDetailItem | DDBSpotDetailItem | DDBGuideDetailItem;
+export type GenericMapFeatureItemType =
+  | DDBLineDetailTypes['Entity']
+  | DDBSpotDetailTypes['Entity']
+  | DDBGuideDetailTypes['Entity'];
 export interface MapFeatureChangelog {
   featureId: string;
   featureType: MapFeatureType;

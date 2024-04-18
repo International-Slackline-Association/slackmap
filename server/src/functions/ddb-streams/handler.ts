@@ -1,12 +1,10 @@
 import type { AttributeValue } from '@aws-sdk/client-dynamodb';
 import { unmarshall } from '@aws-sdk/util-dynamodb';
 import type { DynamoDBRecord, DynamoDBStreamHandler } from 'aws-lambda';
-import {
-  featureChangelogDBUtils,
-  guideDetailsDBUtils,
-  lineDetailsDBUtils,
-  spotDetailsDBUtils,
-} from 'core/db';
+import { guideDetailsDB } from 'core/db/entities/guide/details';
+import { lineDetailsDB } from 'core/db/entities/line/details';
+import { mapFeatureChangelogDB } from 'core/db/entities/mapFeature/changelog';
+import { spotDetailsDB } from 'core/db/entities/spot/details';
 import { logger } from 'core/utils/logger';
 
 import { processFeatureChangelogOperation } from './changelogHandler';
@@ -29,6 +27,7 @@ const dynamodbStreamEventHandler: DynamoDBStreamHandler = async (event, context,
           data: {
             record: record,
             err: err.message,
+            stack: err.stack,
           },
         });
       }),
@@ -40,19 +39,19 @@ const dynamodbStreamEventHandler: DynamoDBStreamHandler = async (event, context,
 
 const processRecord = async (record: DynamoDBRecord) => {
   const { newItem, oldItem, keys, eventName } = parseRecord(record);
-  if (lineDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
+  if (lineDetailsDB.converter.isItemMatching(keys)) {
     await processLineDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed line details operation:', { newItem, oldItem, eventName });
   }
-  if (spotDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
+  if (spotDetailsDB.converter.isItemMatching(keys)) {
     await processSpotDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed spot details operation:', { newItem, oldItem, eventName });
   }
-  if (guideDetailsDBUtils.isDDBRecordTypeMatching(keys)) {
+  if (guideDetailsDB.converter.isItemMatching(keys)) {
     await processGuideDetailsOperation(newItem, oldItem, eventName);
     console.log('Processed guide details operation:', { newItem, oldItem, eventName });
   }
-  if (featureChangelogDBUtils.isDDBRecordTypeMatching(keys)) {
+  if (mapFeatureChangelogDB.converter.isItemMatching(keys)) {
     await processFeatureChangelogOperation(newItem, oldItem, eventName);
     console.log('Processed feature changelog operation:', { newItem, oldItem, eventName });
   }
