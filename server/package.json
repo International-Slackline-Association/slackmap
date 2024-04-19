@@ -10,6 +10,7 @@
     "deploy:api": "serverless deploy function -f api",
     "deploy:ddbStreams": "serverless deploy function -f ddbStreams",
     "deploy:cronJob": "serverless deploy function -f cronJob",
+    "invoke:cronJob": "serverless invoke local -f cronJob",
     "script:cwLogs": "ts-node misc/scripts/queryCwLogs.ts"
   },
   "engines": {

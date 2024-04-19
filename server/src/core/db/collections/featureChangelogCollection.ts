@@ -10,9 +10,9 @@ import { DDBTableKeyAttrs } from '../utils/types';
 
 const keyComposers = (<T extends CollectionKeysComposer>(p: T) => p)({
   GSI2: (code: string) => composeKey('country', code),
-  GSI2_SK: (params: { featureType?: string; changelogDate?: string }) =>
-    composeKeyStrictly('featureChangelog', params.changelogDate) ||
-    composeKeyStrictly('featureType', params.featureType),
+  GSI2_SK: (date: string) => composeKeyStrictly('featureChangelog', date),
+  GSI3: () => 'global',
+  GSI3_SK: (date: string) => composeKeyStrictly('featureChangelog', date),
 });
 
 type QueryReturnType = {
@@ -42,7 +42,34 @@ export const getCountryChangelogs = async (
         },
         ExpressionAttributeValues: {
           ':GSI2': keyComposers.GSI2(code),
-          ':GSI2_SK': keyComposers.GSI2_SK({ changelogDate: '' }),
+          ':GSI2_SK': keyComposers.GSI2_SK(''),
+        },
+      }),
+    );
+  }, opts);
+  return {
+    items: parser.parseQueryItems(results.items as DDBTableKeyAttrs[]),
+    lastEvaluatedKey: results.lastEvaluatedKey,
+  };
+};
+
+export const getGlobalChangelogs = async (opts: { startKey?: any; limit?: number } = {}) => {
+  const results = await recursiveQuery(async (lastEvaluatedKey) => {
+    return ddb.send(
+      new QueryCommand({
+        TableName: TABLE_NAME,
+        IndexName: INDEX_NAMES.GSI3,
+        ExclusiveStartKey: lastEvaluatedKey,
+        ScanIndexForward: false,
+        Limit: opts.limit,
+        KeyConditionExpression: '#GSI3 = :GSI3 AND begins_with(#GSI3_SK, :GSI3_SK)',
+        ExpressionAttributeNames: {
+          '#GSI3': KEY_FIELDS.GSI3,
+          '#GSI3_SK': KEY_FIELDS.GSI3_SK,
+        },
+        ExpressionAttributeValues: {
+          ':GSI3': keyComposers.GSI3(),
+          ':GSI3_SK': keyComposers.GSI3_SK(''),
         },
       }),
     );
@@ -55,4 +82,5 @@ export const getCountryChangelogs = async (
 
 export const countryChangelogCollection = {
   getCountryChangelogs,
+  getGlobalChangelogs,
 };

@@ -60,7 +60,7 @@ export const batchGet = async (keys: DDBTableRequiredKeyAttrs[]) => {
         new BatchGetCommand({
           RequestItems: {
             [TABLE_NAME]: {
-              Keys: keys,
+              Keys: keysToLoad,
             },
           },
         }),
@@ -69,7 +69,8 @@ export const batchGet = async (keys: DDBTableRequiredKeyAttrs[]) => {
       keysToLoad = (result.UnprocessedKeys?.[TABLE_NAME]?.Keys as DDBTableKeyAttrs[]) ?? [];
     }
   }
-  return items;
+  // Sort items by keys order
+  return keys.map((key) => items.find((item) => item.PK === key.PK && item.SK_GSI === key.SK_GSI));
 };
 
 export const batchDelete = async (keys: DDBTableRequiredKeyAttrs[]) => {

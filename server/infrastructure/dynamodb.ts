@@ -93,7 +93,7 @@ export const dynamodbResources: NonNullable<AWS['resources']>['Resources'] = {
             { AttributeName: 'GSI2_SK', KeyType: 'RANGE' },
           ],
           Projection: {
-            NonKeyAttributes: ['GSI_SK'],
+            NonKeyAttributes: ['GSI_SK', 'GSI3', 'GSI3_SK'],
             ProjectionType: 'INCLUDE',
           },
         },

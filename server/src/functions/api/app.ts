@@ -6,6 +6,7 @@ import {
 import cors from 'cors';
 import { Express, default as express, json, urlencoded } from 'express';
 
+import { activityApi } from './endpoints/activity/api';
 import { communitiesApi } from './endpoints/communities/api';
 import { countryApi } from './endpoints/country/api';
 import { featureApi } from './endpoints/feature/api';
@@ -32,6 +33,7 @@ const setupRoutes = (app: Express) => {
   app.use('/guide', guideApi);
   app.use('/feature', featureApi);
   app.use('/country', countryApi);
+  app.use('/activity', activityApi);
   app.use('/communities', communitiesApi);
 };
 

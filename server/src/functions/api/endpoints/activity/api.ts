@@ -1,5 +1,4 @@
-import { getChangelogsOfCountry } from 'core/features/mapFeature/changelog';
-import countriesJson from 'data/countryInfoDict.json';
+import { getChangelogsOfGlobal } from 'core/features/mapFeature/changelog';
 import express, { Request } from 'express';
 
 import {
@@ -8,18 +7,10 @@ import {
   expressRoute,
 } from '../../utils';
 
-export const getCountryDetails = async (req: Request) => {
-  const countryCode = req.params.code;
-  const countryInfo = countriesJson[countryCode.toUpperCase() as keyof typeof countriesJson];
-
-  return { name: countryInfo.name };
-};
-
-export const getCountryChangelogs = async (req: Request) => {
-  const countryCode = req.params.code;
+export const getGlobalActivityChangelogs = async (req: Request) => {
   const { cursor } = destructPaginationQueryParam(req.query);
 
-  const { changelogs, lastEvaluatedKey } = await getChangelogsOfCountry(countryCode.toUpperCase(), {
+  const { changelogs, lastEvaluatedKey } = await getChangelogsOfGlobal({
     limit: 20,
     startKey: cursor,
   });
@@ -53,6 +44,5 @@ export const getCountryChangelogs = async (req: Request) => {
   return { items, pagination: constructPaginationResponse(lastEvaluatedKey) };
 };
 
-export const countryApi = express.Router();
-countryApi.get('/:code/details', expressRoute(getCountryDetails));
-countryApi.get('/:code/changelogs', expressRoute(getCountryChangelogs));
+export const activityApi = express.Router();
+activityApi.get('/changelogs', expressRoute(getGlobalActivityChangelogs));

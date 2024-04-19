@@ -1,4 +1,4 @@
-import { countryChangelogCollection } from './collections/countryChangelogCollection';
+import { countryChangelogCollection } from './collections/featureChangelogCollection';
 import { guideDetailsDB } from './entities/guide/details';
 import { isaUsersDb } from './entities/isa-users';
 import { lineDetailsDB } from './entities/line/details';

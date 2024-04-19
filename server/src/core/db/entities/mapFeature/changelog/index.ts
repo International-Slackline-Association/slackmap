@@ -31,6 +31,8 @@ const keyComposers = (<T extends EntityKeysComposer<PrimaryKeyAttrs, AllKeyAttrs
   SK_GSI: (item: { date?: string }) => composeKey('changelog', item.date),
   GSI2: (item) => composeKeyStrictly('country', item.country),
   GSI2_SK: (item) => composeKey('featureChangelog', item.date),
+  GSI3: () => 'global',
+  GSI3_SK: (item) => composeKey('featureChangelog', item.date),
 });
 const keyParsers: EntityKeysParser<AllKeyAttrs> = {
   PK: (key) => ({
@@ -89,6 +91,7 @@ const getMultipleFeatureChangelog = async (
       converter.key({ featureId: i.featureId, featureType: i.featureType, date: i.date }),
     ),
   );
+
   return items.map((i) => converter.itemToEntity(i as Item));
 };
 

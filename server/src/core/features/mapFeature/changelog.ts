@@ -1,13 +1,14 @@
 import { db } from 'core/db';
 import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
+import { DDBMapFeatureChangelogTypes } from 'core/db/entities/mapFeature/changelog/types';
 import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { MapFeatureType } from 'core/types';
 import { diff } from 'deep-diff';
 
 import { genericFeatureFromItem } from '.';
 import { getUserDetails } from '../isaUser';
-import { GenericMapFeatureItemType, MapFeatureChangelog } from './types';
+import { GenericMapFeatureItemType } from './types';
 
 type AllFieldNames = keyof (DDBLineDetailTypes['Entity'] &
   DDBSpotDetailTypes['Entity'] &
@@ -115,6 +116,31 @@ export const addTemporaryEditorChangelogToFeature = async (
   });
 };
 
+const fillChangelogs = async (items: DDBMapFeatureChangelogTypes['Entity'][]) => {
+  const userNames = (await Promise.all(items.map((c) => getUserDetails(c.userId)))).map(
+    (f) => f?.fullname,
+  );
+
+  const changelogs = items.map((c, index) => {
+    const userName = userNames[index] || 'Unknown user';
+    const paths = c.updatedPaths?.map((p) => pathNamesMapping[p as AllFieldNames]).filter((p) => p);
+    const pathsString =
+      paths && paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
+
+    const item = {
+      featureId: c.featureId,
+      featureType: c.featureType,
+      userName: userName,
+      date: c.date,
+      actionType: c.action,
+      updatedPathsString: pathsString,
+    };
+    return item;
+  });
+
+  return changelogs;
+};
+
 export const getChangelogsOfFeature = async (
   featureId: string,
   featureType: MapFeatureType,
@@ -124,51 +150,7 @@ export const getChangelogsOfFeature = async (
   } = {},
 ) => {
   const { items, lastEvaluatedKey } = await db.getFeatureChangelogs(featureId, featureType, opts);
-
-  const userNames = (await Promise.all(items.map((c) => getUserDetails(c.userId)))).map(
-    (f) => f?.fullname,
-  );
-
-  const changelogs = items
-    .map((c, index) => {
-      const item: MapFeatureChangelog = {
-        featureId: c.featureId,
-        featureType: c.featureType,
-        userName: userNames[index] || 'Unknown user',
-        date: c.date,
-        htmlText: '',
-        actionType: c.action,
-      };
-      const userName = userNames[index] || 'Unknown user';
-      const paths = c.updatedPaths
-        ?.map((p) => pathNamesMapping[p as AllFieldNames])
-        .filter((p) => p);
-      const pathsString =
-        paths &&
-        paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
-
-      switch (c.action) {
-        case 'created':
-          item.htmlText = `<b>${userName}</b> has created the ${c.featureType}.`;
-          break;
-        case 'updatedDetails':
-          item.htmlText = `<b>${userName}</b> updated the <b>${
-            pathsString || 'details'
-          }</b> of the ${c.featureType}.`;
-          break;
-        case 'grantedTemporaryEditor':
-          item.htmlText = `<b>${userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
-          break;
-        case 'updatedOwners':
-          item.htmlText = `<b>${userName}</b> changed the owner of the ${c.featureType}.`;
-          break;
-        default:
-          break;
-      }
-      return item;
-    })
-    .filter((c) => c.htmlText !== '');
-
+  const changelogs = await fillChangelogs(items);
   return { changelogs: changelogs, lastEvaluatedKey };
 };
 
@@ -183,66 +165,22 @@ export const getChangelogsOfCountry = async (
     items: { mapFeatureChangelogs },
     lastEvaluatedKey,
   } = await db.getCountryChangelogs(code, opts);
+  const featureChangelogs = await db.getMultipleFeatureChangelog(mapFeatureChangelogs);
+  const changelogs = await fillChangelogs(featureChangelogs);
+  return { changelogs, lastEvaluatedKey };
+};
 
-  const countryChangelogs = mapFeatureChangelogs.map((c) => ({
-    featureId: c.featureId,
-    featureType: c.featureType,
-    date: c.date,
-  }));
-
-  const featureChangelogs = await db.getMultipleFeatureChangelog(countryChangelogs);
-
-  const userNames = (
-    await Promise.all(featureChangelogs.map((c) => getUserDetails(c.userId)))
-  ).reduce(
-    (acc, f) => {
-      if (f) {
-        acc[f.id] = f?.fullname;
-      }
-      return acc;
-    },
-    {} as { [userId: string]: string },
-  );
-
-  const changelogs = featureChangelogs
-    .sort((a, b) => (a.date > b.date ? -1 : 1))
-    .map((c) => {
-      const item: MapFeatureChangelog = {
-        featureId: c.featureId,
-        featureType: c.featureType,
-        userName: userNames[c.userId] || 'Unknown user',
-        date: c.date,
-        htmlText: '',
-        actionType: c.action,
-      };
-      const paths = c.updatedPaths
-        ?.map((p) => pathNamesMapping[p as AllFieldNames])
-        .filter((p) => p);
-      const pathsString =
-        paths &&
-        paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
-
-      switch (c.action) {
-        case 'created':
-          item.htmlText = `<b>${item.userName}</b> has created the ${c.featureType}.`;
-          break;
-        case 'updatedDetails':
-          item.htmlText = `<b>${item.userName}</b> updated the <b>${
-            pathsString || 'details'
-          }</b> of the ${c.featureType}.`;
-          break;
-        case 'grantedTemporaryEditor':
-          item.htmlText = `<b>${item.userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
-          break;
-        case 'updatedOwners':
-          item.htmlText = `<b>${item.userName}</b> changed the owner of the ${c.featureType}.`;
-          break;
-        default:
-          break;
-      }
-      return item;
-    })
-    .filter((c) => c.htmlText !== '');
-
-  return { changelogs: changelogs, lastEvaluatedKey };
+export const getChangelogsOfGlobal = async (
+  opts: {
+    startKey?: any;
+    limit?: number;
+  } = {},
+) => {
+  const {
+    items: { mapFeatureChangelogs },
+    lastEvaluatedKey,
+  } = await db.getGlobalChangelogs(opts);
+  const featureChangelogs = await db.getMultipleFeatureChangelog(mapFeatureChangelogs);
+  const changelogs = await fillChangelogs(featureChangelogs);
+  return { changelogs, lastEvaluatedKey };
 };

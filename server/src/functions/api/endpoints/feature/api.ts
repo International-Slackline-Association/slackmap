@@ -20,7 +20,6 @@ import {
   validateApiPayload,
   verifyRequestClaims,
 } from '../../utils';
-import { getFeatureChangelogsResponse } from './dto';
 import { DeleteFeatureRequestPostBody, deleteFeatureRequestSchema } from './schema';
 
 export const getFeatureChangelogs = async (
@@ -40,7 +39,32 @@ export const getFeatureChangelogs = async (
     },
   );
 
-  return getFeatureChangelogsResponse(changelogs, constructPaginationResponse(lastEvaluatedKey));
+  const items = changelogs
+    .map((c) => {
+      const item = { ...c, htmlText: '' };
+      switch (c.actionType) {
+        case 'created':
+          item.htmlText = `<b>${c.userName}</b> has created the ${c.featureType}.`;
+          break;
+        case 'updatedDetails':
+          item.htmlText = `<b>${c.userName}</b> updated the <b>${
+            c.updatedPathsString || 'details'
+          }</b> of the ${c.featureType}.`;
+          break;
+        case 'grantedTemporaryEditor':
+          item.htmlText = `<b>${c.userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
+          break;
+        case 'updatedOwners':
+          item.htmlText = `<b>${c.userName}</b> changed the owner of the ${c.featureType}.`;
+          break;
+        default:
+          break;
+      }
+      return item;
+    })
+    .filter((c) => c.htmlText !== '');
+
+  return { items, pagination: constructPaginationResponse(lastEvaluatedKey) };
 };
 
 export const requestTemporaryEditorship = async (
