@@ -53,7 +53,16 @@ export const getCountryChangelogs = async (
   };
 };
 
-export const getGlobalChangelogs = async (opts: { startKey?: any; limit?: number } = {}) => {
+export const getGlobalChangelogs = async (
+  opts: { untilDate?: string; startKey?: any; limit?: number } = {},
+) => {
+  let keyConditionExpression = '#GSI3 = :GSI3';
+  if (opts.untilDate) {
+    keyConditionExpression += ' AND #GSI3_SK BETWEEN :GSI3_SK AND :GSI3_SK2';
+  } else {
+    keyConditionExpression += ' AND begins_with(#GSI3_SK, :GSI3_SK)';
+  }
+
   const results = await recursiveQuery(async (lastEvaluatedKey) => {
     return ddb.send(
       new QueryCommand({
@@ -62,14 +71,15 @@ export const getGlobalChangelogs = async (opts: { startKey?: any; limit?: number
         ExclusiveStartKey: lastEvaluatedKey,
         ScanIndexForward: false,
         Limit: opts.limit,
-        KeyConditionExpression: '#GSI3 = :GSI3 AND begins_with(#GSI3_SK, :GSI3_SK)',
+        KeyConditionExpression: keyConditionExpression,
         ExpressionAttributeNames: {
           '#GSI3': KEY_FIELDS.GSI3,
           '#GSI3_SK': KEY_FIELDS.GSI3_SK,
         },
         ExpressionAttributeValues: {
           ':GSI3': keyComposers.GSI3(),
-          ':GSI3_SK': keyComposers.GSI3_SK(''),
+          ':GSI3_SK': keyComposers.GSI3_SK(opts.untilDate || ''),
+          ':GSI3_SK2': opts.untilDate ? keyComposers.GSI3_SK(new Date().toISOString()) : undefined,
         },
       }),
     );

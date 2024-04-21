@@ -1,4 +1,5 @@
 import type { Handler } from 'aws-lambda';
+import { refreshGlobalContributorsToS3 } from 'core/features/contributors';
 import {
   refreshGuideGeoJsonFiles,
   refreshLineGeoJsonFiles,
@@ -14,7 +15,6 @@ interface EventPayload {
 
 const cronJobHandler: Handler<EventPayload> = async (event, context, callback) => {
   try {
-    // const featureId = event?.featureId;
     await runGenericCronJob();
   } catch (err) {
     if (err instanceof Error) {
@@ -33,6 +33,8 @@ const runGenericCronJob = async () => {
   console.log('Lines:', updatedLines?.length);
   console.log('Spots:', updatedSpots?.length);
   console.log('Guides:', updatedGuides?.length);
+
+  await refreshGlobalContributorsToS3();
 
   // const allFeatures = [
   //   ...(updatedLines?.items ?? []),

@@ -1,7 +1,6 @@
 import React from 'react';
 
 import HistoryIcon from '@mui/icons-material/History';
-import HistoryToggleOffIcon from '@mui/icons-material/HistoryToggleOff';
 import LoadingButton from '@mui/lab/LoadingButton';
 import Timeline from '@mui/lab/Timeline';
 import TimelineConnector from '@mui/lab/TimelineConnector';
@@ -11,7 +10,7 @@ import TimelineItem from '@mui/lab/TimelineItem';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import { Box, Link, Typography } from '@mui/material';
 
-import { countryApi } from 'app/api/country-api';
+import { activityApi } from 'app/api/activity-api';
 import { format } from 'date-fns';
 import ReactHtmlParser from 'html-react-parser';
 
@@ -20,40 +19,14 @@ import { FeatureDetailFieldLayout } from './DetailFieldLayout';
 import { ChangelogActionIcon } from './FeatureHistoryField';
 
 interface Props {
-  code: string;
   onChangelogClick: (featureId: string, featureType: SlacklineMapFeatureType) => void;
   onChangelogHover: (featureId?: string, featureType?: SlacklineMapFeatureType) => void;
 }
 
-export const EnabledHistoryTimelineItem = () => (
-  <TimelineItem>
-    <TimelineSeparator>
-      <TimelineDot color="primary">
-        <HistoryToggleOffIcon fontSize="small" />
-      </TimelineDot>
-    </TimelineSeparator>
-    <TimelineContent sx={{ alignItems: 'center' }}>
-      <Typography
-        variant="body2"
-        sx={{
-          fontSize: '0.8rem',
-          color: (t) => t.palette.text.secondary,
-        }}
-      >
-        {format(new Date('2023-05-06'), 'dd MMM yyy, HH:mm')}
-      </Typography>
-      <Typography variant="body2">
-        Enabled the <b>History Tracking</b>. Changes after this date will be visible here.
-      </Typography>
-    </TimelineContent>
-  </TimelineItem>
-);
-
-export const CountryHistoryField = (props: Props) => {
+export const ActivityHistoryField = (props: Props) => {
   const [cursor, setCursor] = React.useState<string>();
 
-  const { data: changelogs, isFetching } = countryApi.useGetCountryChangelogsQuery({
-    code: props.code,
+  const { data: changelogs, isFetching } = activityApi.useGetActivityChangelogsQuery({
     cursor,
   });
 
@@ -66,7 +39,7 @@ export const CountryHistoryField = (props: Props) => {
   };
 
   return (
-    <FeatureDetailFieldLayout icon={<HistoryIcon />} header={'History'} noDivider>
+    <FeatureDetailFieldLayout icon={<HistoryIcon />} header={'Global History'} noDivider>
       {!changelogs ? (
         isFetching ? (
           <LoadingIndicator />
@@ -117,7 +90,7 @@ export const CountryHistoryField = (props: Props) => {
                 </TimelineContent>
               </TimelineItem>
             ))}
-            {changelogs.pagination.cursor ? (
+            {changelogs.pagination.cursor && (
               <LoadingButton
                 loading={isFetching}
                 onClick={() => setCursor(changelogs.pagination.cursor)}
@@ -125,8 +98,6 @@ export const CountryHistoryField = (props: Props) => {
               >
                 Load more
               </LoadingButton>
-            ) : (
-              <EnabledHistoryTimelineItem />
             )}
           </Timeline>
         </Box>

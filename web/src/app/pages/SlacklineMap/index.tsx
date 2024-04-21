@@ -19,6 +19,7 @@ import { FeatureCollection } from 'geojson';
 import { useMediaQuery } from 'utils/hooks/useMediaQuery';
 import { usePageViewAnalytics } from 'utils/hooks/usePageViewAnalytics';
 
+import { ActivityDetailCard } from './ActivityDetailCard';
 import { CountryDetailCard } from './CountryDetailCard';
 import { CreateFeatureSpeedDial } from './CreateSpeedDial';
 import { GuideDetailCard } from './GuideDetailCard';
@@ -66,6 +67,11 @@ export function SlacklineMapPage() {
     } else if (type === 'country') {
       const { geoJson } = await getSlacklinePointFeaturesOfCountry(id);
       setActiveFeatureGeoJson(geoJson);
+    } else if (type === 'activity') {
+      setActiveFeatureGeoJson({
+        type: 'FeatureCollection',
+        features: [],
+      });
     }
     if (!isDesktop) {
       window.scrollTo({
@@ -214,6 +220,12 @@ export function SlacklineMapPage() {
           {lastActiveFeature?.type === 'country' && (
             <CountryDetailCard
               countryCode={lastActiveFeature.id}
+              onChangelogHover={highlightFeature}
+              onChangelogClick={navigateToFeature}
+            />
+          )}
+          {lastActiveFeature?.type === 'activity' && (
+            <ActivityDetailCard
               onChangelogHover={highlightFeature}
               onChangelogClick={navigateToFeature}
             />

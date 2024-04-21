@@ -28,6 +28,11 @@ const parseLocation = (
         id: id.toUpperCase(),
         type: 'country',
       };
+    case 'activity':
+      return {
+        type: 'activity',
+        id: '',
+      };
     default:
       return undefined;
   }

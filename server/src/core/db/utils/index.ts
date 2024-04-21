@@ -37,6 +37,9 @@ export const recursiveQuery = async (
   do {
     const result = await queryFunc(lastEvaluatedKey);
     items.push(...(result.Items as DDBTableKeyAttrs[]));
+    if (result.LastEvaluatedKey === lastEvaluatedKey) {
+      break;
+    }
     lastEvaluatedKey = result.LastEvaluatedKey;
   } while (lastEvaluatedKey && (!opts.limit || items.length < opts.limit));
   return { items, lastEvaluatedKey };

@@ -29,8 +29,8 @@ interface Props {
   createdDateTime: string;
 }
 
-const getIcon = (actionType: MapFeatureChangelogAction) => {
-  switch (actionType) {
+export const ChangelogActionIcon = (props: { type: MapFeatureChangelogAction }) => {
+  switch (props.type) {
     case 'created':
       return <AddCircleIcon fontSize="small" />;
     case 'updatedDetails':
@@ -74,7 +74,9 @@ export const FeatureHistoryField = (props: Props) => {
               <TimelineItem key={changelog.date}>
                 <TimelineSeparator>
                   {index !== 0 && <TimelineConnector />}
-                  <TimelineDot color="primary">{getIcon(changelog.actionType)}</TimelineDot>
+                  <TimelineDot color="primary">
+                    <ChangelogActionIcon type={changelog.actionType} />
+                  </TimelineDot>
                   <TimelineConnector />
                 </TimelineSeparator>
                 <TimelineContent sx={{}}>

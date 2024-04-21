@@ -13,6 +13,9 @@ interface AppLocalStorage {
   mapSettings: {
     mapStyle: 'default' | 'satellite' | 'outdoors' | 'streets';
   };
+  activity: {
+    lastSeenChangelogDate: string;
+  };
 }
 
 export const useAppLocalStorage = <

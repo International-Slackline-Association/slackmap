@@ -30,18 +30,18 @@ export const getCountryChangelogs = async (req: Request) => {
 
       switch (c.actionType) {
         case 'created':
-          item.htmlText = `<b>${c.userName}</b> has created the ${c.featureType}.`;
+          item.htmlText = `<b>${c.user.fullname}</b> has created the ${c.featureType}.`;
           break;
         case 'updatedDetails':
-          item.htmlText = `<b>${c.userName}</b> updated the <b>${
+          item.htmlText = `<b>${c.user.fullname}</b> updated the <b>${
             c.updatedPathsString || 'details'
           }</b> of the ${c.featureType}.`;
           break;
         case 'grantedTemporaryEditor':
-          item.htmlText = `<b>${c.userName}</b> has been granted temporary editor rights for the ${c.featureType}.`;
+          item.htmlText = `<b>${c.user.fullname}</b> has been granted temporary editor rights for the ${c.featureType}.`;
           break;
         case 'updatedOwners':
-          item.htmlText = `<b>${c.userName}</b> changed the owner of the ${c.featureType}.`;
+          item.htmlText = `<b>${c.user.fullname}</b> changed the owner of the ${c.featureType}.`;
           break;
         default:
           break;

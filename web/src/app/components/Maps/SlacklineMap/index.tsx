@@ -16,6 +16,7 @@ import type { FeatureCollection } from 'geojson';
 import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { MapLogo } from '../Components/Logo';
+import { MapActivityButton } from '../Components/MapActivityButton';
 import { MapImage } from '../Components/MapImage';
 import { MapLoadingPlaceholder } from '../Components/MapLoadingPlaceholder';
 import { MAPBOX_TOKEN, defaultMapSettings, defaultMapViewState } from '../constants';
@@ -96,9 +97,12 @@ export const SlacklineMap = (props: Props) => {
 
   useActiveFeatureGeoJson(mapRef, isMapLoaded, props.activeSlacklineFeatureGeoJson, {
     paddingType: {
-      padExplicityly: props.activeSlacklineFeature?.type === 'country',
+      padExplicityly:
+        props.activeSlacklineFeature?.type === 'activity' ||
+        props.activeSlacklineFeature?.type === 'country',
       padOnFit: true,
     },
+    minBufferRadiusInKm: props.activeSlacklineFeature?.type === 'activity' ? 300 : undefined,
   });
 
   return (
@@ -132,6 +136,7 @@ export const SlacklineMap = (props: Props) => {
       {!isMapLoaded && <MapLoadingPlaceholder pad={Boolean(props.activeSlacklineFeature)} />}
       <MapLogo />
       {isMapLoaded && !props.activeSlacklineFeature && <SlacklineMapLegend />}
+      <MapActivityButton isSelected={props.activeSlacklineFeature?.type === 'activity'} />
       {MapOptionsComponent}
       <ReactMapGL
         {...defaultMapSettings}

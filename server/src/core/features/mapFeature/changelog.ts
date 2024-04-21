@@ -4,10 +4,11 @@ import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
 import { DDBMapFeatureChangelogTypes } from 'core/db/entities/mapFeature/changelog/types';
 import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { MapFeatureType } from 'core/types';
+import countriesJson from 'data/countryInfoDict.json';
 import { diff } from 'deep-diff';
 
 import { genericFeatureFromItem } from '.';
-import { getUserDetails } from '../isaUser';
+import { getMultipleUserDetails } from '../isaUser';
 import { GenericMapFeatureItemType } from './types';
 
 type AllFieldNames = keyof (DDBLineDetailTypes['Entity'] &
@@ -116,31 +117,6 @@ export const addTemporaryEditorChangelogToFeature = async (
   });
 };
 
-const fillChangelogs = async (items: DDBMapFeatureChangelogTypes['Entity'][]) => {
-  const userNames = (await Promise.all(items.map((c) => getUserDetails(c.userId)))).map(
-    (f) => f?.fullname,
-  );
-
-  const changelogs = items.map((c, index) => {
-    const userName = userNames[index] || 'Unknown user';
-    const paths = c.updatedPaths?.map((p) => pathNamesMapping[p as AllFieldNames]).filter((p) => p);
-    const pathsString =
-      paths && paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
-
-    const item = {
-      featureId: c.featureId,
-      featureType: c.featureType,
-      userName: userName,
-      date: c.date,
-      actionType: c.action,
-      updatedPathsString: pathsString,
-    };
-    return item;
-  });
-
-  return changelogs;
-};
-
 export const getChangelogsOfFeature = async (
   featureId: string,
   featureType: MapFeatureType,
@@ -150,8 +126,12 @@ export const getChangelogsOfFeature = async (
   } = {},
 ) => {
   const { items, lastEvaluatedKey } = await db.getFeatureChangelogs(featureId, featureType, opts);
-  const changelogs = await fillChangelogs(items);
-  return { changelogs: changelogs, lastEvaluatedKey };
+  const featureChangelogs = await db.getMultipleFeatureChangelog(items);
+  const userDetailsDict = await getMultipleUserDetails(featureChangelogs.map((c) => c.userId));
+  const changelogs = featureChangelogs.map((c) => {
+    return { ...prettifyChangelog(c), user: userDetailsDict[c.userId] };
+  });
+  return { changelogs, lastEvaluatedKey };
 };
 
 export const getChangelogsOfCountry = async (
@@ -166,7 +146,11 @@ export const getChangelogsOfCountry = async (
     lastEvaluatedKey,
   } = await db.getCountryChangelogs(code, opts);
   const featureChangelogs = await db.getMultipleFeatureChangelog(mapFeatureChangelogs);
-  const changelogs = await fillChangelogs(featureChangelogs);
+  const userDetailsDict = await getMultipleUserDetails(featureChangelogs.map((c) => c.userId));
+  const changelogs = featureChangelogs.map((c) => {
+    return { ...prettifyChangelog(c), user: userDetailsDict[c.userId] };
+  });
+
   return { changelogs, lastEvaluatedKey };
 };
 
@@ -181,6 +165,27 @@ export const getChangelogsOfGlobal = async (
     lastEvaluatedKey,
   } = await db.getGlobalChangelogs(opts);
   const featureChangelogs = await db.getMultipleFeatureChangelog(mapFeatureChangelogs);
-  const changelogs = await fillChangelogs(featureChangelogs);
+  const userDetailsDict = await getMultipleUserDetails(featureChangelogs.map((c) => c.userId));
+  const changelogs = featureChangelogs.map((c) => {
+    return { ...prettifyChangelog(c), user: userDetailsDict[c.userId] };
+  });
   return { changelogs, lastEvaluatedKey };
+};
+
+const prettifyChangelog = (changelog: DDBMapFeatureChangelogTypes['Entity']) => {
+  const paths = changelog.updatedPaths
+    ?.map((p) => pathNamesMapping[p as AllFieldNames])
+    .filter((p) => p);
+  const pathsString =
+    paths && paths.slice(0, -1).join(', ') + (paths.length > 1 ? ', and ' : '') + paths.slice(-1);
+
+  return {
+    featureId: changelog.featureId,
+    featureType: changelog.featureType,
+    date: changelog.date,
+    countryName:
+      countriesJson[changelog.country as keyof typeof countriesJson]?.name || changelog.country,
+    actionType: changelog.action,
+    updatedPathsString: pathsString,
+  };
 };
