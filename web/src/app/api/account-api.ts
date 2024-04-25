@@ -2,7 +2,7 @@ import { isaAccountApi } from 'store/rtk-query';
 
 interface GetUserBasicDetailsAPIResponse {
   name: string;
-  surname?: string;
+  surname: string;
   email: string;
   profilePictureUrl?: string;
   isaId: string;

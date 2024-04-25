@@ -115,7 +115,7 @@ export const ActivityDetailCard = (props: Props) => {
               icon={<EmojiEventsIcon />}
               header={'Top Contributors'}
               subHeader={
-                'List of the most active contributors based on the number of created and updated lines/spots/guides. The list is updated weekly.'
+                'List of the most active contributors of the last 12 months based on the number of created and updated lines/spots/guides. The list is updated weekly.'
               }
             >
               <Stack spacing={2}>

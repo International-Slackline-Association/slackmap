@@ -14,14 +14,15 @@ export const getGlobalContributors = async (_req: Request) => {
   const stats = await getGlobalContributorsSummaryFromS3();
   const userDetailsDict = await getMultipleUserDetails(stats.map((s) => s.userId));
   const items = stats.map((s) => {
+    const userInfo = userDetailsDict[s.userId];
+    const countryName =
+      countriesJson[(userInfo?.country ?? '') as keyof typeof countriesJson]?.name;
     return {
       user: {
-        fullName: userDetailsDict[s.userId].fullname,
-        profilePictureUrl: userDetailsDict[s.userId].profilePictureUrl,
-        countryCode: userDetailsDict[s.userId].country,
-        countryName:
-          countriesJson[(userDetailsDict[s.userId].country ?? '') as keyof typeof countriesJson]
-            ?.name,
+        fullName: userInfo?.fullname ?? 'Unknown User',
+        profilePictureUrl: userInfo?.profilePictureUrl,
+        countryCode: userInfo?.country,
+        countryName,
       },
       added: s.added,
       updated: s.updated,

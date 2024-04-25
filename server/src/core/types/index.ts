@@ -10,7 +10,6 @@ export type SlacklineType =
   | 'parkline'
   | 'other';
 export type SlacklineRestrictionLevel = 'partial' | 'full' | 'none';
-export type UserIdentityType = 'individual' | 'organization';
 export type GuideType =
   | 'parkingLot'
   | 'campingSpot'

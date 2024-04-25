@@ -1,5 +1,5 @@
 import type { Handler } from 'aws-lambda';
-import { refreshGlobalContributorsToS3 } from 'core/features/contributors';
+import { refreshGlobalContributorsStatsToS3 } from 'core/features/contributors';
 import {
   refreshGuideGeoJsonFiles,
   refreshLineGeoJsonFiles,
@@ -34,7 +34,7 @@ const runGenericCronJob = async () => {
   console.log('Spots:', updatedSpots?.length);
   console.log('Guides:', updatedGuides?.length);
 
-  await refreshGlobalContributorsToS3();
+  await refreshGlobalContributorsStatsToS3();
 
   // const allFeatures = [
   //   ...(updatedLines?.items ?? []),

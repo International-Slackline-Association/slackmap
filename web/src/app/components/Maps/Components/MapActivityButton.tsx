@@ -34,8 +34,9 @@ export const MapActivityButton = (props: Props) => {
   }, [changelogs]);
 
   useEffect(() => {
-    if (props.isSelected) {
-      latestChangelogDate.set(changelogs?.items[0]?.date ?? '');
+    const date = changelogs?.items[0]?.date;
+    if (props.isSelected && date) {
+      latestChangelogDate.set(date);
       setBadgeCount(0);
     }
   }, [props.isSelected]);
