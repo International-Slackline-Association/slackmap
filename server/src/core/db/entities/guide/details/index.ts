@@ -32,6 +32,7 @@ const keyAttrs: (keyof AllKeyAttrs)[] = ['guideId', 'country'];
 const keyComposers = (<T extends EntityKeysComposer<PrimaryKeyAttrs, AllKeyAttrs>>(p: T) => p)({
   PK: (item: { guideId: string }) => composeKey('guide', item.guideId),
   SK_GSI: () => 'guideDetails',
+  GSI_SK: (item) => composeKeyStrictly('guide', item.guideId),
   GSI2: (item) => composeKeyStrictly('country', item.country),
   GSI2_SK: () => composeKey('featureType', 'guide'),
 });

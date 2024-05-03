@@ -30,7 +30,7 @@ export const getMultipleUserDetails = async (userIds: string[]) => {
       acc[user.id] = user;
       return acc;
     },
-    {} as Record<string, NonNullable<UserDetailType>>,
+    {} as Record<string, UserDetailType>,
   );
   return userDict;
 };

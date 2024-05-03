@@ -130,8 +130,11 @@ export const S3ImageList = (props: Props) => {
         .filter((i) => i.s3Key)
         .map((item) => (
           <ImageListItem key={item.s3Key}>
-            {item.srcFile && <img src={URL.createObjectURL(item.srcFile)} alt={''} />}
-            {item.s3Key && <img src={imageUrlFromS3Key(item.s3Key)} alt={''} loading="lazy" />}
+            {item.srcFile ? (
+              <img src={URL.createObjectURL(item.srcFile)} alt={''} />
+            ) : (
+              <img src={imageUrlFromS3Key(item.s3Key)} alt={''} loading="lazy" />
+            )}
             <ImageListItemBar
               actionIcon={
                 <Stack direction={'row'} spacing={1}>

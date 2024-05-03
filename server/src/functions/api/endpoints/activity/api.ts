@@ -42,20 +42,21 @@ export const getGlobalActivityChangelogs = async (req: Request) => {
   const items = changelogs
     .map((c) => {
       const item = { ...c, htmlText: '' };
+      const fullname = c.user?.fullname ?? 'Unknown User';
       switch (c.actionType) {
         case 'created':
-          item.htmlText = `<b>${c.user.fullname}</b> has created the ${c.featureType} in <b>${c.countryName}</b>.`;
+          item.htmlText = `<b>${fullname}</b> has created a ${c.featureType} in <b>${c.countryName}</b>.`;
           break;
         case 'updatedDetails':
-          item.htmlText = `<b>${c.user.fullname}</b> updated the <b>${
+          item.htmlText = `<b>${fullname}</b> updated the <b>${
             c.updatedPathsString || 'details'
           }</b> of the ${c.featureType} in <b>${c.countryName}</b>.`;
           break;
         case 'grantedTemporaryEditor':
-          item.htmlText = `<b>${c.user.fullname}</b> has been granted temporary editor rights for the ${c.featureType} in <b>${c.countryName}</b>.`;
+          item.htmlText = `<b>${fullname}</b> has been granted temporary editor rights for the ${c.featureType} in <b>${c.countryName}</b>.`;
           break;
         case 'updatedOwners':
-          item.htmlText = `<b>${c.user.fullname}</b> changed the owner of the ${c.featureType} in <b>${c.countryName}</b>.`;
+          item.htmlText = `<b>${fullname}</b> changed the owner of the ${c.featureType} in <b>${c.countryName}</b>.`;
           break;
         default:
           break;

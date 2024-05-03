@@ -33,6 +33,7 @@ const keyAttrs: (keyof AllKeyAttrs)[] = ['spotId', 'country'];
 const keyComposers = (<T extends EntityKeysComposer<PrimaryKeyAttrs, AllKeyAttrs>>(p: T) => p)({
   PK: (item: { spotId: string }) => composeKey('spot', item.spotId),
   SK_GSI: () => 'spotDetails',
+  GSI_SK: (item) => composeKeyStrictly('spot', item.spotId),
   GSI2: (item) => composeKeyStrictly('country', item.country),
   GSI2_SK: () => composeKey('featureType', 'spot'),
 });
