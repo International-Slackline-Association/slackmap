@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Box, Stack } from '@mui/system';
 
+import { length } from '@turf/turf';
 import { lineApi } from 'app/api/line-api';
 import { DrawableMap } from 'app/components/Maps/SlacklineMap/DrawableMap';
 import { drawControlStyles } from 'app/components/Maps/SlacklineMap/DrawableMap/DrawControl/styles';
 import { mapUrlSearchParams } from 'app/components/Maps/mapUtils';
 import { CreateLineTutorial } from 'app/components/Tutorials/CreateLineTutorial';
 import { Feature, FeatureCollection } from 'geojson';
+import { showInfoNotification } from 'utils';
 import { usePageViewAnalytics } from 'utils/hooks/usePageViewAnalytics';
 
 import { LineEditCard } from './LineEditCard';
@@ -20,6 +23,7 @@ export function CreateLinePage() {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const [features, setFeatures] = useState<Feature[]>([]);
   const [mapErrors, setMapErrors] = useState<string[]>([]);
@@ -40,6 +44,10 @@ export function CreateLinePage() {
       return;
     } else {
       setMapErrors([]);
+      const lineLength = length(features[0], {
+        units: 'meters',
+      });
+      dispatch(showInfoNotification(`Length: ${lineLength.toFixed(2)}m`, 5000));
     }
   }, [features]);
 

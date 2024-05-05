@@ -3,7 +3,16 @@ import { NavLink, Link as RouterLink, useLocation } from 'react-router-dom';
 
 import PeopleIcon from '@mui/icons-material/People';
 import PublicIcon from '@mui/icons-material/Public';
-import { Box, Divider, IconButton, Link, List, ListItem, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  IconButton,
+  Link,
+  List,
+  ListItem,
+  ListSubheader,
+  Stack,
+  Typography,
+} from '@mui/material';
 
 import { Footer } from './Footer';
 import { Profile } from './Profile';
@@ -49,24 +58,40 @@ export const DrawerPanel = () => {
             alt="Slackmap Logo"
           />
         </Link>
-        <Divider sx={{ borderColor: 'inherit', opacity: 0.3 }} />
         <Profile />
-        <List>
+        <List sx={{ flexGrow: 1 }}>
+          {/* <SectionHeaderText title="Maps" /> */}
           <NavigationItem to="/" selected={selectedTab === 'slacklineMap'}>
             <PublicIcon />
             <Typography>Slackline Map</Typography>
           </NavigationItem>
-
           <NavigationItem to="/communities" selected={selectedTab === 'communityMap'}>
             <PeopleIcon />
             <Typography>Community Map</Typography>
           </NavigationItem>
+          {/* <SectionHeaderText title="Utilities" /> */}
         </List>
       </Stack>
       <Box sx={{ mt: 'auto' }}>
         <Footer />
       </Box>
     </Box>
+  );
+};
+
+const SectionHeaderText = (props: { title: string }) => {
+  return (
+    <ListSubheader
+      component={'div'}
+      disableGutters
+      disableSticky
+      sx={{
+        bgcolor: 'transparent',
+        color: (t) => t.palette.primary.contrastText,
+      }}
+    >
+      {props.title}
+    </ListSubheader>
   );
 };
 
