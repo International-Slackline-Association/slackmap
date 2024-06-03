@@ -3,7 +3,12 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import HelpCenterIcon from '@mui/icons-material/HelpCenter';
 import { Grid, IconButton, Link, Typography } from '@mui/material';
 
+import { useInfoDialog } from '../Dialogs/useInfoDialog';
+import { FAQ } from './FAQ';
+
 export const Footer = () => {
+  const { InfoDialog, showInfoDialog } = useInfoDialog();
+
   return (
     <Grid container spacing={1} sx={{}}>
       <Grid item xs={12}>
@@ -49,10 +54,16 @@ export const Footer = () => {
         </IconButton>
       </Grid>
       <Grid item xs={6}>
+        <InfoDialog />
         <IconButton
           sx={{ borderRadius: 0, padding: 0 }}
           color="inherit"
-          href="https://data.slacklineinternational.org/access/slackmap.com-faq/"
+          onClick={() =>
+            showInfoDialog({
+              title: 'FAQ',
+              description: <FAQ />,
+            })
+          }
         >
           <HelpCenterIcon sx={{ fontSize: '1rem' }} />
           <Typography variant="caption" sx={{ marginLeft: 0.5 }}>

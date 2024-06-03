@@ -15,7 +15,7 @@ export const validateSpotFeatures = (features: Feature[]): string[] => {
       }
       const aream2 = area(feature);
       if (aream2 < 100 || aream2 > 500000) {
-        throw new Error(`Spot drawn should be between 100 and 500000 square meters`);
+        errors.push(`Spot drawn should be between 100 and 500000 square meters`);
       }
     }
   }

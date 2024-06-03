@@ -21,6 +21,6 @@ export const geoJsonURL = {
 };
 
 export const slacklineGroupEditGoogleFormUrl =
-  'https://docs.google.com/forms/d/e/1FAIpQLSdEPV1ZV8TjmkQUGmKP8L0LrrkyUlspnfGFZ3dw32ocJ_zXVQ/viewform?usp=pp_url&entry.677223950=Edit+existing+data&entry.1762852981=';
+  'https://docs.google.com/forms/d/e/1FAIpQLSdEPV1ZV8TjmkQUGmKP8L0LrrkyUlspnfGFZ3dw32ocJ_zXVQ/viewform?usp=pp_url&entry.1049152186=';
 export const slacklineGroupsGithubUrl =
   'https://github.com/International-Slackline-Association/slackline-data/tree/master/data/communities/groups';

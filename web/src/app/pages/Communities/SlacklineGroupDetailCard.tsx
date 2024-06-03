@@ -123,7 +123,7 @@ export const SlacklineGroupDetailCard = (props: Props) => {
               <Button
                 variant="contained"
                 color="error"
-                href={slacklineGroupEditGoogleFormUrl + encodeURIComponent(groupInfo.name)}
+                href={slacklineGroupEditGoogleFormUrl + encodeURIComponent(groupInfo.id)}
                 target="_blank"
                 rel="noreferrer"
               >

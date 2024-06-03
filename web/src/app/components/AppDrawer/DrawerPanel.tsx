@@ -3,16 +3,7 @@ import { NavLink, Link as RouterLink, useLocation } from 'react-router-dom';
 
 import PeopleIcon from '@mui/icons-material/People';
 import PublicIcon from '@mui/icons-material/Public';
-import {
-  Box,
-  IconButton,
-  Link,
-  List,
-  ListItem,
-  ListSubheader,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, IconButton, Link, List, ListItem, Stack, Typography } from '@mui/material';
 
 import { Footer } from './Footer';
 import { Profile } from './Profile';
@@ -79,21 +70,21 @@ export const DrawerPanel = () => {
   );
 };
 
-const SectionHeaderText = (props: { title: string }) => {
-  return (
-    <ListSubheader
-      component={'div'}
-      disableGutters
-      disableSticky
-      sx={{
-        bgcolor: 'transparent',
-        color: (t) => t.palette.primary.contrastText,
-      }}
-    >
-      {props.title}
-    </ListSubheader>
-  );
-};
+// const SectionHeaderText = (props: { title: string }) => {
+//   return (
+//     <ListSubheader
+//       component={'div'}
+//       disableGutters
+//       disableSticky
+//       sx={{
+//         bgcolor: 'transparent',
+//         color: (t) => t.palette.primary.contrastText,
+//       }}
+//     >
+//       {props.title}
+//     </ListSubheader>
+//   );
+// };
 
 const NavigationItem = (props: {
   to: string;
