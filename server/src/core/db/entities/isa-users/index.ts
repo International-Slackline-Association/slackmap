@@ -7,6 +7,7 @@ const getUserDetails = async (
   userId: string,
 ): Promise<{
   id: string;
+  email?: string;
   fullname: string;
   profilePictureUrl?: string;
   country?: string;
@@ -22,6 +23,7 @@ const getUserDetails = async (
       if (data.Item) {
         const user = {
           id: userId,
+          email: data.Item.GSI_SK.split(':')?.[1],
           fullname: `${data.Item.name} ${data.Item.surname}`,
           profilePictureUrl: data.Item.profilePictureS3Key
             ? `https://images.slacklineinternational.org/${data.Item.profilePictureS3Key}`

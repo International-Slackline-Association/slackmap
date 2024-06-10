@@ -8,6 +8,7 @@ import { Express, default as express, json, urlencoded } from 'express';
 
 import { activityApi } from './endpoints/activity/api';
 import { communitiesApi } from './endpoints/communities/api';
+import { contactApi } from './endpoints/contact/api';
 import { countryApi } from './endpoints/country/api';
 import { featureApi } from './endpoints/feature/api';
 import { guideApi } from './endpoints/guide/api';
@@ -35,6 +36,7 @@ const setupRoutes = (app: Express) => {
   app.use('/country', countryApi);
   app.use('/activity', activityApi);
   app.use('/communities', communitiesApi);
+  app.use('/contact', contactApi);
 };
 
 const registerStartingMiddlewares = (app: Express) => {

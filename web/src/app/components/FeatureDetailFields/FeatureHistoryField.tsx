@@ -13,6 +13,7 @@ import TimelineDot from '@mui/lab/TimelineDot';
 import TimelineItem from '@mui/lab/TimelineItem';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
 import { Box, Typography } from '@mui/material';
+import { Stack } from '@mui/system';
 
 import { MapFeatureChangelogAction } from '@server/core/types';
 import { featureApi } from 'app/api/feature-api';
@@ -22,6 +23,7 @@ import ReactHtmlParser from 'html-react-parser';
 import { LoadingIndicator } from '../LoadingIndicator';
 import { EnabledHistoryTimelineItem } from './CountryHistoryField';
 import { FeatureDetailFieldLayout } from './DetailFieldLayout';
+import { ContactUserButton } from './FeatureContactField';
 
 interface Props {
   featureId: string;
@@ -80,15 +82,21 @@ export const FeatureHistoryField = (props: Props) => {
                   <TimelineConnector />
                 </TimelineSeparator>
                 <TimelineContent sx={{}}>
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      fontSize: '0.8rem',
-                      color: (t) => t.palette.text.secondary,
-                    }}
-                  >
-                    {format(new Date(changelog.date), 'dd MMM yyy, HH:mm')}
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems={'center'}>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontSize: '0.8rem',
+                        color: (t) => t.palette.text.secondary,
+                      }}
+                    >
+                      {format(new Date(changelog.date), 'dd MMM yyy, HH:mm')}
+                    </Typography>
+                    {changelog.user?.id && (
+                      <ContactUserButton noText contactUserId={changelog.user.id} />
+                    )}
+                  </Stack>
+
                   <Typography variant="body2">{ReactHtmlParser(changelog.htmlText)}</Typography>
                 </TimelineContent>
               </TimelineItem>

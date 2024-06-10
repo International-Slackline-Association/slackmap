@@ -71,9 +71,9 @@ export const FeatureMenuActions = (props: Props) => {
         title: `Send a delete request`,
         description:
           'Only the owner of this feature can delete it. If you still think that it should be deleted, please provide a reason. We will process your request as soon as possible.',
+        textBoxLabel: 'Reason',
         confirmText: 'Send',
         onConfirm: (reason) => {
-          console.log(reason);
           sendDeleteFeatureRequest({
             id: props.feature.id,
             type: props.feature.type,

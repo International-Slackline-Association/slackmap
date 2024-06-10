@@ -6,11 +6,14 @@ type UserDetailType = AsyncReturnType<typeof db.isaUsersDb.getUserDetails>;
 
 const usersCache = new SimpleCache<UserDetailType>(10);
 
-export const getUserDetails = async (userId: string) => {
+export const getUserDetails = async (userId: string, opts: { includeEmail?: boolean } = {}) => {
   const cache = usersCache.get(userId);
   if (cache) return cache;
 
   const user = await db.isaUsersDb.getUserDetails(userId);
+  if (!opts.includeEmail) {
+    delete user?.email;
+  }
   usersCache.set(userId, user);
   return user;
 };

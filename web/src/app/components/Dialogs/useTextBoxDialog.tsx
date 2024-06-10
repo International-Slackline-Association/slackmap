@@ -7,13 +7,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { Stack } from '@mui/system';
 
 interface ConfirmDialogProps {
   title: string;
   description: string;
+  textBoxLabel: string;
   confirmText?: string;
   cancelText?: string;
-  onConfirm: (reason: string) => void;
+  onConfirm: (text: string) => void;
   onCancel?: () => void;
 }
 
@@ -37,7 +39,7 @@ export const useTextBoxDialog = () => {
             event.preventDefault();
             const formData = new FormData(event.currentTarget);
             const formJson = Object.fromEntries((formData as any).entries());
-            dialogProps?.onConfirm(formJson.reason);
+            dialogProps?.onConfirm(formJson.text);
             setIsOpen(false);
           },
         }}
@@ -48,19 +50,21 @@ export const useTextBoxDialog = () => {
       >
         <DialogTitle> {dialogProps?.title}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{dialogProps?.description}</DialogContentText>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            name="reason"
-            label="Reason"
-            type="text"
-            variant="outlined"
-            fullWidth
-            value={text}
-            onChange={(event) => setText(event.target.value)}
-          />
+          <Stack spacing={2}>
+            <DialogContentText>{dialogProps?.description}</DialogContentText>
+            <TextField
+              autoFocus
+              required
+              margin="dense"
+              name="text"
+              label={dialogProps?.textBoxLabel}
+              type="text"
+              variant="outlined"
+              fullWidth
+              value={text}
+              onChange={(event) => setText(event.target.value)}
+            />
+          </Stack>
         </DialogContent>
         <DialogActions>
           <Button

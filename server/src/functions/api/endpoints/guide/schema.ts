@@ -15,7 +15,7 @@ export const createGuideSchema = z.object({
     features: z.array(z.any()),
   }),
   type: guideTypeEnum,
-  description: z.string().max(512).optional(),
+  description: z.string().max(1024).optional(),
   images: s3ImageUploadZodSchema,
 });
 export type CreateGuidePostBody = z.infer<typeof createGuideSchema>;
@@ -27,7 +27,7 @@ export const updateGuideSchema = z
       features: z.array(z.any()),
     }),
     type: guideTypeEnum,
-    description: z.string().max(512).optional(),
+    description: z.string().max(1024).optional(),
     images: s3ImageUploadZodSchema,
   })
   .strict();

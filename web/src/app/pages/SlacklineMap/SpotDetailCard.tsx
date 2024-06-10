@@ -14,6 +14,7 @@ import { Stack } from '@mui/system';
 import { centerOfMass } from '@turf/turf';
 import { featureApi } from 'app/api/feature-api';
 import { GetSpotDetailsAPIResponse, spotApi } from 'app/api/spot-api';
+import { FeatureContactField } from 'app/components/FeatureDetailFields/FeatureContactField';
 import { FeatureHistoryField } from 'app/components/FeatureDetailFields/FeatureHistoryField';
 import { FeatureMenuActions } from 'app/components/FeatureDetailFields/FeatureMenuActions';
 import { FeatureDetailInfoField } from 'app/components/FeatureDetailFields/InfoField';
@@ -124,11 +125,9 @@ export const SpotDetailCard = (props: Props) => {
               infoType="access"
             />
 
-            <FeatureDetailInfoField
-              header="Contact"
+            <FeatureContactField
               content={spotDetails.contactInfo}
-              skipIfEmpty
-              infoType="contact"
+              contactUserId={spotDetails.creatorUserId}
             />
             <FeatureDetailInfoField
               header="Additional Details"

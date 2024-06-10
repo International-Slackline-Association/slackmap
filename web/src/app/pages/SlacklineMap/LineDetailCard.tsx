@@ -14,6 +14,7 @@ import { Stack } from '@mui/system';
 import { centerOfMass } from '@turf/turf';
 import { featureApi } from 'app/api/feature-api';
 import { GetLineDetailsAPIResponse, lineApi } from 'app/api/line-api';
+import { FeatureContactField } from 'app/components/FeatureDetailFields/FeatureContactField';
 import { FeatureHistoryField } from 'app/components/FeatureDetailFields/FeatureHistoryField';
 import { FeatureMenuActions } from 'app/components/FeatureDetailFields/FeatureMenuActions';
 import { FeatureDetailInfoField } from 'app/components/FeatureDetailFields/InfoField';
@@ -151,11 +152,9 @@ export const LineDetailCard = (props: Props) => {
               skipIfEmpty
               infoType="gear"
             />
-            <FeatureDetailInfoField
-              header="Contact"
+            <FeatureContactField
               content={lineDetails.contactInfo}
-              skipIfEmpty
-              infoType="contact"
+              contactUserId={lineDetails.creatorUserId}
             />
             <FeatureDetailInfoField
               header="Additional Details"
