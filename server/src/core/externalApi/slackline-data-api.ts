@@ -1,6 +1,6 @@
-import { FeatureCollection, Geometry } from '@turf/turf';
 import axios from 'axios';
 import { SimpleCache } from 'core/utils/cache';
+import { FeatureCollection, Geometry } from 'geojson';
 
 const api = axios.create({
   baseURL: `https://raw.githubusercontent.com/International-Slackline-Association/slackline-data/master/data`,

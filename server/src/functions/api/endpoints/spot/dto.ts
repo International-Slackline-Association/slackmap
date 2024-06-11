@@ -1,5 +1,5 @@
-import { FeatureCollection } from '@turf/turf';
 import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
+import { FeatureCollection } from 'geojson';
 
 export const getSpotDetailsResponse = (
   item: DDBSpotDetailTypes['Entity'],

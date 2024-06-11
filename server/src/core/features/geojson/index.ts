@@ -1,10 +1,11 @@
 import * as turf from '@turf/turf';
 import { GetObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
-import { Feature, FeatureCollection, featureCollection } from '@turf/turf';
+import { featureCollection } from '@turf/turf';
 import { s3 } from 'core/aws/clients';
 import { db } from 'core/db';
 import { GuideType, SlacklineType } from 'core/types';
 import countriesJson from 'data/countryInfoDict.json';
+import { Feature, FeatureCollection, Geometry } from 'geojson';
 import { AsyncReturnType } from 'type-fest';
 import zlib from 'zlib';
 
@@ -286,7 +287,7 @@ const refreshCountryPointsGeoJson = async (opts: { allPoints?: FeatureCollection
         id: code,
         ft: 'ct',
       },
-      geometry: countryInfo.geometry,
+      geometry: countryInfo.geometry as Geometry,
     });
   }
 

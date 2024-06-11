@@ -1,5 +1,5 @@
-import { FeatureCollection } from '@turf/turf';
 import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
+import { FeatureCollection } from 'geojson';
 
 export const getLineDetailsResponse = (
   item: DDBLineDetailTypes['Entity'],

@@ -110,18 +110,18 @@ export const fitMapToGeoJson = (
     const feature = geoJson.features[0];
     if (isFeaturePoint(feature)) {
       const radius = Math.max(opts.minBufferRadiusInKm ?? 0, 0.1);
-      bufferedBounds = bbox(buffer(geoJson, radius)) as BBox;
+      bufferedBounds = bbox(buffer(geoJson, radius)!) as BBox;
     } else if (isFeatureLine(feature)) {
       const length = (parseFloat(feature.properties?.l) || 200) / 1000;
       const radius = Math.max(opts.minBufferRadiusInKm ?? 0, length);
-      bufferedBounds = bbox(buffer(geoJson, radius)) as BBox;
+      bufferedBounds = bbox(buffer(geoJson, radius)!) as BBox;
     } else if (isFeaturePolygon(feature)) {
-      bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())) as BBox;
+      bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())!) as BBox;
     } else {
-      bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())) as BBox;
+      bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())!) as BBox;
     }
   } else {
-    bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())) as BBox;
+    bufferedBounds = bbox(buffer(geoJson, bufferKmFromArea())!) as BBox;
   }
 
   map.fitBounds(bufferedBounds, {

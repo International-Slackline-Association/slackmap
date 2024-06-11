@@ -1,5 +1,5 @@
-import { Polygon, area } from '@turf/turf';
-import { Feature } from 'geojson';
+import { area } from '@turf/turf';
+import { Feature, Polygon } from 'geojson';
 
 export const validateSpotFeatures = (features: Feature[]): string[] => {
   const errors: string[] = [];

@@ -1,7 +1,7 @@
-import { Feature, FeatureCollection } from '@turf/turf';
 import { slacklineDataApi } from 'core/externalApi/slackline-data-api';
 import countriesJson from 'data/countryInfoDict.json';
 import express, { Request } from 'express';
+import { Feature, FeatureCollection, Geometry } from 'geojson';
 
 import { expressRoute } from '../../utils';
 
@@ -31,7 +31,7 @@ export const getCountriesGeoJson = async () => {
         id: countryCode,
         ft: 'comCt',
       },
-      geometry: countryInfo.geometry,
+      geometry: countryInfo.geometry as Geometry,
     };
     countriesGeoJson.features.push(feature);
   }

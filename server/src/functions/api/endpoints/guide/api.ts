@@ -1,4 +1,3 @@
-import { FeatureCollection, Geometry } from '@turf/turf';
 import { db } from 'core/db';
 import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { processGuideGeoJson } from 'core/features/geojson';
@@ -14,6 +13,7 @@ import { GuideType } from 'core/types';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
 import express, { Request } from 'express';
+import { FeatureCollection, Geometry } from 'geojson';
 import { nanoid } from 'nanoid';
 
 import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';

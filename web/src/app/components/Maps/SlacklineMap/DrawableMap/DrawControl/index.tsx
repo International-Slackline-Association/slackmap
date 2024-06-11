@@ -5,7 +5,7 @@ import type { ControlPosition } from 'react-map-gl';
 import MapboxDraw from '@mapbox/mapbox-gl-draw';
 import StaticDrawMode from '@mapbox/mapbox-gl-draw-static-mode';
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
-import { Feature } from '@turf/turf';
+import { Feature } from 'geojson';
 
 export interface MapboxDrawEvent {
   features: Feature[];

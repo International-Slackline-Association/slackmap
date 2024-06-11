@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { Feature, FeatureCollection, LineString } from '@turf/turf';
+import { Feature, FeatureCollection, LineString } from 'geojson';
 
 export const validateLineGeoJson = (
   geoJson: FeatureCollection,

@@ -1,6 +1,7 @@
 import * as turf from '@turf/turf';
-import { Feature, FeatureCollection } from '@turf/turf';
 import { getCountryCode } from 'core/externalApi/geonames-api';
+import { GeometryCollection } from 'geojson';
+import { Feature, FeatureCollection, Geometry } from 'geojson';
 import cloneDeep from 'lodash.clonedeep';
 
 export const optimizeGeoJsonFeature = <T extends Feature>(feature: T): T => {
@@ -25,4 +26,10 @@ export const getCountryCodeOfGeoJson = async <Throw = false>(
     throw new Error('Country code cannot be determined from the coordinates');
   }
   return countryCode?.toUpperCase() as string;
+};
+
+export const hasGeometryCoordinates = (
+  feature: Geometry,
+): feature is Exclude<Geometry, GeometryCollection> => {
+  return feature.type !== 'GeometryCollection' && !!feature.coordinates;
 };

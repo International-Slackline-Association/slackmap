@@ -1,6 +1,6 @@
-import { FeatureCollection } from '@turf/turf';
 import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { guideTypeLabel } from 'core/features/guide';
+import { FeatureCollection } from 'geojson';
 
 export const getGuideDetailsResponse = (
   item: DDBGuideDetailTypes['Entity'],

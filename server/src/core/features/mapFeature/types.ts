@@ -1,8 +1,8 @@
-import { FeatureCollection } from '@turf/turf';
 import { DDBGuideDetailTypes } from 'core/db/entities/guide/details/types';
 import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
 import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { MapFeatureChangelogAction, MapFeatureType } from 'core/types';
+import { FeatureCollection } from 'geojson';
 
 export type GenericMapFeatureItemType =
   | DDBLineDetailTypes['Entity']

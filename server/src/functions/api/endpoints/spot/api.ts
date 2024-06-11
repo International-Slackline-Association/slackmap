@@ -1,4 +1,3 @@
-import { FeatureCollection } from '@turf/turf';
 import { db } from 'core/db';
 import { DDBSpotDetailTypes } from 'core/db/entities/spot/details/types';
 import { processSpotGeoJson } from 'core/features/geojson';
@@ -13,6 +12,7 @@ import { validateSpotGeoJson } from 'core/features/spot/validations';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
 import express, { Request } from 'express';
+import { FeatureCollection } from 'geojson';
 import { nanoid } from 'nanoid';
 
 import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';

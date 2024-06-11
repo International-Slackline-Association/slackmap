@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf';
-import { Feature, FeatureCollection, Polygon } from '@turf/turf';
+import { Feature, FeatureCollection, Polygon } from 'geojson';
 
 export const validateSpotGeoJson = (
   geoJson: FeatureCollection,

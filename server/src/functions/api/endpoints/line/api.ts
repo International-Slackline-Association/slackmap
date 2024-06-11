@@ -1,5 +1,4 @@
 import * as turf from '@turf/turf';
-import { FeatureCollection } from '@turf/turf';
 import { db } from 'core/db';
 import { DDBLineDetailTypes } from 'core/db/entities/line/details/types';
 import { processLineGeoJson } from 'core/features/geojson';
@@ -14,6 +13,7 @@ import { updateFeatureImagesInS3 } from 'core/features/mapFeature/image';
 import { assignFromSourceToTarget } from 'core/utils';
 import { logger } from 'core/utils/logger';
 import express, { Request } from 'express';
+import { FeatureCollection } from 'geojson';
 import { nanoid } from 'nanoid';
 
 import { expressRoute, validateApiPayload, verifyRequestClaims } from '../../utils';
