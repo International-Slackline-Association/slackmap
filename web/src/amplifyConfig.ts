@@ -12,8 +12,16 @@ export const amplifyConfig: ResourcesConfig = {
         oauth: {
           domain: 'auth.slacklineinternational.org',
           scopes: ['email', 'openid', 'aws.cognito.signin.user.admin'],
-          redirectSignIn: ['http://localhost:5173', 'https://slackmap.com'],
-          redirectSignOut: ['http://localhost:5173', 'https://slackmap.com'],
+          redirectSignIn: [
+            'http://localhost:5173',
+            'https://slackmap.com',
+            'https://www.slackmap.com',
+          ],
+          redirectSignOut: [
+            'http://localhost:5173',
+            'https://slackmap.com',
+            'https://www.slackmap.com',
+          ],
           responseType: 'code',
         },
       },
