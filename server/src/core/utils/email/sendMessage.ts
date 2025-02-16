@@ -1,6 +1,7 @@
 import { SendEmailCommand } from '@aws-sdk/client-ses';
 import { ses } from 'core/aws/clients';
 
+import { logger } from '../logger';
 import newMessageHTML from './__static/newMessageHtml';
 
 export const sendNewMessageEmail = async (params: {
@@ -19,6 +20,7 @@ export const sendNewMessageEmail = async (params: {
   html = html.replace(/{{CONTEXT_URL}}/g, params.context_url);
   html = html.replace(/{{MESSAGE}}/g, params.message);
 
+  logger.debug('Sending email', { params });
   await ses.send(
     new SendEmailCommand({
       Destination: {

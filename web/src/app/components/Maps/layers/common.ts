@@ -126,6 +126,9 @@ export const genericFillLayer = (opts: CommonOpts): FillLayer => {
     type: 'fill',
     minzoom: 12,
     filter: opts.filter ? opts.filter : filterExprs.polygon,
+    layout: {
+      visibility: opts.visible ? 'visible' : 'none',
+    },
     paint: {
       'fill-opacity': [
         'case',
