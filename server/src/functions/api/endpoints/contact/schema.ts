@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
+const recipientSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('userId'), userId: z.string() }),
+  z.object({ type: z.literal('email'), email: z.string().email() }),
+]);
+
 export const sendUserMessageSchema = z.object({
-  userId: z.string(),
+  recipient: recipientSchema,
   context_url: z.string(),
   message: z.string(),
 });

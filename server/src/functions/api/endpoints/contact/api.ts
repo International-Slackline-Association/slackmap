@@ -10,16 +10,23 @@ export const sendUserMessage = async (req: Request<any, any, SendUserMessagePost
   const body = validateApiPayload(req.body, sendUserMessageSchema);
 
   const senderDetails = await getUserDetails(requestClaims.isaId, { includeEmail: true });
-  const receiverDetails = await getUserDetails(body.userId, { includeEmail: true });
 
-  if (senderDetails && receiverDetails) {
+  let recipientEmail: string | undefined;
+  if (body.recipient.type === 'email') {
+    recipientEmail = body.recipient.email;
+  } else {
+    const receiverDetails = await getUserDetails(body.recipient.userId, { includeEmail: true });
+    recipientEmail = receiverDetails?.email;
+  }
+
+  if (senderDetails && recipientEmail) {
     await sendNewMessageEmail({
       from: {
         username: senderDetails.fullname,
         email: senderDetails.email!,
       },
       to: {
-        email: receiverDetails.email!,
+        email: recipientEmail,
       },
       context_url: body.context_url,
       message: body.message,

@@ -12,13 +12,27 @@ interface Props {
   contactUserId: string;
 }
 
-export const ContactUserButton = (props: { contactUserId: string; noText?: boolean }) => {
+const extractEmail = (text?: string): string | undefined => {
+  if (!text) return undefined;
+  const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const match = text.match(emailRegex);
+  return match ? match[0] : undefined;
+};
+
+export const ContactUserButton = (props: {
+  contactUserId: string;
+  contactInfo?: string;
+  noText?: boolean;
+}) => {
   const { TextBoxDialog, showTextBoxDialog } = useTextBoxDialog();
   const [sendContactMessage] = contactApi.useSendUserMessageMutation();
 
   if (!props.contactUserId || props.contactUserId === 'unknown') {
     return null;
   }
+
+  const extractedEmail = extractEmail(props.contactInfo);
+
   const onClick = () => {
     showTextBoxDialog({
       title: 'Contact User (Email)',
@@ -28,7 +42,9 @@ export const ContactUserButton = (props: { contactUserId: string; noText?: boole
       confirmText: 'Send',
       onConfirm: (message) => {
         sendContactMessage({
-          userId: props.contactUserId,
+          recipient: extractedEmail
+            ? { type: 'email', email: extractedEmail }
+            : { type: 'userId', userId: props.contactUserId },
           message,
           context_url: window.location.href,
         });
@@ -70,7 +86,7 @@ export const FeatureContactField = (props: Props) => {
           User has not provided any contact information!
         </Typography>
       )}
-      <ContactUserButton contactUserId={props.contactUserId} />
+      <ContactUserButton contactUserId={props.contactUserId} contactInfo={props.content} />
     </FeatureDetailFieldLayout>
   );
 };
