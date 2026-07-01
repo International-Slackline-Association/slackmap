@@ -15,6 +15,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 import { AppDrawer } from './components/AppDrawer';
 import { withErrorBoundry } from './components/ErrorBoundary';
+import { MaintenancePage } from './components/MaintenancePage';
 import { CommunitiesPage } from './pages/Communities/Loadable';
 import { CreateGuidePage } from './pages/Create/Guide/Loadable';
 import { CreateLinePage } from './pages/Create/Line/Loadable';
@@ -60,7 +61,7 @@ export function App() {
   }, [authState, dispatch]);
 
   return (
-    <BrowserRouter>
+    <>
       <CssBaseline />
       <GlobalStyles
         styles={{
@@ -71,33 +72,39 @@ export function App() {
           },
         }}
       />
-      <AppDrawer>
-        <Routes>
-          <Route path="/" element={<SlacklineMapPage />} />
-          <Route path="/line/:lineId" element={<SlacklineMapPage />} />
-          <Route path="/spot/:spotId" element={<SlacklineMapPage />} />
-          <Route path="/guide/:guideId" element={<SlacklineMapPage />} />
-          <Route path="/country/:countryCode" element={<SlacklineMapPage />} />
-          <Route path="/communities" element={<CommunitiesPage />} />
-          <Route path="/communities/group/:groupId" element={<CommunitiesPage />} />
-          <Route path="/communities/country/:countryCode" element={<CommunitiesPage />} />
-          {isSignedIn && (
-            <>
-              <Route path="/create/line" element={<CreateLinePage />} />
-              <Route path="/line/:lineId/edit" element={<LineEditPage />} />
-              <Route path="/create/spot" element={<CreateSpotPage />} />
-              <Route path="/spot/:spotId/edit" element={<SpotEditPage />} />
-              <Route path="/create/guide" element={<CreateGuidePage />} />
-              <Route path="/guide/:guideId/edit" element={<GuideEditPage />} />
-            </>
-          )}
-          <Route path="/x/:legacyId" element={<LegacyDetailPage />} />
-          <Route path="*" element={<SlacklineMapPage />} />
-        </Routes>
-      </AppDrawer>
+      {import.meta.env.VITE_APP_MAINTENANCE_MODE === 'true' ? (
+        <MaintenancePage />
+      ) : (
+        <BrowserRouter>
+          <AppDrawer>
+            <Routes>
+              <Route path="/" element={<SlacklineMapPage />} />
+              <Route path="/line/:lineId" element={<SlacklineMapPage />} />
+              <Route path="/spot/:spotId" element={<SlacklineMapPage />} />
+              <Route path="/guide/:guideId" element={<SlacklineMapPage />} />
+              <Route path="/country/:countryCode" element={<SlacklineMapPage />} />
+              <Route path="/communities" element={<CommunitiesPage />} />
+              <Route path="/communities/group/:groupId" element={<CommunitiesPage />} />
+              <Route path="/communities/country/:countryCode" element={<CommunitiesPage />} />
+              {isSignedIn && (
+                <>
+                  <Route path="/create/line" element={<CreateLinePage />} />
+                  <Route path="/line/:lineId/edit" element={<LineEditPage />} />
+                  <Route path="/create/spot" element={<CreateSpotPage />} />
+                  <Route path="/spot/:spotId/edit" element={<SpotEditPage />} />
+                  <Route path="/create/guide" element={<CreateGuidePage />} />
+                  <Route path="/guide/:guideId/edit" element={<GuideEditPage />} />
+                </>
+              )}
+              <Route path="/x/:legacyId" element={<LegacyDetailPage />} />
+              <Route path="*" element={<SlacklineMapPage />} />
+            </Routes>
+          </AppDrawer>
 
-      <NotificationSnackbar />
-    </BrowserRouter>
+          <NotificationSnackbar />
+        </BrowserRouter>
+      )}
+    </>
   );
 }
 
